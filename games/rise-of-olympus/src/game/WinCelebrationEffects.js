@@ -2,6 +2,7 @@
  * Cluster-win celebration — original coin01–coin05 shower + tier resolution.
  */
 import { Container, Sprite, Assets, Spritesheet } from 'pixi.js';
+import { STAGE } from './config.js';
 
 /** Ref riseofolympus1000 WinCounter limits (bet multiples). */
 export const WIN_CELEBRATION_LIMITS = [1, 3, 7, 15];
@@ -14,11 +15,11 @@ const COIN_SHEET_PNG = `${COIN_BASE}/main_texture0_level2.png`;
 let coinAnimSets = null;
 
 const TIER_COIN = [
-  { burst: 12, rate: 4, speed: 700, spread: 0.55, scale: 1.65 },
-  { burst: 16, rate: 6, speed: 760, spread: 0.6, scale: 1.75 },
-  { burst: 22, rate: 8, speed: 820, spread: 0.65, scale: 1.85 },
-  { burst: 30, rate: 10, speed: 880, spread: 0.7, scale: 1.95 },
-  { burst: 38, rate: 12, speed: 940, spread: 0.75, scale: 2.05 },
+  { burst: 12, rate: 4, speed: 700, spread: 0.55, scale: 1.65, spawnMs: 900 },
+  { burst: 16, rate: 6, speed: 760, spread: 0.6, scale: 1.75, spawnMs: 1050 },
+  { burst: 22, rate: 8, speed: 820, spread: 0.65, scale: 1.85, spawnMs: 1200 },
+  { burst: 30, rate: 10, speed: 880, spread: 0.7, scale: 1.95, spawnMs: 1350 },
+  { burst: 38, rate: 12, speed: 940, spread: 0.75, scale: 2.05, spawnMs: 1500 },
 ];
 
 /**
@@ -96,10 +97,10 @@ export function preloadCoinShowerAssets() {
 /**
  * Original RoO coins — spin frames arc up from the bottom of the stage.
  * @param {import('pixi.js').Container} layer
- * @param {{ width: number, height: number }} stage
+ * @param {import('pixi.js').Ticker} ticker
  * @param {number} tier
  */
-export async function startCoinShower(layer, stage, tier) {
+export async function startCoinShower(layer, ticker, tier) {
   const anims = await loadCoinAnimSets();
   if (!anims?.length) return { stop() {} };
 
@@ -110,9 +111,9 @@ export async function startCoinShower(layer, stage, tier) {
   if (!layer.sortableChildren) layer.sortableChildren = true;
   layer.addChild(bucket);
 
-  const floorY = stage.height - 8;
+  const floorY = STAGE.height - 8;
   const minX = 40;
-  const maxX = stage.width - 40;
+  const maxX = STAGE.width - 40;
 
   /** @type {{
    *   sprite: Sprite,
@@ -127,8 +128,8 @@ export async function startCoinShower(layer, stage, tier) {
   const coins = [];
   let spawnAcc = 0;
   let stopped = false;
-  let raf = 0;
-  let last = performance.now();
+  let spawnDone = false;
+  let spawnElapsed = 0;
 
   const spawnOne = () => {
     const anim = anims[Math.floor(Math.random() * anims.length)];
@@ -157,17 +158,28 @@ export async function startCoinShower(layer, stage, tier) {
 
   for (let i = 0; i < cfg.burst; i++) spawnOne();
 
-  const step = (now) => {
+  const finish = () => {
+    ticker.remove(step);
+    for (const c of coins) c.sprite.destroy();
+    coins.length = 0;
+    if (bucket.parent) bucket.destroy({ children: true });
+  };
+
+  const step = () => {
     if (stopped) return;
-    const dt = Math.min(32, now - last);
-    last = now;
-    spawnAcc += dt;
-    if (cfg.rate > 0) {
-      const interval = 1000 / cfg.rate;
-      while (spawnAcc >= interval) {
-        spawnAcc -= interval;
-        spawnOne();
+    const dt = Math.min(32, ticker.deltaMS);
+
+    if (!spawnDone) {
+      spawnElapsed += dt;
+      spawnAcc += dt;
+      if (cfg.rate > 0) {
+        const interval = 1000 / cfg.rate;
+        while (spawnAcc >= interval && spawnElapsed < cfg.spawnMs) {
+          spawnAcc -= interval;
+          spawnOne();
+        }
       }
+      if (spawnElapsed >= cfg.spawnMs) spawnDone = true;
     }
 
     for (let i = coins.length - 1; i >= 0; i--) {
@@ -186,29 +198,24 @@ export async function startCoinShower(layer, stage, tier) {
 
       const t = c.life / c.maxLife;
       c.sprite.alpha = t > 0.82 ? 1 - (t - 0.82) / 0.18 : 1;
-      if (c.life >= c.maxLife || c.sprite.y < -80 || c.sprite.y > stage.height + 100) {
+      if (c.life >= c.maxLife || c.sprite.y < -80 || c.sprite.y > STAGE.height + 100) {
         c.sprite.destroy();
         coins.splice(i, 1);
       }
     }
 
-    if (coins.length === 0 && stopped) {
-      bucket.destroy({ children: true });
-      return;
+    if (spawnDone && coins.length === 0) {
+      finish();
     }
-    raf = requestAnimationFrame(step);
   };
 
-  raf = requestAnimationFrame(step);
+  ticker.add(step);
 
   return {
     stop() {
       if (stopped) return;
       stopped = true;
-      cancelAnimationFrame(raf);
-      for (const c of coins) c.sprite.destroy();
-      coins.length = 0;
-      bucket.destroy({ children: true });
+      finish();
     },
   };
 }

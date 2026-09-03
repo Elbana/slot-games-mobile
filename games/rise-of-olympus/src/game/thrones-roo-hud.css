@@ -127,6 +127,7 @@
   min-width: 30%;
   text-align: right;
   pointer-events: auto;
+  z-index: 10;
 }
 
 #roo-gamepanel #buttonsWrapper.pt {
@@ -149,6 +150,7 @@
   bottom: auto;
   inset: auto;
   pointer-events: auto;
+  z-index: 10;
 }
 
 .roo-gamepanel #balanceText,

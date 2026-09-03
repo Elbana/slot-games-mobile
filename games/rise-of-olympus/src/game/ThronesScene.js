@@ -143,7 +143,9 @@ export async function createThronesScene(opts) {
   overlayLayer.sortableChildren = true;
   const coinLayer = new Container();
   coinLayer.sortableChildren = true;
+  coinLayer.zIndex = 1000;
   // bg → platform → frame → grid → fx → ui → overlay → coins (top)
+  stageContent.sortableChildren = true;
   stageContent.addChild(bgLayer, platformLayer, frameLayer, gridLayer, fxLayer, uiLayer, overlayLayer, coinLayer);
 
   /** @type {import('pixi.js').Sprite | null} */
@@ -277,8 +279,6 @@ export async function createThronesScene(opts) {
   let activeWinboxes = [];
   /** @type {import('@esotericsoftware/spine-pixi-v8').Spine | null} */
   let winlabelSpine = null;
-  /** @type {{ stop: () => void } | null} */
-  let activeCoinShower = null;
   /** @type {{ x: number, y: number } | null} */
   let winlabelHome = null;
   /** @type {import('@esotericsoftware/spine-pixi-v8').Spine | null} */
@@ -569,15 +569,12 @@ export async function createThronesScene(opts) {
       setWinlabelValue(winlabelSpine, clusterPay);
     }
 
-    activeCoinShower?.stop();
-    activeCoinShower = null;
-
     const tasks = [
-      startCoinShower(coinLayer, STAGE, tier).then((shower) => {
-        activeCoinShower = shower;
-      }),
       ...activeWinboxes.map((wb) => playWinboxIn(wb)),
     ];
+    if (coinLayer) {
+      tasks.push(startCoinShower(coinLayer, app.ticker, tier));
+    }
     if (winlabelSpine && tier >= 1) {
       tasks.push(playWinlabelShow(winlabelSpine, tier));
     }
