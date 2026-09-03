@@ -18,6 +18,7 @@ import {
   isSoundReady,
   stopLoop,
 } from './SoundEngine.js';
+import { MULTIPLIER_GOD_ID } from './config.js';
 
 export {
   loadGameSounds,
@@ -101,7 +102,7 @@ export function playEventSound(ev) {
       if (ev.sum != null) playMultiplierValueSound(ev.sum);
       break;
     case 'multiplier_land':
-      playGodPpsSound(ev.godId ?? 0);
+      playGodPpsSound(MULTIPLIER_GOD_ID);
       break;
     case 'multiplier_upgrade':
       playSound('1044SfTumbleWin', { volume: 0.7 });

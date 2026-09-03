@@ -609,9 +609,9 @@ export function createUpgradeFxSpine() {
   return spawnSpine('roo-upgrade-fx-skel', 'roo-sym-atlas');
 }
 
-export function playUpgradeFx(spine, godId = 0) {
-  const anim = UPGRADE_FX[godId] ?? UPGRADE_FX[0];
-  return playSpineAnim(spine, [anim, 'feature_fire'], false);
+export function playUpgradeFx(spine, godId = 2) {
+  const anim = UPGRADE_FX[godId] ?? UPGRADE_FX[2];
+  return playSpineAnim(spine, [anim, 'feature_lightning'], false);
 }
 
 export function playScatterActivation(spine) {

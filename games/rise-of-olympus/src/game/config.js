@@ -85,7 +85,7 @@ export const CHROME = {
   signpost: { x: 255, y: 155, scale: 0.88 },
   reelFrame: { x: 602, y: 558 },
   platform: { x: 602, y: 558 },
-  godPortrait: { x: 968, y: 218, scale: 0.48, skel: 'roo-god-hades-skel' },
+  godPortrait: { x: 968, y: 218, scale: 0.48, skel: 'roo-god-zeus-skel' },
   tumbleWin: { x: 600, y: 168 },
   /** extends logo in ref (fsCounter node) */
   fsCounter: { x: 600, y: 130 },
@@ -99,6 +99,8 @@ export const LAND_ANIM_SYMBOLS = new Set([5, 6, 7, 8, 9, 11, 12, 13, 14]);
 
 export const MULTIPLIER_SYMBOL_MIN = 12;
 export const MULTIPLIER_SYMBOL_MAX = 14;
+/** Always use Zeus (thunder) for multiplier land FX and portrait — 0=Hades, 1=Poseidon, 2=Zeus. */
+export const MULTIPLIER_GOD_ID = 2;
 export const SCATTER_SYMBOL = 11;
 
 /** Bleed past grid clip rect to hide mask/platform fringe (px). */

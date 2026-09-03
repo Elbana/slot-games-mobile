@@ -85,6 +85,7 @@ import {
   GRID_BACKING_BLEED,
   gridPixelSize,
   cellPosition,
+  MULTIPLIER_GOD_ID,
 } from './config.js';
 
 /**
@@ -245,7 +246,7 @@ export async function createThronesScene(opts) {
   /** @type {import('@esotericsoftware/spine-pixi-v8').Spine | null} */
   let godPortraitSpine = null;
   try {
-    godPortraitSpine = createGodPortraitSpine(0);
+    godPortraitSpine = createGodPortraitSpine(MULTIPLIER_GOD_ID);
     uiLayer.addChild(godPortraitSpine);
   } catch (err) {
     console.warn('[Thrones] god portrait spine failed', err);
@@ -697,9 +698,9 @@ export async function createThronesScene(opts) {
     void count;
   }
 
-  function onMultiplierLand(ev) {
+  function onMultiplierLand(_ev) {
     if (!godPortraitSpine) return godPortraitSpine;
-    godPortraitSpine = swapGodPortraitSpine(godPortraitSpine, ev.godId ?? 0);
+    godPortraitSpine = swapGodPortraitSpine(godPortraitSpine, MULTIPLIER_GOD_ID);
     if (godWraps.length) godWraps[0] = godPortraitSpine;
     return godPortraitSpine;
   }

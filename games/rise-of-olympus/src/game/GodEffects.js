@@ -32,7 +32,7 @@ export async function animateGodLand(ticker, godPortrait, godId) {
  * @param {number} [godId]
  * @param {() => void} [onOrbRevealComplete] — ref: set multiplier text when reveal finishes
  */
-export async function animateOrbLand(ticker, cell, fxLayer, godId = 0, onOrbRevealComplete) {
+export async function animateOrbLand(ticker, cell, fxLayer, godId = 2, onOrbRevealComplete) {
   const sym = cell.__sym ?? 0;
 
   if (cell.__spine && sym >= 12 && sym <= 14) {
@@ -72,7 +72,7 @@ export async function animateOrbLand(ticker, cell, fxLayer, godId = 0, onOrbReve
  * @param {number} [godId]
  * @param {() => void} [onUpgradeComplete] — show new multiplier value when tier upgrade clip ends
  */
-export async function animateMultiplierUpgrade(ticker, cell, fxLayer, godId = 0, onUpgradeComplete) {
+export async function animateMultiplierUpgrade(ticker, cell, fxLayer, godId = 2, onUpgradeComplete) {
   void ticker;
   if (cell.__spine && (cell.__sym ?? 0) >= 12) {
     const sym = cell.__sym ?? 12;

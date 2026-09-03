@@ -3,7 +3,7 @@
  */
 
 import { getClientMultiplier, toClientMultiplierGrid } from './AssetLoader.js';
-import { GRID, TIMING, LAND_ANIM_SYMBOLS, SCATTER_SYMBOL, cellPosition, DROP_PHYSICS, TUMBLE_PHYSICS } from './config.js';
+import { GRID, TIMING, LAND_ANIM_SYMBOLS, SCATTER_SYMBOL, MULTIPLIER_GOD_ID, cellPosition, DROP_PHYSICS, TUMBLE_PHYSICS } from './config.js';
 import {
   animate,
   animateColumnTumble,
@@ -130,7 +130,7 @@ export function createEventReplayer(ctx) {
   async function handleMultiplierLandBatch(batch) {
     if (!batch.length) return;
 
-    for (const ev of batch) playGodPpsSound(ev.godId ?? 0);
+    for (const ev of batch) playGodPpsSound(MULTIPLIER_GOD_ID);
 
     for (const ev of batch) {
       ctx.setCellMultiplier?.(cells[ev.col]?.[ev.row], 0);
@@ -140,13 +140,13 @@ export function createEventReplayer(ctx) {
     await Promise.all([
       ...batch.map((ev) => {
         const cell = cells[ev.col]?.[ev.row];
-        return animateOrbLand(ticker, cell, ctx.fxLayer, ev.godId ?? 0, () => {
+        return animateOrbLand(ticker, cell, ctx.fxLayer, MULTIPLIER_GOD_ID, () => {
           ctx.setCellMultiplier?.(cell, ev.value);
         });
       }),
       (async () => {
         godPortrait = ctx.onMultiplierLand?.(lead) ?? ctx.godPortrait;
-        await animateGodLand(ticker, godPortrait, lead.godId ?? 0);
+        await animateGodLand(ticker, godPortrait, MULTIPLIER_GOD_ID);
       })(),
     ]);
   }
@@ -160,8 +160,7 @@ export function createEventReplayer(ctx) {
         const cell = cells[ev.col]?.[ev.row];
         if (!cell) return;
         ctx.setCellMultiplier?.(cell, 0);
-        const godId = cell.__sym === 14 ? 2 : cell.__sym === 13 ? 1 : 0;
-        await animateMultiplierUpgrade(ticker, cell, ctx.fxLayer, godId, () => {
+        await animateMultiplierUpgrade(ticker, cell, ctx.fxLayer, MULTIPLIER_GOD_ID, () => {
           ctx.setCellMultiplier?.(cell, ev.value);
         });
       })
