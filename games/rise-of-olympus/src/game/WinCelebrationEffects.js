@@ -1,7 +1,7 @@
 /**
  * Cluster-win celebration — original coin01–coin05 shower + tier resolution.
  */
-import { Container, Rectangle, Sprite, Texture, Assets } from 'pixi.js';
+import { Container, Sprite, Assets, Spritesheet } from 'pixi.js';
 
 /** Ref riseofolympus1000 WinCounter limits (bet multiples). */
 export const WIN_CELEBRATION_LIMITS = [1, 3, 7, 15];
@@ -14,11 +14,11 @@ const COIN_SHEET_PNG = `${COIN_BASE}/main_texture0_level2.png`;
 let coinAnimSets = null;
 
 const TIER_COIN = [
-  { burst: 12, rate: 4, speed: 700, spread: 0.55, scale: 0.85 },
-  { burst: 16, rate: 6, speed: 760, spread: 0.6, scale: 0.9 },
-  { burst: 22, rate: 8, speed: 820, spread: 0.65, scale: 0.95 },
-  { burst: 30, rate: 10, speed: 880, spread: 0.7, scale: 1.0 },
-  { burst: 38, rate: 12, speed: 940, spread: 0.75, scale: 1.05 },
+  { burst: 12, rate: 4, speed: 700, spread: 0.55, scale: 1.65 },
+  { burst: 16, rate: 6, speed: 760, spread: 0.6, scale: 1.75 },
+  { burst: 22, rate: 8, speed: 820, spread: 0.65, scale: 1.85 },
+  { burst: 30, rate: 10, speed: 880, spread: 0.7, scale: 1.95 },
+  { burst: 38, rate: 12, speed: 940, spread: 0.75, scale: 2.05 },
 ];
 
 /**
@@ -53,56 +53,35 @@ function buildCoinAnimSets(textures) {
   return sets;
 }
 
-/** @param {import('pixi.js').Texture} pageTex @param {object} json */
-function buildCoinAnimSetsFromJson(pageTex, json) {
-  const source = pageTex?.source ?? pageTex?.texture?.source;
-  if (!source || !json?.frames) return [];
-
-  /** @type {import('pixi.js').Texture[][]} */
-  const sets = [];
-  for (let coin = 1; coin <= 5; coin++) {
-    /** @type {import('pixi.js').Texture[]} */
-    const frames = [];
-    for (let i = 0; i < 19; i++) {
-      const key = `coin0${coin}_${i}.png`;
-      const f = json.frames[key]?.frame;
-      if (!f) continue;
-      frames.push(new Texture({ source, frame: new Rectangle(f.x, f.y, f.w, f.h) }));
-    }
-    if (frames.length) sets.push(frames);
-  }
-  return sets;
-}
-
 async function loadCoinAnimSets() {
   if (coinAnimSets?.length) return coinAnimSets;
 
   try {
-    const [pageTex, jsonRes] = await Promise.all([
-      Assets.load(COIN_SHEET_PNG),
-      fetch(COIN_SHEET_JSON).then((r) => r.json()),
-    ]);
-    const page = pageTex instanceof Texture ? pageTex : pageTex?.texture ?? pageTex;
-    const sets = buildCoinAnimSetsFromJson(page, jsonRes);
+    const sheet = await Assets.load({ alias: 'roo-coin-atlas', src: COIN_SHEET_JSON });
+    const sets = buildCoinAnimSets(sheet?.textures ?? {});
     if (sets.length) {
       coinAnimSets = sets;
       return coinAnimSets;
     }
   } catch (err) {
-    console.warn('[WinCelebration] manual coin atlas load failed', err);
+    console.warn('[WinCelebration] Assets.load coin atlas failed', err);
   }
 
   try {
-    const sheet = await Assets.load(COIN_SHEET_JSON);
-    if (sheet?.textures) {
-      const sets = buildCoinAnimSets(sheet.textures);
-      if (sets.length) {
-        coinAnimSets = sets;
-        return coinAnimSets;
-      }
+    const page = await Assets.load(COIN_SHEET_PNG);
+    const data = await fetch(COIN_SHEET_JSON).then((r) => r.json());
+    if (data.meta && typeof data.meta.scale === 'string') {
+      data.meta.scale = Number(data.meta.scale);
+    }
+    const sheet = new Spritesheet({ texture: page, data });
+    await sheet.parse();
+    const sets = buildCoinAnimSets(sheet.textures);
+    if (sets.length) {
+      coinAnimSets = sets;
+      return coinAnimSets;
     }
   } catch (err) {
-    console.warn('[WinCelebration] spritesheet load failed', err);
+    console.warn('[WinCelebration] Spritesheet coin load failed', err);
   }
 
   console.warn('[WinCelebration] no coin textures — shower disabled');
@@ -126,17 +105,15 @@ export async function startCoinShower(layer, stage, tier) {
 
   const cfg = TIER_COIN[Math.max(0, Math.min(TIER_COIN.length - 1, tier))] ?? TIER_COIN[0];
   const bucket = new Container();
-  bucket.zIndex = 200;
+  bucket.zIndex = 500;
   bucket.eventMode = 'none';
   if (!layer.sortableChildren) layer.sortableChildren = true;
   layer.addChild(bucket);
 
-  const floorY = stage.height - 12;
+  const floorY = stage.height - 8;
   const minX = 40;
   const maxX = stage.width - 40;
 
-  /** @type {import('pixi.js').Texture[][]} */
-  const animPool = anims;
   /** @type {{
    *   sprite: Sprite,
    *   anim: import('pixi.js').Texture[],
@@ -154,14 +131,15 @@ export async function startCoinShower(layer, stage, tier) {
   let last = performance.now();
 
   const spawnOne = () => {
-    const anim = animPool[Math.floor(Math.random() * animPool.length)];
+    const anim = anims[Math.floor(Math.random() * anims.length)];
     const frame = Math.floor(Math.random() * anim.length);
     const sprite = new Sprite(anim[frame]);
     sprite.anchor.set(0.5);
+    sprite.tint = 0xffffff;
     const scale = cfg.scale * (0.92 + Math.random() * 0.18);
     sprite.scale.set(scale);
     sprite.x = minX + Math.random() * (maxX - minX);
-    sprite.y = floorY + Math.random() * 16;
+    sprite.y = floorY + Math.random() * 12;
     const spread = (Math.random() - 0.5) * Math.PI * cfg.spread;
     const speed = cfg.speed * (0.88 + Math.random() * 0.28);
     bucket.addChild(sprite);
@@ -173,7 +151,7 @@ export async function startCoinShower(layer, stage, tier) {
       vx: Math.sin(spread) * speed * 0.45,
       vy: -Math.abs(Math.cos(spread) * speed),
       life: 0,
-      maxLife: 1100 + Math.random() * 500,
+      maxLife: 1200 + Math.random() * 600,
     });
   };
 
@@ -208,7 +186,7 @@ export async function startCoinShower(layer, stage, tier) {
 
       const t = c.life / c.maxLife;
       c.sprite.alpha = t > 0.82 ? 1 - (t - 0.82) / 0.18 : 1;
-      if (c.life >= c.maxLife || c.sprite.y < -60 || c.sprite.y > stage.height + 80) {
+      if (c.life >= c.maxLife || c.sprite.y < -80 || c.sprite.y > stage.height + 100) {
         c.sprite.destroy();
         coins.splice(i, 1);
       }

@@ -106,7 +106,7 @@ function buildSpritesheetJson() {
       image: 'main_texture0_level2.png',
       format: 'RGBA8888',
       size: main.data.tex.main_texture0.meta.size,
-      scale: '1',
+      scale: 1,
     },
   };
 }

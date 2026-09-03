@@ -141,8 +141,10 @@ export async function createThronesScene(opts) {
   const uiLayer = new Container();
   const overlayLayer = new Container();
   overlayLayer.sortableChildren = true;
-  // bg → platform → frame → grid (plate + symbols) → fx → ui → overlay
-  stageContent.addChild(bgLayer, platformLayer, frameLayer, gridLayer, fxLayer, uiLayer, overlayLayer);
+  const coinLayer = new Container();
+  coinLayer.sortableChildren = true;
+  // bg → platform → frame → grid → fx → ui → overlay → coins (top)
+  stageContent.addChild(bgLayer, platformLayer, frameLayer, gridLayer, fxLayer, uiLayer, overlayLayer, coinLayer);
 
   /** @type {import('pixi.js').Sprite | null} */
   let staticBgSprite = null;
@@ -571,7 +573,7 @@ export async function createThronesScene(opts) {
     activeCoinShower = null;
 
     const tasks = [
-      startCoinShower(overlayLayer, STAGE, tier).then((shower) => {
+      startCoinShower(coinLayer, STAGE, tier).then((shower) => {
         activeCoinShower = shower;
       }),
       ...activeWinboxes.map((wb) => playWinboxIn(wb)),
