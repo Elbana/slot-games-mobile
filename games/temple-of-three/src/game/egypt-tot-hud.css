@@ -1,0 +1,239 @@
+/**
+ * TOT clone HUD — portrait gamepanel overlay (matches SOR fg template).
+ */
+
+.gc-hud--egypt {
+  pointer-events: none;
+  height: 100%;
+  position: relative;
+}
+
+.gc-hud--egypt .gc-hud__top--egypt {
+  background: transparent;
+  border: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 4;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.5rem;
+}
+
+.gc-hud--egypt .gc-hud__back,
+.gc-hud--egypt .gc-hud__rules {
+  pointer-events: auto;
+}
+
+.tot-gamepanel {
+  font-family: 'Roboto Condensed', Arial, sans-serif;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.tot-gamepanel.pt {
+  height: 14cqh;
+  font-size: 2cqh;
+  line-height: 3.5cqh;
+}
+
+.tot-gamepanel #backgroundImg {
+  position: absolute;
+  inset: 0;
+  background-image: var(--tot-bottom-bg);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+.tot-gamepanel #bottomPanelWrapper {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+}
+
+.tot-gamepanel #moneyBalanceWrapper,
+.tot-gamepanel #moneyWinWrapper,
+.tot-gamepanel #coinsBetWrapper {
+  position: absolute;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* Desktop — pixel layout inside 72px footer */
+#tot-gamepanel.pt #moneyBalanceWrapper,
+#tot-gamepanel.fg.pt #moneyBalanceWrapper {
+  left: 4cqw;
+  right: auto;
+  top: 7.5cqh;
+  bottom: auto;
+  min-width: 40%;
+  text-align: left;
+}
+
+#tot-gamepanel.pt #moneyWinWrapper,
+#tot-gamepanel.fg.pt #moneyWinWrapper {
+  right: 4cqw;
+  top: 10.5cqh;
+  bottom: auto;
+  min-width: 40%;
+  text-align: right;
+}
+
+#tot-gamepanel.pt #coinsBetWrapper,
+#tot-gamepanel.fg.pt #coinsBetWrapper {
+  top: 2.2cqh;
+  bottom: auto;
+  right: 9cqh;
+  min-width: 30%;
+  text-align: right;
+  pointer-events: auto;
+}
+
+#tot-gamepanel #buttonsWrapper.pt {
+  position: absolute;
+  left: 50%;
+  right: 50%;
+  bottom: 23cqw;
+  height: 12%;
+  transform: none;
+  width: auto;
+}
+
+#tot-gamepanel.pt #spinBtnWrapper {
+  position: absolute;
+  width: 12cqw;
+  height: 12cqw;
+  top: -2.5cqw;
+  left: 10px;
+  right: auto;
+  bottom: auto;
+  inset: auto;
+  pointer-events: auto;
+}
+
+.tot-gamepanel #balanceText,
+.tot-gamepanel #winText,
+.tot-gamepanel .coinsText {
+  color: #fff;
+  font-weight: 400;
+}
+
+.tot-gamepanel #moneyBalance,
+.tot-gamepanel .moneyWin,
+.tot-gamepanel .coinsBet {
+  color: #fc3;
+  margin-left: 0.35rem;
+  font-weight: 700;
+}
+
+.tot-gamepanel .coinsBet {
+  background: transparent;
+  border: none;
+  color: #fc3;
+  font: inherit;
+  font-weight: 700;
+  pointer-events: auto;
+}
+
+.tot-gamepanel #spinBtn {
+  width: 100%;
+  height: 100%;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  background-color: transparent;
+  background-size: 402.78% 709.72%;
+  background-position: 33.72% 63.78%;
+  background-image: var(--tot-ui-elements);
+}
+
+.tot-gamepanel #spinBtn.tot-spin--free {
+  filter: hue-rotate(85deg) saturate(1.2);
+}
+
+.tot-gamepanel #spinBtn.tot-spin--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.tot-gamepanel #spinBtnPulse {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 4%;
+  pointer-events: none;
+  background-size: 370% 100%;
+  background-position: 74.2% 0%;
+  background-image: var(--tot-ui);
+  animation: tot-spin-pulse 2s 0.5s infinite;
+  opacity: 0;
+}
+
+.tot-gamepanel #spinBtnWrapper:not(.tot-spin--disabled):hover #spinBtnPulse,
+.tot-gamepanel #spinBtn:not(:disabled):hover + #spinBtnPulse {
+  opacity: 0.35;
+}
+
+@keyframes tot-spin-pulse {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+}
+
+.tot-gamepanel .tot-feature {
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff59f;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
+.tot-gamepanel .tot-msg {
+  position: absolute;
+  top: -48px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.tot-gamepanel .moneyWin.tot-win--active {
+  color: #ffe082;
+}
+
+@font-face {
+  font-family: 'Roboto Condensed';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/assets/temple-of-three/ROBOTO_CONDENSED_REGULAR.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Roboto Condensed';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/assets/temple-of-three/ROBOTO_CONDENSED_BOLD.woff') format('woff');
+}

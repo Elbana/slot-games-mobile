@@ -1,19 +1,11 @@
 {
   "name": "games-mobile",
-  "version": "0.1.0",
   "private": true,
-  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "roo": "npm run dev --prefix games/rise-of-olympus",
-    "roo:install": "npm install --prefix games/rise-of-olympus"
-  },
-  "dependencies": {
-    "pixi.js": "^8.9.2"
-  },
-  "devDependencies": {
-    "vite": "^6.3.5"
+    "dev:roo": "npm run dev --prefix games/rise-of-olympus",
+    "dev:sor": "npm run dev --prefix games/stadium-of-riches",
+    "dev:tot": "npm run dev --prefix games/temple-of-three",
+    "dev:beat": "npm run dev --prefix games/spinnin-records-into-the-beat",
+    "scaffold:all": "node tools/scaffold-mobile-game.mjs --all"
   }
 }

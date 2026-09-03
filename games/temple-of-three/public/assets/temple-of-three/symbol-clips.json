@@ -1,0 +1,2854 @@
+{
+  "fps": 30,
+  "symbolSize": 195,
+  "symbols": {
+    "0": {
+      "size": 195,
+      "duration": 1,
+      "labels": {
+        "stop": 0,
+        "land": 0,
+        "win": 0
+      },
+      "frames": [
+        [
+          {
+            "frame": "sym_0",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ]
+      ]
+    },
+    "1": {
+      "size": 195,
+      "duration": 1,
+      "labels": {
+        "stop": 0,
+        "land": 0,
+        "win": 0
+      },
+      "frames": [
+        [
+          {
+            "frame": "sym_1",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ]
+      ]
+    },
+    "2": {
+      "size": 195,
+      "duration": 1,
+      "labels": {
+        "stop": 0,
+        "land": 0,
+        "win": 0
+      },
+      "frames": [
+        [
+          {
+            "frame": "sym_2",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ]
+      ]
+    },
+    "3": {
+      "size": 195,
+      "duration": 1,
+      "labels": {
+        "stop": 0,
+        "land": 0,
+        "win": 0
+      },
+      "frames": [
+        [
+          {
+            "frame": "sym_3",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ]
+      ]
+    },
+    "4": {
+      "size": 195,
+      "duration": 1,
+      "labels": {
+        "stop": 0,
+        "land": 0,
+        "win": 0
+      },
+      "frames": [
+        [
+          {
+            "frame": "sym_4",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ]
+      ]
+    },
+    "5": {
+      "size": 195,
+      "duration": 21,
+      "labels": {
+        "stop": 0,
+        "land": 0,
+        "win": 1
+      },
+      "frames": [
+        [
+          {
+            "frame": "sym_5_stop",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_5_win_00",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_5_win_01",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_5_win_02",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_5_win_03",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_5_win_04",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_5_win_05",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_5_win_06",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_5_win_07",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_5_win_08",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_5_win_09",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_5_win_10",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_5_win_11",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_5_win_12",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_5_win_13",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_5_win_14",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_5_win_15",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_5_win_16",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_5_win_17",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_5_win_18",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_5_win_19",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ]
+      ]
+    },
+    "6": {
+      "size": 195,
+      "duration": 21,
+      "labels": {
+        "stop": 0,
+        "land": 0,
+        "win": 1
+      },
+      "frames": [
+        [
+          {
+            "frame": "sym_6_stop",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_6_win_00",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_6_win_01",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_6_win_02",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_6_win_03",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_6_win_04",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_6_win_05",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_6_win_06",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_6_win_07",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_6_win_08",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_6_win_09",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_6_win_10",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_6_win_11",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_6_win_12",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_6_win_13",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_6_win_14",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_6_win_15",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_6_win_16",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_6_win_17",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_6_win_18",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_6_win_19",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ]
+      ]
+    },
+    "7": {
+      "size": 195,
+      "duration": 21,
+      "labels": {
+        "stop": 0,
+        "land": 0,
+        "win": 1
+      },
+      "frames": [
+        [
+          {
+            "frame": "sym_7_stop",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_7_win_00",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_7_win_01",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_7_win_02",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_7_win_03",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_7_win_04",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_7_win_05",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_7_win_06",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_7_win_07",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_7_win_08",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_7_win_09",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_7_win_10",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_7_win_11",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_7_win_12",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_7_win_13",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_7_win_14",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_7_win_15",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_7_win_16",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_7_win_17",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_7_win_18",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "sym_7_win_19",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ]
+      ]
+    },
+    "8": {
+      "size": 195,
+      "duration": 1,
+      "labels": {
+        "stop": 0,
+        "land": 0,
+        "win": 0
+      },
+      "frames": [
+        [
+          {
+            "frame": "sym_8",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ]
+      ]
+    }
+  },
+  "backgroundClip": {
+    "size": {
+      "w": 1200,
+      "h": 900
+    },
+    "duration": 30,
+    "labels": {
+      "stop": 0
+    },
+    "frames": [
+      [
+        {
+          "frame": "bg_00",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_01",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_02",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_03",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_04",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_05",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_06",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_07",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_08",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_09",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_10",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_11",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_12",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_13",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_14",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_15",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_16",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_17",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_18",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_19",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_20",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_21",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_22",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_23",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_24",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_25",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_26",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_27",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_28",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ],
+      [
+        {
+          "frame": "bg_29",
+          "x": 0,
+          "y": 0,
+          "tfx": 0,
+          "tfy": 0,
+          "scx": 1,
+          "scy": 1,
+          "bm": 0,
+          "ap": 1
+        }
+      ]
+    ]
+  },
+  "paytableSource": {
+    "0": "T0RB.png",
+    "1": "T0SB.png",
+    "2": "T0TB.png",
+    "3": "T0UB.png",
+    "4": "T0VB.png",
+    "5": "T0WB.png",
+    "6": "T0XB.png",
+    "7": "T0YB.png",
+    "8": "T0FB.png"
+  },
+  "potClips": {
+    "anubis": {
+      "size": 120,
+      "duration": 36,
+      "labels": {
+        "idle": 0,
+        "collect": 24,
+        "stop": 0
+      },
+      "frames": [
+        [
+          {
+            "frame": "anubis_idle_00",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_idle_01",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_idle_02",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_idle_03",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_idle_04",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_idle_05",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_idle_06",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_idle_07",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_idle_08",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_idle_09",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_idle_10",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_idle_11",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_idle_12",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_idle_13",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_idle_14",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_idle_15",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_idle_16",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_idle_17",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_idle_18",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_idle_19",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_idle_20",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_idle_21",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_idle_22",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_idle_23",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_collect_00",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_collect_01",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_collect_02",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_collect_03",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_collect_04",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_collect_05",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_collect_06",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_collect_07",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_collect_08",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_collect_09",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_collect_10",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "anubis_collect_11",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ]
+      ]
+    },
+    "bastet": {
+      "size": 120,
+      "duration": 36,
+      "labels": {
+        "idle": 0,
+        "collect": 24,
+        "stop": 0
+      },
+      "frames": [
+        [
+          {
+            "frame": "bastet_idle_00",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_idle_01",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_idle_02",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_idle_03",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_idle_04",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_idle_05",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_idle_06",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_idle_07",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_idle_08",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_idle_09",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_idle_10",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_idle_11",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_idle_12",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_idle_13",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_idle_14",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_idle_15",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_idle_16",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_idle_17",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_idle_18",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_idle_19",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_idle_20",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_idle_21",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_idle_22",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_idle_23",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_collect_00",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_collect_01",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_collect_02",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_collect_03",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_collect_04",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_collect_05",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_collect_06",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_collect_07",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_collect_08",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_collect_09",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_collect_10",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "bastet_collect_11",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ]
+      ]
+    },
+    "ra": {
+      "size": 120,
+      "duration": 36,
+      "labels": {
+        "idle": 0,
+        "collect": 24,
+        "stop": 0
+      },
+      "frames": [
+        [
+          {
+            "frame": "ra_idle_00",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_idle_01",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_idle_02",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_idle_03",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_idle_04",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_idle_05",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_idle_06",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_idle_07",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_idle_08",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_idle_09",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_idle_10",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_idle_11",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_idle_12",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_idle_13",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_idle_14",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_idle_15",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_idle_16",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_idle_17",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_idle_18",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_idle_19",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_idle_20",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_idle_21",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_idle_22",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_idle_23",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_collect_00",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_collect_01",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_collect_02",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_collect_03",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_collect_04",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_collect_05",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_collect_06",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_collect_07",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_collect_08",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_collect_09",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_collect_10",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ],
+        [
+          {
+            "frame": "ra_collect_11",
+            "x": 0,
+            "y": 0,
+            "tfx": 0,
+            "tfy": 0,
+            "scx": 1,
+            "scy": 1,
+            "bm": 0,
+            "ap": 1
+          }
+        ]
+      ]
+    }
+  }
+}

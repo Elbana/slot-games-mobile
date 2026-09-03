@@ -1,0 +1,345 @@
+/**
+ * SOR clone HUD — ported from mobile_videoslot.css (portrait gamepanel, fg template).
+ */
+
+.gc-game--football {
+  container-type: size;
+  position: relative;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+#app:has(.gc-game--football) {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+.gc-game--football .gc-game__stage {
+  position: absolute;
+  inset: 0;
+  background: #000;
+}
+
+.gc-game--football .gc-game__hud {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: transparent;
+  pointer-events: none;
+}
+
+.gc-hud--football {
+  pointer-events: none;
+  height: 100%;
+  position: relative;
+}
+
+.gc-hud--football .gc-hud__top--football {
+  background: transparent;
+  border: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 4;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.5rem;
+}
+
+.gc-hud--football .gc-hud__back,
+.gc-hud--football .gc-hud__rules {
+  pointer-events: auto;
+}
+
+/* --- SOR #gamepanel (portrait) --- */
+
+.sor-gamepanel {
+  font-family: 'Roboto Condensed', Arial, sans-serif;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.sor-gamepanel.pt {
+  height: 14cqh;
+  font-size: 2cqh;
+  line-height: 3.5cqh;
+}
+
+.sor-gamepanel #backgroundImg {
+  position: absolute;
+  inset: 0;
+  background-image: var(--sor-bottom-bg);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+.sor-gamepanel #bottomPanelWrapper {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 3;
+}
+
+.sor-gamepanel #moneyBalanceWrapper,
+.sor-gamepanel #moneyWinWrapper,
+.sor-gamepanel #coinsBetWrapper {
+  position: absolute;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+#sor-gamepanel.pt #moneyBalanceWrapper {
+  right: 56cqw;
+  top: 7.5cqh;
+  min-width: 40%;
+  text-align: left;
+}
+
+#sor-gamepanel.pt #moneyWinWrapper {
+  top: 10.5cqh;
+  min-width: 40%;
+  display: inline-table;
+  text-align: right;
+  right: 4cqw;
+}
+
+#sor-gamepanel.pt #coinsBetWrapper {
+  top: 2.2cqh;
+  right: 9cqh;
+  min-width: 30%;
+  text-align: right;
+  display: inline-table;
+  pointer-events: auto;
+}
+
+#sor-gamepanel.fg.pt #moneyBalanceWrapper {
+  left: 4cqw;
+  right: auto;
+  top: 7.5cqh;
+  min-width: 40%;
+  text-align: left;
+}
+
+#sor-gamepanel.fg.pt #coinsBetWrapper {
+  top: 2.2cqh;
+  right: 9cqh;
+}
+
+#sor-gamepanel.fg.pt #moneyWinWrapper {
+  right: 4cqw;
+  top: 10.5cqh;
+}
+
+.sor-gamepanel #balanceText,
+.sor-gamepanel #winText,
+.sor-gamepanel .coinsText {
+  color: #fff;
+  font-weight: 400;
+}
+
+.sor-gamepanel #moneyBalance,
+.sor-gamepanel .moneyWin,
+.sor-gamepanel .coinsBet {
+  color: #fc3;
+  margin-left: 0.5cqw;
+  font-weight: 700;
+}
+
+.sor-gamepanel .coinsBet {
+  background: transparent;
+  border: none;
+  color: #fc3;
+  font: inherit;
+  font-weight: 700;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+#sor-gamepanel #buttonsWrapper.pt {
+  position: absolute;
+  left: 50%;
+  right: 50%;
+  bottom: 23cqw;
+  height: 12%;
+}
+
+#sor-gamepanel.pt #spinBtnWrapper {
+  position: absolute;
+  width: 12cqw;
+  height: 12cqw;
+  top: -2.5cqw;
+  left: 10px;
+  right: auto;
+  pointer-events: auto;
+}
+
+  .sor-gamepanel #spinBtn {
+    width: 100%;
+    height: 100%;
+    min-width: 56px;
+    min-height: 56px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  background-color: transparent;
+  background-size: 402.78% 709.72%;
+  background-position: 33.72% 63.78%;
+  background-image: var(--sor-ui-elements);
+}
+
+.sor-gamepanel #spinBtn.sor-spin--free {
+  filter: hue-rotate(85deg) saturate(1.2);
+}
+
+.sor-gamepanel #spinBtn.sor-spin--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.sor-gamepanel #spinBtnPulse {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 4%;
+  pointer-events: none;
+  background-size: 370% 100%;
+  background-position: 74.2% 0%;
+  background-image: var(--sor-ui);
+  animation: sor-spin-pulse 2s 0.5s infinite;
+  opacity: 0;
+}
+
+.sor-gamepanel #spinBtnWrapper:not(.sor-spin--disabled):hover #spinBtnPulse,
+.sor-gamepanel #spinBtn:not(:disabled):hover + #spinBtnPulse {
+  opacity: 0.35;
+}
+
+@keyframes sor-spin-pulse {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+}
+
+.sor-gamepanel .sor-feature {
+  position: absolute;
+  top: -3.5cqh;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff59f;
+  font-size: 2.4cqh;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
+.sor-gamepanel .sor-msg {
+  position: absolute;
+  top: -6cqh;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  font-size: 2cqh;
+  pointer-events: none;
+}
+
+.sor-gamepanel .moneyWin.sor-win--active {
+  color: #ffe082;
+}
+
+/* Wide desktop — docked footer bar (readable labels, centered spin) */
+@media (min-width: 900px) {
+  .sor-gamepanel.pt {
+    height: 72px;
+    font-size: 14px;
+    line-height: 1.2;
+  }
+
+  #sor-gamepanel.pt #moneyBalanceWrapper,
+  #sor-gamepanel.fg.pt #moneyBalanceWrapper {
+    left: 20px;
+    right: auto;
+    top: auto;
+    bottom: 14px;
+    min-width: 0;
+    text-align: left;
+  }
+
+  #sor-gamepanel.pt #moneyWinWrapper,
+  #sor-gamepanel.fg.pt #moneyWinWrapper {
+    right: 20px;
+    left: auto;
+    top: auto;
+    bottom: 8px;
+    min-width: 0;
+  }
+
+  #sor-gamepanel.pt #coinsBetWrapper,
+  #sor-gamepanel.fg.pt #coinsBetWrapper {
+    right: 120px;
+    left: auto;
+    top: auto;
+    bottom: 14px;
+    min-width: 0;
+  }
+
+  #sor-gamepanel #buttonsWrapper.pt {
+    left: 50%;
+    right: auto;
+    bottom: 4px;
+    transform: translateX(-50%);
+    width: 64px;
+    height: 64px;
+  }
+
+  #sor-gamepanel.pt #spinBtnWrapper {
+    inset: 0;
+    width: auto;
+    height: auto;
+    top: auto;
+    left: auto;
+  }
+
+  .sor-gamepanel .sor-feature {
+    top: -28px;
+    font-size: 14px;
+  }
+
+  .sor-gamepanel .sor-msg {
+    top: -48px;
+    font-size: 13px;
+  }
+}
+
+@font-face {
+  font-family: 'Roboto Condensed';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/assets/stadium-of-riches/ROBOTO_CONDENSED_REGULAR.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Roboto Condensed';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/assets/stadium-of-riches/ROBOTO_CONDENSED_BOLD.woff') format('woff');
+}
