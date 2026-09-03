@@ -51,7 +51,7 @@ export async function mountRiseOfOlympus(mount) {
   app.stage.addChild(grid.view);
 
   function onResize() {
-    grid.layout(app.screen.width, app.screen.height);
+    grid.layout?.(app.screen.width, app.screen.height);
   }
   onResize();
   app.renderer.on('resize', onResize);
@@ -64,11 +64,15 @@ export async function mountRiseOfOlympus(mount) {
   let displayedWin = 0;
   /** @type {import('../api/spin-types.js').SpinState} */
   let gameState = {};
+  let turbo = false;
 
   const paytable = mountPaytablePanel(paytableMount);
 
   const hud = createThronesHUD(hudMount, {
     betLevels,
+    onTurboToggle: (on) => {
+      turbo = on;
+    },
     onSpin: async () => {
       await unlockAudio();
       await doSpin();
@@ -97,6 +101,7 @@ export async function mountRiseOfOlympus(mount) {
   hud.setBalance(balance);
   hud.setWin(0);
   syncHud();
+  requestAnimationFrame(() => onResize());
 
   function canSpin() {
     const charge = gameState.fsRemaining > 0 ? 0 : bet;
@@ -147,7 +152,7 @@ export async function mountRiseOfOlympus(mount) {
     hud.setWin(0);
     hud.setMessage?.('');
     grid.showTumbleWin?.(0);
-    grid.setAnimationSpeed?.(1);
+    grid.setAnimationSpeed?.(turbo ? 2 : 1);
 
     try {
       const spinPromise = requestSpin(GAME.slug, { bet, balance });

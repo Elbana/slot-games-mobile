@@ -808,8 +808,14 @@ export async function createThronesScene(opts) {
     return godPortraitSpine;
   }
 
+  function readHudReserve(screenH) {
+    const panel = document.getElementById('roo-gamepanel');
+    if (panel?.offsetHeight) return panel.offsetHeight + screenH * 0.045;
+    return screenH * 0.3;
+  }
+
   function layoutScene(screenW, screenH) {
-    const hudReserve = screenH * 0.14;
+    const hudReserve = readHudReserve(screenH);
     const playH = Math.max(0, screenH - hudReserve);
     root.x = screenW / 2;
     root.y = playH / 2;

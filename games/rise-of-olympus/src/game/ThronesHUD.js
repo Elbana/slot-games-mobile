@@ -1,5 +1,5 @@
 /**
- * Thrones of Olympus — DOM HUD copied from RoO1000 mobile gamepanel (portrait .fg.pt).
+ * Rise of Olympus — mobile portrait HUD (RoO1000 gamepanel layout).
  */
 
 import './thrones-roo-hud.css';
@@ -7,9 +7,26 @@ import { playThronesSound } from './ThronesSound.js';
 
 const ASSET_BASE = '/assets/rise-of-olympus';
 
+/** @param {number} v */
+export function formatMoney(v) {
+  const n = Math.max(0, Math.round(v));
+  if (n >= 1_000_000) {
+    const m = n / 1_000_000;
+    return `$ ${m >= 10 ? Math.round(m) : m.toFixed(1).replace(/\.0$/, '')}M`;
+  }
+  if (n >= 10_000) return `$ ${Math.round(n / 1000)}K`;
+  return `$ ${n.toLocaleString()}`;
+}
+
 /**
  * @param {HTMLElement} root
- * @param {{ betLevels?: number[], onSpin: () => void, onBetChange?: (bet: number) => void, onRules?: () => void }} opts
+ * @param {{
+ *   betLevels?: number[],
+ *   onSpin: () => void,
+ *   onBetChange?: (bet: number) => void,
+ *   onRules?: () => void,
+ *   onTurboToggle?: (enabled: boolean) => void,
+ * }} opts
  */
 export function createThronesHUD(root, opts) {
   const levels = opts.betLevels ?? [20, 40, 60, 100, 200, 500, 1000];
@@ -17,31 +34,42 @@ export function createThronesHUD(root, opts) {
   root.innerHTML = `
     <div class="gc-hud gc-hud--thrones">
       <header class="gc-hud__top gc-hud__top--thrones">
-        <span class="gc-hud__back">Rise of Olympus</span>
+        <button type="button" id="gc-menu" class="gc-hud__menu" aria-label="Menu"></button>
         <button type="button" id="gc-rules" class="gc-hud__rules">Rules</button>
       </header>
-      <footer id="roo-gamepanel" class="pt roo-gamepanel" style="--roo-bottom-bg: url('${ASSET_BASE}/bottomBg.png'); --roo-ui-elements: url('${ASSET_BASE}/uiElements2.png'); --roo-ui: url('${ASSET_BASE}/ui.png');">
+      <p class="roo-status" id="roo-status">GOOD LUCK</p>
+      <footer id="roo-gamepanel" class="roo-gamepanel pt" style="--roo-bottom-bg: url('${ASSET_BASE}/bottomBg.png'); --roo-ui-elements: url('${ASSET_BASE}/uiElements2.png'); --roo-ui: url('${ASSET_BASE}/ui.png');">
         <div id="backgroundImg"></div>
         <div id="bottomPanelWrapper">
-          <div id="moneyBalanceWrapper">
-            <span id="balanceText">Balance</span>
-            <strong id="moneyBalance">—</strong>
+          <div class="roo-stats-row">
+            <div class="roo-stat" id="moneyBalanceWrapper">
+              <span class="roo-stat__label" id="balanceText">WALLET</span>
+              <strong class="roo-stat__value" id="moneyBalance">—</strong>
+            </div>
+            <div class="roo-stat roo-stat--bet" id="coinsBetWrapper">
+              <span class="roo-stat__label coinsText">BET</span>
+              <button type="button" id="betOpen" class="roo-stat__value roo-stat__value--btn coinsBet" aria-label="Select bet">—</button>
+            </div>
+            <div class="roo-stat" id="moneyWinWrapper">
+              <span class="roo-stat__label" id="winText">WIN</span>
+              <strong class="roo-stat__value moneyWin" id="moneyWin">$ 0</strong>
+            </div>
           </div>
-          <div id="buttonsWrapper" class="pt">
+          <div id="buttonsWrapper" class="roo-controls-row pt">
+            <button type="button" id="turboBtn" class="roo-ctrl roo-ctrl--turbo" aria-label="Turbo spin">
+              <span class="roo-ctrl__icon roo-ctrl__icon--bolt"></span>
+              <span class="roo-ctrl__label" id="turboLabel">OFF</span>
+            </button>
+            <button type="button" id="betDec" class="roo-ctrl roo-bet-btn roo-bet-btn--dec" aria-label="Decrease bet"></button>
             <div id="spinBtnWrapper">
               <button type="button" id="spinBtn" aria-label="Spin"></button>
               <div id="spinBtnPulse"></div>
             </div>
-          </div>
-          <div id="moneyWinWrapper">
-            <span id="winText">Win</span>
-            <strong id="moneyWin" class="moneyWin">0</strong>
-          </div>
-          <div id="coinsBetWrapper">
-            <span class="coinsText">Bet</span>
-            <button type="button" id="betDec" class="roo-bet-btn roo-bet-btn--dec" aria-label="Decrease bet"></button>
-            <button type="button" id="betOpen" class="coinsBet" aria-label="Select bet">—</button>
-            <button type="button" id="betInc" class="roo-bet-btn roo-bet-btn--inc" aria-label="Increase bet"></button>
+            <button type="button" id="betInc" class="roo-ctrl roo-bet-btn roo-bet-btn--inc" aria-label="Increase bet"></button>
+            <button type="button" id="autoBtn" class="roo-ctrl roo-ctrl--auto" aria-label="Auto play" disabled>
+              <span class="roo-ctrl__icon roo-ctrl__icon--auto"></span>
+              <span class="roo-ctrl__label">AUTO</span>
+            </button>
           </div>
         </div>
         <div id="chipSelectorWrapper" class="roo-chip-overlay" hidden>
@@ -59,25 +87,29 @@ export function createThronesHUD(root, opts) {
 
   const balanceEl = root.querySelector('#moneyBalance');
   const winEl = root.querySelector('#moneyWin');
+  const statusEl = root.querySelector('#roo-status');
   const spinBtn = root.querySelector('#spinBtn');
   const spinWrap = root.querySelector('#spinBtnWrapper');
   const betEl = root.querySelector('#betOpen');
   const betDec = root.querySelector('#betDec');
   const betInc = root.querySelector('#betInc');
+  const turboBtn = root.querySelector('#turboBtn');
+  const turboLabel = root.querySelector('#turboLabel');
   const chipOverlay = root.querySelector('#chipSelectorWrapper');
   const chipGrid = root.querySelector('#chipGrid');
   const msgEl = root.querySelector('#gc-msg');
   const featureEl = root.querySelector('#gc-feature');
   const gamepanel = root.querySelector('#roo-gamepanel');
 
-  let betIndex = Math.max(0, levels.indexOf(levels[0]));
+  let betIndex = 0;
   let betEnabled = true;
+  let turboOn = false;
 
   function renderChipGrid() {
     chipGrid.innerHTML = levels
       .map(
         (v, i) =>
-          `<button type="button" class="roo-chip-btn${i === betIndex ? ' roo-chip-btn--active' : ''}" data-idx="${i}">${v.toLocaleString()}</button>`
+          `<button type="button" class="roo-chip-btn${i === betIndex ? ' roo-chip-btn--active' : ''}" data-idx="${i}">${formatMoney(v)}</button>`
       )
       .join('');
   }
@@ -100,11 +132,18 @@ export function createThronesHUD(root, opts) {
 
   function setBetIndex(idx, notify = true) {
     betIndex = Math.max(0, Math.min(levels.length - 1, idx));
-    betEl.textContent = levels[betIndex].toLocaleString();
+    betEl.textContent = formatMoney(levels[betIndex]);
     syncBetButtons();
     if (notify) opts.onBetChange?.(levels[betIndex]);
   }
 
+  function syncTurbo() {
+    turboBtn.classList.toggle('roo-ctrl--turbo-on', turboOn);
+    turboLabel.textContent = turboOn ? 'ON' : 'OFF';
+    opts.onTurboToggle?.(turboOn);
+  }
+
+  root.querySelector('#gc-menu').addEventListener('click', () => opts.onRules?.());
   spinBtn.addEventListener('click', () => {
     playThronesSound('ui_interact');
     opts.onSpin();
@@ -119,33 +158,44 @@ export function createThronesHUD(root, opts) {
     setBetIndex(betIndex + 1);
   });
   betEl.addEventListener('click', openChipSelector);
+  turboBtn.addEventListener('click', () => {
+    playThronesSound('ui_interact');
+    turboOn = !turboOn;
+    syncTurbo();
+  });
   root.querySelector('#chipClose').addEventListener('click', closeChipSelector);
   root.querySelector('.roo-chip-overlay__backdrop').addEventListener('click', closeChipSelector);
   chipGrid.addEventListener('click', (e) => {
     const btn = e.target.closest('.roo-chip-btn');
     if (!btn) return;
-    const idx = parseInt(btn.dataset.idx ?? '0', 10);
-    setBetIndex(idx);
+    setBetIndex(parseInt(btn.dataset.idx ?? '0', 10));
     closeChipSelector();
   });
 
   setBetIndex(0, false);
+  syncTurbo();
 
   return {
     setBalance(v) {
-      balanceEl.textContent = v.toLocaleString();
+      balanceEl.textContent = formatMoney(v);
     },
     setWin(v) {
-      winEl.textContent = v.toLocaleString();
+      winEl.textContent = formatMoney(v);
       winEl.classList.toggle('roo-win--active', v > 0);
+    },
+    setStatus(text) {
+      statusEl.textContent = text || 'GOOD LUCK';
     },
     setBet(v) {
       const idx = levels.indexOf(v);
       if (idx >= 0) setBetIndex(idx, false);
-      else betEl.textContent = v.toLocaleString();
+      else betEl.textContent = formatMoney(v);
     },
     getBet() {
-      return levels[betIndex] ?? parseInt(String(betEl.textContent).replace(/,/g, ''), 10);
+      return levels[betIndex] ?? parseInt(String(betEl.textContent).replace(/[^\d]/g, ''), 10);
+    },
+    getTurbo() {
+      return turboOn;
     },
     setBetEnabled(on) {
       betEnabled = on;
@@ -157,7 +207,7 @@ export function createThronesHUD(root, opts) {
       spinWrap.classList.toggle('roo-spin--disabled', !on);
     },
     setSpinLabel(_t) {
-      /* PG spin is sprite-only */
+      /* sprite-only spin button */
     },
     setMessage(text) {
       if (!text) {
@@ -172,10 +222,12 @@ export function createThronesHUD(root, opts) {
       if (!text) {
         featureEl.hidden = true;
         featureEl.textContent = '';
+        this.setStatus('GOOD LUCK');
         return;
       }
       featureEl.hidden = false;
       featureEl.textContent = text;
+      this.setStatus(text);
     },
     setFreeSpins(fs) {
       if (fs.remaining > 0) {
