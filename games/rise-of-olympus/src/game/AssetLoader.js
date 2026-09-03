@@ -115,6 +115,33 @@ export function getClientMultiplier(multGrid, col, row) {
   return multGrid[row]?.[col] ?? 0;
 }
 
+/**
+ * Server sends multiplier values as a column-major flat tail aligned with multiplier symbols.
+ * @param {number[][] | null | undefined} clientGrid symbols[col][row]
+ * @param {number[] | number[][] | null | undefined} multList
+ * @returns {number[][] | null} values[row][col]
+ */
+export function toClientMultiplierGrid(clientGrid, multList) {
+  if (!multList || !clientGrid?.length) return null;
+  if (Array.isArray(multList[0])) return /** @type {number[][]} */ (multList);
+
+  const cols = clientGrid.length;
+  const rows = clientGrid[0]?.length ?? 0;
+  /** @type {number[][]} */
+  const out = Array.from({ length: rows }, () => Array(cols).fill(0));
+  let idx = 0;
+  for (let c = 0; c < cols; c++) {
+    for (let r = 0; r < rows; r++) {
+      const sym = clientGrid[c][r];
+      if (sym >= 12 && sym <= 14) {
+        out[r][c] = multList[idx] ?? 0;
+        idx++;
+      }
+    }
+  }
+  return out;
+}
+
 export function getBackgroundTexture() {
   return backgroundTexture;
 }

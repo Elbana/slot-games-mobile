@@ -2,7 +2,7 @@
  * Maps server spin events → grid/UI animations (our client logic).
  */
 
-import { getClientMultiplier } from './AssetLoader.js';
+import { getClientMultiplier, toClientMultiplierGrid } from './AssetLoader.js';
 import { GRID, TIMING, LAND_ANIM_SYMBOLS, SCATTER_SYMBOL, cellPosition, DROP_PHYSICS, TUMBLE_PHYSICS } from './config.js';
 import {
   animate,
@@ -115,10 +115,57 @@ export function createEventReplayer(ctx) {
             }
           }
         }
-        return { targetGrid: deal.grid, multGrid: deal.multipliers ?? null };
+        return {
+          targetGrid: deal.grid,
+          multGrid: toClientMultiplierGrid(deal.grid, deal.multipliers ?? null),
+        };
       },
       exitStaggerMs: TIMING.clearExitStagger,
     });
+  }
+
+  /**
+   * @param {{ col: number, row: number, value: number, godId?: number }[]} batch
+   */
+  async function handleMultiplierLandBatch(batch) {
+    if (!batch.length) return;
+
+    for (const ev of batch) playGodPpsSound(ev.godId ?? 0);
+
+    for (const ev of batch) {
+      ctx.setCellMultiplier?.(cells[ev.col]?.[ev.row], 0);
+    }
+
+    const lead = batch[0];
+    await Promise.all([
+      ...batch.map((ev) => {
+        const cell = cells[ev.col]?.[ev.row];
+        return animateOrbLand(ticker, cell, ctx.fxLayer, ev.godId ?? 0, () => {
+          ctx.setCellMultiplier?.(cell, ev.value);
+        });
+      }),
+      (async () => {
+        godPortrait = ctx.onMultiplierLand?.(lead) ?? ctx.godPortrait;
+        await animateGodLand(ticker, godPortrait, lead.godId ?? 0);
+      })(),
+    ]);
+  }
+
+  /**
+   * @param {{ col: number, row: number, value: number, super?: boolean }[]} batch
+   */
+  async function handleMultiplierUpgradeBatch(batch) {
+    await Promise.all(
+      batch.map(async (ev) => {
+        const cell = cells[ev.col]?.[ev.row];
+        if (!cell) return;
+        ctx.setCellMultiplier?.(cell, 0);
+        const godId = cell.__sym === 14 ? 2 : cell.__sym === 13 ? 1 : 0;
+        await animateMultiplierUpgrade(ticker, cell, ctx.fxLayer, godId, () => {
+          ctx.setCellMultiplier?.(cell, ev.value);
+        });
+      })
+    );
   }
 
   /**
@@ -133,7 +180,8 @@ export function createEventReplayer(ctx) {
     /** @type {number[][] | null} */
     let lastMult = null;
 
-    for (const ev of events) {
+    for (let i = 0; i < events.length; i++) {
+      const ev = events[i];
       playEventSound(ev);
 
       if (ev.type === 'deal') {
@@ -146,7 +194,7 @@ export function createEventReplayer(ctx) {
           }
         }
         lastGrid = ev.grid;
-        lastMult = ev.multipliers;
+        lastMult = toClientMultiplierGrid(ev.grid, ev.multipliers);
         if (ev.multiplierSum > 0) ctx.setMultiplierSum(ev.multiplierSum);
         continue;
       }
@@ -195,7 +243,7 @@ export function createEventReplayer(ctx) {
         resetCellVisuals(cells, layout, cellPos);
         glowLayer.removeChildren();
         lastGrid = ev.grid;
-        lastMult = ev.multipliers;
+        lastMult = toClientMultiplierGrid(ev.grid, ev.multipliers);
         if (ev.multiplierSum > 0) ctx.setMultiplierSum(ev.multiplierSum);
         continue;
       }
@@ -231,25 +279,22 @@ export function createEventReplayer(ctx) {
       }
 
       if (ev.type === 'multiplier_land') {
-        playGodPpsSound(ev.godId ?? 0);
-        await Promise.all([
-          animateOrbLand(ticker, cells[ev.col][ev.row], ctx.fxLayer, ev.godId),
-          (async () => {
-            godPortrait = ctx.onMultiplierLand?.(ev) ?? ctx.godPortrait;
-            await animateGodLand(ticker, godPortrait, ev.godId);
-          })(),
-        ]);
+        /** @type {typeof ev[]} */
+        const batch = [ev];
+        while (i + 1 < events.length && events[i + 1].type === 'multiplier_land') {
+          batch.push(/** @type {typeof ev} */ (events[++i]));
+        }
+        await handleMultiplierLandBatch(batch);
         continue;
       }
 
       if (ev.type === 'multiplier_upgrade') {
-        const cell = cells[ev.col]?.[ev.row];
-        if (cell) {
-          cell.__badge.visible = true;
-          cell.__badge.text = `×${ev.value}`;
-          const godId = cell.__sym === 14 ? 2 : cell.__sym === 13 ? 1 : 0;
-          await animateMultiplierUpgrade(ticker, cell, ctx.fxLayer, godId);
+        /** @type {typeof ev[]} */
+        const batch = [ev];
+        while (i + 1 < events.length && events[i + 1].type === 'multiplier_upgrade') {
+          batch.push(/** @type {typeof ev} */ (events[++i]));
         }
+        await handleMultiplierUpgradeBatch(batch);
         continue;
       }
 

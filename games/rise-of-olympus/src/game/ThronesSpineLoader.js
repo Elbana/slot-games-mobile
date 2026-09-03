@@ -80,6 +80,30 @@ export function createTumbleWinValueLabel() {
   });
 }
 
+/** Ref DynamicSizedSymbol multiplier_value text field — format "x2", "x15", etc. */
+export function createSymbolMultiplierLabel() {
+  return new Text({
+    text: '',
+    style: {
+      fill: 0xffffff,
+      fontSize: 30,
+      fontWeight: '900',
+      stroke: { color: 0x2a1400, width: 3 },
+      align: 'center',
+    },
+  });
+}
+
+export function formatSymbolMultiplier(value) {
+  return value > 0 ? `x${value}` : '';
+}
+
+/** @param {import('@esotericsoftware/spine-pixi-v8').Spine | null | undefined} spine @param {number} value */
+export function setSymbolMultiplierValue(spine, value) {
+  if (!spine) return;
+  setSpineSlotLabel(spine, 'multiplier_value', formatSymbolMultiplier(value));
+}
+
 export function playSpineAnim(spine, names, loop = false, track = 0) {
   for (const name of names) {
     if (!hasAnim(spine, name)) continue;
@@ -245,6 +269,9 @@ export function createSymbolSpine(symbolId, displaySize = GRID.clip) {
   const skel = symbolAliases.get(symbolId) ?? symbolAliases.get(0);
   const spine = spawnSpine(skel, 'roo-sym-atlas');
   fitAndCenterSpine(spine, displaySize, symbolId);
+  if (symbolId >= 12 && symbolId <= 14) {
+    attachSpineSlotLabel(spine, 'multiplier_value', createSymbolMultiplierLabel());
+  }
   playSymbolIdle(spine, symbolId);
   return spine;
 }
@@ -599,11 +626,19 @@ function multiplierTierName(symbolId) {
   return 'bronze';
 }
 
-export function playMultiplierLand(spine, symbolId) {
+export function playMultiplierReveal(spine) {
+  return playSpineAnim(spine, ['reveal'], false);
+}
+
+export function playMultiplierLandIdle(spine, symbolId) {
   const tier = multiplierTierName(symbolId);
-  return playSpineAnim(spine, ['reveal', tier, 'land'], false).then(() =>
+  return playSpineAnim(spine, ['land', tier], false).then(() =>
     playSpineAnim(spine, [tier, 'idle'], true)
   );
+}
+
+export function playMultiplierLand(spine, symbolId) {
+  return playMultiplierReveal(spine).then(() => playMultiplierLandIdle(spine, symbolId));
 }
 
 export function hideSignpost(spine) {

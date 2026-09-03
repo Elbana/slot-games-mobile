@@ -34,6 +34,7 @@ import {
   showFsSummaryPanel,
   hideFsSummaryPanel,
   playSymbolPhase,
+  setSymbolMultiplierValue,
   playSpineAnim,
   playScatterActivation,
   setGodMeterLevel,
@@ -351,9 +352,10 @@ export async function createThronesScene(opts) {
     }
   }
 
-  function paintCell(cell, sym, mult = 0) {
+  function paintCell(cell, sym, mult = 0, revealMult = false) {
     clearCell(cell);
     cell.__sym = sym;
+    cell.__mult = mult;
 
     try {
       const spine = createSymbolSpine(sym, symbolSize);
@@ -369,9 +371,16 @@ export async function createThronesScene(opts) {
       }
     }
 
-    const showBadge = mult > 0 && sym >= 12 && sym <= 14;
-    cell.__badge.visible = showBadge;
-    cell.__badge.text = showBadge ? `×${mult}` : '';
+    if (sym >= 12 && sym <= 14 && cell.__spine) {
+      setSymbolMultiplierValue(cell.__spine, revealMult ? mult : 0);
+    }
+    cell.__badge.visible = false;
+  }
+
+  function setCellMultiplier(cell, value) {
+    if (!cell) return;
+    setSymbolMultiplierValue(cell.__spine, value);
+    cell.__badge.visible = false;
   }
 
   function paintCellScroll(cell) {
@@ -571,7 +580,7 @@ export async function createThronesScene(opts) {
   function setSymbolsImmediate(grid, multGrid = null) {
     for (let c = 0; c < cols; c++) {
       for (let r = 0; r < rows; r++) {
-        paintCell(cells[c][r], grid[c]?.[r] ?? 0, getMult(multGrid, c, r));
+        paintCell(cells[c][r], grid[c]?.[r] ?? 0, getMult(multGrid, c, r), true);
         const pos = cellPosition(c, r);
         cells[c][r].x = pos.x;
         cells[c][r].y = pos.y;
@@ -746,6 +755,7 @@ export async function createThronesScene(opts) {
     setSymbolsImmediate,
     showTumbleWin,
     setMultiplierSum,
+    setCellMultiplier,
     showFsBanner,
     showScatterFlash,
     showBigWin,

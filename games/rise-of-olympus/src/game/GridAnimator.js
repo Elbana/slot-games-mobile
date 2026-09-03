@@ -707,7 +707,7 @@ export async function animateColumnTumble(opts) {
           src.__sprite?.scale.set(srcBase);
           src.__spine?.scale.set(spineBaseScale(src));
 
-          paintCell(dst, m.sym, mult);
+          paintCell(dst, m.sym, mult, true);
           dst.y = cellPos(c, m.toRow).y;
           dst.visible = true;
           dst.alpha = 1;
