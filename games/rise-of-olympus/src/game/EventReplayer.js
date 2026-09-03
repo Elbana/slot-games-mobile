@@ -249,12 +249,12 @@ export function createEventReplayer(ctx) {
 
       if (ev.type === 'multiplier_apply') {
         ctx.setMultiplierSum(ev.sum);
+        onWinTick?.(ev.totalWin);
+        await ctx.onMultiplierApply?.(ev.totalWin, ev.sum, ev.baseWin);
         if (ctx.pulseSignpost) {
           await animate(ticker, TIMING.signpostPulse / speedMult, (t) => ctx.pulseSignpost(t));
           ctx.resetPanelScale?.();
         }
-        onWinTick?.(ev.totalWin);
-        await ctx.onMultiplierApply?.(ev.totalWin, ev.sum);
         continue;
       }
 

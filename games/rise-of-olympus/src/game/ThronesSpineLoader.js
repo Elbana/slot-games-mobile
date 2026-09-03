@@ -431,6 +431,50 @@ export function createTrailMultiSpine() {
   return spawnSpine('roo-trail-multi-skel', 'roo-sym-atlas');
 }
 
+/** Flying multiplier value — ref trail_multi + multiplier_value label. */
+export function createMultiplierTrailSpine(value) {
+  const spine = createTrailMultiSpine();
+  attachSpineSlotLabel(spine, 'multiplier_value', createSymbolMultiplierLabel());
+  setSpineSlotLabel(spine, 'multiplier_value', formatSymbolMultiplier(value));
+  return spine;
+}
+
+/**
+ * Smooth arc flight to signpost / collector (ref COLLECTOR_TRAIL).
+ * @param {import('@esotericsoftware/spine-pixi-v8').Spine} spine
+ * @param {{ x: number, y: number }} target
+ * @param {number} [durationMs]
+ */
+export function playMultiplierValueTrail(spine, target, durationMs = 420) {
+  if (!target) return playSpineAnim(spine, ['collect', 'idle'], false);
+
+  const sx = spine.x;
+  const sy = spine.y;
+  const dx = target.x - sx;
+  const dy = target.y - sy;
+  const lift = Math.min(140, Math.hypot(dx, dy) * 0.28);
+  const cx = sx + dx * 0.5;
+  const cy = sy + dy * 0.5 - lift;
+
+  return new Promise((resolve) => {
+    const start = performance.now();
+    const collectAnim = playSpineAnim(spine, ['collect'], false);
+    const step = (now) => {
+      const t = Math.min(1, (now - start) / durationMs);
+      const ease = 1 - (1 - t) ** 3;
+      const u = 1 - ease;
+      spine.x = u * u * sx + 2 * u * ease * cx + ease * ease * target.x;
+      spine.y = u * u * sy + 2 * u * ease * cy + ease * ease * target.y;
+      const pulse = 1 + Math.sin(ease * Math.PI) * 0.18;
+      spine.scale.set(pulse);
+      spine.alpha = t > 0.88 ? 1 - (t - 0.88) / 0.12 : 1;
+      if (t < 1) requestAnimationFrame(step);
+      else collectAnim.then(resolve);
+    };
+    requestAnimationFrame(step);
+  });
+}
+
 export function createRunningMultiplierSpine() {
   const spine = spawnSpine('roo-running-mult-skel', 'roo-sym-atlas');
   spine.position.set(CHROME.runningMultiplier.x, CHROME.runningMultiplier.y);

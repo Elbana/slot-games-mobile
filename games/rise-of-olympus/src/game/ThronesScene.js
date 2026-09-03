@@ -67,6 +67,7 @@ import {
 } from './ThronesSpineLoader.js';
 import { animate } from './GridAnimator.js';
 import { createEventReplayer } from './EventReplayer.js';
+import { animateMultiplierCollectTrails, findMultiplierCells } from './MultiplierEffects.js';
 import {
   loadGameSounds,
   unlockAudio,
@@ -434,12 +435,34 @@ export async function createThronesScene(opts) {
     await tumbleWinCharge(tumbleWinSpine);
   }
 
-  async function onMultiplierApply(totalWin, sum) {
+  async function onMultiplierApply(totalWin, sum, _baseWin) {
+    const sources = findMultiplierCells(cells, layout);
+    const target = {
+      x: signpostSpine?.x ?? CHROME.signpost.x,
+      y: signpostSpine?.y ?? CHROME.signpost.y,
+    };
+
     if (signpostSpine) {
-      setSignpostMultiplier(signpostSpine, sum);
+      setSignpostMultiplier(signpostSpine, 0);
+      signpostSpine.visible = true;
       await playSpineAnim(signpostSpine, ['show'], false);
       void playSpineAnim(signpostSpine, ['loop'], true);
     }
+
+    if (sources.length > 0) {
+      playThronesSound('trail');
+      await animateMultiplierCollectTrails({
+        sources,
+        cells,
+        fxLayer,
+        target,
+        clearCellMultiplier: setCellMultiplier,
+        durationMs: TIMING.trailCollect,
+      });
+    }
+
+    if (signpostSpine) setSignpostMultiplier(signpostSpine, sum);
+
     updateTumbleText(totalWin);
     if (tumbleWinSpine) {
       await tumbleWinPay(tumbleWinSpine);
