@@ -69,11 +69,12 @@ export async function mountRiseOfOlympus(mount) {
 
   const hud = createThronesHUD(hudMount, {
     betLevels,
-    onSpin: () => {
-      void unlockAudio();
-      void doSpin();
+    onSpin: async () => {
+      await unlockAudio();
+      await doSpin();
     },
-    onBetChange: (v) => {
+    onBetChange: async (v) => {
+      await unlockAudio();
       bet = v;
       syncHud();
     },

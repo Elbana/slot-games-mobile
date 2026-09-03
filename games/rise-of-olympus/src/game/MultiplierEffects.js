@@ -1,5 +1,5 @@
 /**
- * Multiplier collect — fly orb values to the signpost (ref COLLECTOR_TRAIL).
+ * Multiplier collect — fly orb values to the tumble win panel (current win area).
  */
 
 import { GRID, ORIGIN, TIMING } from './config.js';

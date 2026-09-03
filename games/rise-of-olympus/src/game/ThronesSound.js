@@ -102,7 +102,6 @@ export function playEventSound(ev) {
       if (ev.sum != null) playMultiplierValueSound(ev.sum);
       break;
     case 'multiplier_land':
-      playGodPpsSound(MULTIPLIER_GOD_ID);
       break;
     case 'multiplier_upgrade':
       playSound('1044SfTumbleWin', { volume: 0.7 });

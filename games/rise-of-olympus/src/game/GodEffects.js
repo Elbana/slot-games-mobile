@@ -12,6 +12,7 @@ import {
   playSpineAnim,
   playUpgradeFx,
 } from './ThronesSpineLoader.js';
+import { playGodPpsSound } from './ThronesSound.js';
 
 /**
  * @param {import('pixi.js').Ticker} ticker
@@ -53,6 +54,7 @@ export async function animateOrbLand(ticker, cell, fxLayer, godId = 2, onOrbReve
   }
 
   if (fxLayer) {
+    playGodPpsSound(godId);
     const fx = createUpgradeFxSpine();
     const col = Math.round(cell.x / GRID.colPitch);
     const row = Math.round(cell.y / GRID.rowPitch);
@@ -98,6 +100,7 @@ export async function animateMultiplierUpgrade(ticker, cell, fxLayer, godId = 2,
     );
   }
   if (fxLayer) {
+    playGodPpsSound(godId);
     const fx = createUpgradeFxSpine();
     const col = Math.round(cell.x / GRID.colPitch);
     const row = Math.round(cell.y / GRID.rowPitch);

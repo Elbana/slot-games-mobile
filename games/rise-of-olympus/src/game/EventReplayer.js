@@ -130,8 +130,6 @@ export function createEventReplayer(ctx) {
   async function handleMultiplierLandBatch(batch) {
     if (!batch.length) return;
 
-    for (const ev of batch) playGodPpsSound(MULTIPLIER_GOD_ID);
-
     for (const ev of batch) {
       ctx.setCellMultiplier?.(cells[ev.col]?.[ev.row], 0);
     }
@@ -155,6 +153,7 @@ export function createEventReplayer(ctx) {
    * @param {{ col: number, row: number, value: number, super?: boolean }[]} batch
    */
   async function handleMultiplierUpgradeBatch(batch) {
+    if (batch.length) playGodPpsSound(MULTIPLIER_GOD_ID);
     await Promise.all(
       batch.map(async (ev) => {
         const cell = cells[ev.col]?.[ev.row];

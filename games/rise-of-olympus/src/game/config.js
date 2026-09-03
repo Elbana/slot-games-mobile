@@ -86,7 +86,7 @@ export const CHROME = {
   reelFrame: { x: 602, y: 558 },
   platform: { x: 602, y: 558 },
   godPortrait: { x: 968, y: 218, scale: 0.48, skel: 'roo-god-zeus-skel' },
-  tumbleWin: { x: 600, y: 168 },
+  tumbleWin: { x: 600, y: 185, frameBottomInset: 34, liftAboveGrid: 16 },
   /** extends logo in ref (fsCounter node) */
   fsCounter: { x: 600, y: 130 },
   /** main:freespinMultiplier — top banner during FS */

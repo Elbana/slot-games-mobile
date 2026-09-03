@@ -5,6 +5,7 @@ import '@esotericsoftware/spine-pixi-v8';
 import { Assets, Text } from 'pixi.js';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { GRID, STAGE, CHROME, gridPixelSize, SCATTER_SYMBOL } from './config.js';
+import { animate, easeOutBack } from './GridAnimator.js';
 
 const BASE = '/assets/rise-of-olympus/spine';
 
@@ -71,13 +72,59 @@ export function createTumbleWinValueLabel() {
   return new Text({
     text: '',
     style: {
-      fill: 0xffe082,
+      fill: 0xfff8dc,
       fontSize: 34,
       fontWeight: '900',
-      fontFamily: 'monospace',
-      stroke: { color: 0x3a1800, width: 3 },
+      fontFamily: 'Arial Black, Arial, sans-serif',
+      align: 'center',
+      stroke: { color: 0x2a1200, width: 4 },
+      dropShadow: { color: 0x000000, blur: 2, distance: 2, alpha: 0.85 },
+      letterSpacing: 1,
     },
   });
+}
+
+const TUMBLE_WIN_FRAME_SLOTS = [
+  'images/normal/tumble/tembole_small_frame',
+  'images/normal/tumble/tembole_small_frame2',
+  'images/normal/tumble/tumble_big_frame',
+];
+
+/** hide fades frame slots to alpha 0; hidden does not restore them — reset manually. */
+export function ensureTumbleWinFramesVisible(spine) {
+  if (!spine?.skeleton) return;
+  for (const name of TUMBLE_WIN_FRAME_SLOTS) {
+    const slot = spine.skeleton.findSlot(name);
+    if (slot) slot.color.set(1, 1, 1, 1);
+  }
+}
+
+/** charge/charge_stop fade this slot out — restore when showing a win value. */
+export function ensureTumbleWinValueSlotVisible(spine, visible) {
+  const slot = spine.skeleton?.findSlot('tumbleWinValue');
+  if (slot) slot.color.set(1, 1, 1, visible ? 1 : 0);
+}
+
+/** Offset of tumbleWinValue bone from spine root (stop pose). */
+const TUMBLE_WIN_LABEL_OFFSET = { x: 0.78, y: -3.35 };
+
+/** Place win text on the value bone — avoids slot alpha hiding the label. */
+export function layoutTumbleWinLabel(spine) {
+  const label = spine?.__tumbleWinLabel;
+  if (!label) return;
+  try {
+    if (spine.skeleton) {
+      spine.skeleton.updateWorldTransform();
+      const bone = spine.skeleton.findBone('value');
+      if (bone) {
+        label.position.set(bone.worldX, bone.worldY);
+        return;
+      }
+    }
+  } catch {
+    /* use static offset */
+  }
+  label.position.set(TUMBLE_WIN_LABEL_OFFSET.x, TUMBLE_WIN_LABEL_OFFSET.y);
 }
 
 /** Ref DynamicSizedSymbol multiplier_value text field — format "x2", "x15", etc. */
@@ -364,8 +411,18 @@ export function playColumnAnticipation(spine, phase) {
 export function createTumbleWinSpine() {
   const spine = spawnSpine(CHROME_SPINE.tumbleWin.skel, CHROME_SPINE.tumbleWin.atlas);
   spine.position.set(CHROME_SPINE.tumbleWin.x, CHROME_SPINE.tumbleWin.y);
-  attachSpineSlotLabel(spine, 'tumbleWinValue', createTumbleWinValueLabel());
-  void playSpineAnim(spine, ['hidden'], true);
+  spine.sortableChildren = true;
+  const label = createTumbleWinValueLabel();
+  label.visible = false;
+  label.alpha = 0;
+  label.zIndex = 20;
+  spine.addChild(label);
+  spine.__tumbleWinLabel = label;
+  spine.__tumbleWinAmount = 0;
+  layoutTumbleWinLabel(spine);
+  ensureTumbleWinFramesVisible(spine);
+  void playSpineAnim(spine, ['stop'], true);
+  layoutTumbleWinLabel(spine);
   return spine;
 }
 
@@ -440,7 +497,7 @@ export function createMultiplierTrailSpine(value) {
 }
 
 /**
- * Smooth arc flight to signpost / collector (ref COLLECTOR_TRAIL).
+ * Smooth arc flight to tumble win panel / collector.
  * @param {import('@esotericsoftware/spine-pixi-v8').Spine} spine
  * @param {{ x: number, y: number }} target
  * @param {number} [durationMs]
@@ -706,21 +763,28 @@ export function tumbleWinCharge(spine) {
 }
 
 export function tumbleWinChargeStop(spine) {
-  return playSpineAnim(spine, ['charge_stop', 'idle'], false);
+  return playSpineAnim(spine, ['charge_stop', 'stop'], false);
 }
 
 export async function tumbleWinPay(spine) {
   await playSpineAnim(spine, ['win'], false);
-  await playSpineAnim(spine, ['win_stop', 'idle'], false);
+  await playSpineAnim(spine, ['win_stop', 'stop'], false);
 }
 
 export async function tumbleWinDisperse(spine) {
   await playSpineAnim(spine, ['disperse', 'disperse_out'], false);
-  await playSpineAnim(spine, ['hidden'], true);
+}
+
+/** Empty tumble panel — frame stays visible, value cleared (never use hide: it fades frames out). */
+export async function tumbleWinResetIdle(spine) {
+  if (!spine) return;
+  setTumbleWinValue(spine, 0);
+  ensureTumbleWinFramesVisible(spine);
+  await playSpineAnim(spine, ['stop'], true);
 }
 
 export function tumbleWinHide(spine) {
-  return playSpineAnim(spine, ['hide', 'hidden'], false);
+  return tumbleWinResetIdle(spine);
 }
 
 export function playWinboxIn(spine) {
@@ -822,12 +886,60 @@ export function setSignpostMultiplier(spine, sum) {
 
 export function setTumbleWinValue(spine, value) {
   if (!spine) return;
-  setSpineSlotLabel(spine, 'tumbleWinValue', value > 0 ? value.toLocaleString() : '');
+  spine.__tumbleWinAmount = value;
+  layoutTumbleWinLabel(spine);
+  const label = spine.__tumbleWinLabel;
+  const text = value > 0 ? value.toLocaleString() : '';
+  if (label) {
+    label.text = text;
+    label.visible = value > 0;
+    label.alpha = value > 0 ? 1 : 0;
+    label.scale.set(1);
+  }
+}
+
+/**
+ * Pop the win value into the frame after charge / pay (ref tumbleWinFont reveal).
+ * @param {import('@esotericsoftware/spine-pixi-v8').Spine} spine
+ * @param {import('pixi.js').Ticker} ticker
+ * @param {number} [value]
+ */
+export async function animateTumbleWinValueReveal(spine, ticker, value = spine?.__tumbleWinAmount ?? 0) {
+  if (!spine || value <= 0) return;
+  const label = spine.__tumbleWinLabel;
+  if (!label || !ticker) {
+    setTumbleWinValue(spine, value);
+    return;
+  }
+
+  label.text = value.toLocaleString();
+  label.visible = true;
+  layoutTumbleWinLabel(spine);
+  spine.__tumbleWinAmount = value;
+  label.alpha = 0;
+  label.scale.set(0.35);
+
+  await animate(ticker, 360, (t) => {
+    layoutTumbleWinLabel(spine);
+    const ease = easeOutBack(t);
+    label.alpha = Math.min(1, t * 1.4);
+    label.scale.set(0.35 + 0.65 * ease);
+  });
+
+  label.alpha = 1;
+  label.scale.set(1);
+  label.visible = true;
+  layoutTumbleWinLabel(spine);
+}
+
+export function refreshTumbleWinValueDisplay(spine) {
+  if (!spine) return;
+  setTumbleWinValue(spine, spine.__tumbleWinAmount ?? 0);
 }
 
 export function showTumbleWinSpine(spine, visible) {
   if (visible) void tumbleWinShow(spine);
-  else void tumbleWinHide(spine);
+  else void tumbleWinResetIdle(spine);
 }
 
 export function playSymbolPhase(spine, phase, symbolId = 0) {

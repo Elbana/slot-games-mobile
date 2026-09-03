@@ -43,11 +43,14 @@ import {
   hideSignpost,
   setSignpostMultiplier,
   setTumbleWinValue,
-  tumbleWinShow,
   tumbleWinCharge,
+  tumbleWinChargeStop,
   tumbleWinPay,
   tumbleWinDisperse,
-  tumbleWinHide,
+  tumbleWinResetIdle,
+  animateTumbleWinValueReveal,
+  refreshTumbleWinValueDisplay,
+  layoutTumbleWinLabel,
   showBigWinCelebration,
   hideBigWinCelebration,
   showFsCounterAward,
@@ -239,6 +242,8 @@ export async function createThronesScene(opts) {
   let tumbleWinSpine = null;
   try {
     tumbleWinSpine = createTumbleWinSpine();
+    tumbleWinSpine.zIndex = 50;
+    uiLayer.sortableChildren = true;
     uiLayer.addChild(tumbleWinSpine);
   } catch (err) {
     console.warn('[Thrones] tumble win spine failed', err);
@@ -381,6 +386,7 @@ export async function createThronesScene(opts) {
 
   function setCellMultiplier(cell, value) {
     if (!cell) return;
+    cell.__mult = value;
     setSymbolMultiplierValue(cell.__spine, value);
     cell.__badge.visible = false;
   }
@@ -409,7 +415,6 @@ export async function createThronesScene(opts) {
     return playSymbolPhase(cell.__spine, 'land', sym);
   }
 
-  let tumbleWinVisible = false;
   let tumbleWinValue = 0;
 
   function updateTumbleText(value) {
@@ -417,37 +422,46 @@ export async function createThronesScene(opts) {
     if (tumbleWinSpine) setTumbleWinValue(tumbleWinSpine, value);
   }
 
+  function tumbleWinCollectTarget() {
+    if (tumbleWinSpine?.__tumbleWinLabel) {
+      const label = tumbleWinSpine.__tumbleWinLabel;
+      return {
+        x: tumbleWinSpine.x + label.x,
+        y: tumbleWinSpine.y + label.y,
+      };
+    }
+    const x = tumbleWinSpine?.x ?? CHROME.tumbleWin.x;
+    const y = (tumbleWinSpine?.y ?? CHROME.tumbleWin.y) - 3;
+    return { x, y };
+  }
+
+  function layoutTumbleWinPanel() {
+    if (!tumbleWinSpine) return;
+    const inset = CHROME.tumbleWin.frameBottomInset ?? 34;
+    const lift = CHROME.tumbleWin.liftAboveGrid ?? 16;
+    tumbleWinSpine.position.set(STAGE.width / 2 + 0.5, ORIGIN.y - inset - lift);
+  }
+
   async function resetTumbleWin() {
-    tumbleWinVisible = false;
     tumbleWinValue = 0;
     updateTumbleText(0);
-    if (tumbleWinSpine) await tumbleWinHide(tumbleWinSpine);
+    if (tumbleWinSpine) await tumbleWinResetIdle(tumbleWinSpine);
     if (signpostSpine) setSignpostMultiplier(signpostSpine, 0);
   }
 
   async function onCascadeWin(value) {
-    updateTumbleText(value);
     if (!tumbleWinSpine) return;
-    if (!tumbleWinVisible) {
-      tumbleWinVisible = true;
-      await tumbleWinShow(tumbleWinSpine);
-    }
+    tumbleWinValue = value;
+    setTumbleWinValue(tumbleWinSpine, 0);
     await tumbleWinCharge(tumbleWinSpine);
+    await tumbleWinChargeStop(tumbleWinSpine);
+    await animateTumbleWinValueReveal(tumbleWinSpine, ticker, value);
+    tumbleWinValue = value;
   }
 
   async function onMultiplierApply(totalWin, sum, _baseWin) {
     const sources = findMultiplierCells(cells, layout);
-    const target = {
-      x: signpostSpine?.x ?? CHROME.signpost.x,
-      y: signpostSpine?.y ?? CHROME.signpost.y,
-    };
-
-    if (signpostSpine) {
-      setSignpostMultiplier(signpostSpine, 0);
-      signpostSpine.visible = true;
-      await playSpineAnim(signpostSpine, ['show'], false);
-      void playSpineAnim(signpostSpine, ['loop'], true);
-    }
+    const target = tumbleWinCollectTarget();
 
     if (sources.length > 0) {
       playThronesSound('trail');
@@ -466,11 +480,13 @@ export async function createThronesScene(opts) {
     updateTumbleText(totalWin);
     if (tumbleWinSpine) {
       await tumbleWinPay(tumbleWinSpine);
+      await animateTumbleWinValueReveal(tumbleWinSpine, ticker, totalWin);
       await new Promise((r) => setTimeout(r, TIMING.tumbleDisperseOut));
       await tumbleWinDisperse(tumbleWinSpine);
+      await tumbleWinResetIdle(tumbleWinSpine);
+    } else {
+      updateTumbleText(0);
     }
-    tumbleWinVisible = false;
-    updateTumbleText(0);
   }
 
   function hideSignpostFn() {
@@ -512,10 +528,7 @@ export async function createThronesScene(opts) {
   }
 
   function spawnTrailFx(positions) {
-    const target = {
-      x: tumbleWinSpine?.x ?? CHROME.tumbleWin.x,
-      y: tumbleWinSpine?.y ?? CHROME.tumbleWin.y,
-    };
+    const target = tumbleWinCollectTarget();
     for (const [c, r] of positions) {
       try {
         const trail = createTrailMultiSpine();
@@ -760,6 +773,12 @@ export async function createThronesScene(opts) {
       const cover =
         Math.max(STAGE.width / tex.width, STAGE.height / tex.height) * 1.35;
       staticBgSprite.scale.set(cover);
+    }
+
+    layoutTumbleWinPanel();
+    if (tumbleWinSpine) layoutTumbleWinLabel(tumbleWinSpine);
+    if (tumbleWinSpine && winlabelSpine) {
+      winlabelSpine.position.set(STAGE.width / 2, tumbleWinSpine.y + 40);
     }
   }
 
