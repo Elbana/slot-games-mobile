@@ -1,11 +1,10 @@
-{
-  "name": "games-mobile",
-  "private": true,
-  "scripts": {
-    "dev:roo": "npm run dev --prefix games/rise-of-olympus",
-    "dev:sor": "npm run dev --prefix games/stadium-of-riches",
-    "dev:tot": "npm run dev --prefix games/temple-of-three",
-    "dev:beat": "npm run dev --prefix games/spinnin-records-into-the-beat",
-    "scaffold:all": "node tools/scaffold-mobile-game.mjs --all"
-  }
-}
+{
+  "name": "games-mobile",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev --prefix games/rise-of-olympus",
+    "build": "npm run build --prefix games/rise-of-olympus",
+    "start": "npm run start --prefix games/rise-of-olympus"
+  }
+}
+

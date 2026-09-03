@@ -36,7 +36,10 @@ if (isDev) {
   const { createServer: createViteServer } = await import('vite');
   const vite = await createViteServer({
     configFile: path.join(ROOT, 'vite.config.js'),
-    server: { middlewareMode: true },
+    server: {
+      middlewareMode: true,
+      hmr: { server },
+    },
   });
 
   async function serveSpa(req, res) {
