@@ -3,7 +3,7 @@
  * Drop motion matches ref BlockAnimator (acceleration + sine bounce on land).
  */
 
-import { DROP_PHYSICS, GRID } from './config.js';
+import { DROP_PHYSICS, GRID, TUMBLE_PHYSICS } from './config.js';
 
 /**
  * @param {import('pixi.js').Ticker} ticker
@@ -506,10 +506,9 @@ export async function animateShuffle(opts) {
   }
 }
 
-/** Win highlight pulse — dim non-winners; duration follows spine win clips */
+/** Win highlight — pulse matched symbols only; board stays fully visible. */
 export async function animateWinHighlight(opts) {
   const { ticker, cells, layout, positions, glowLayer, cellSize, durationMs = 680, playWinClip } = opts;
-  const set = new Set(positions.map(([c, r]) => `${c},${r}`));
 
   glowLayer.removeChildren();
   /** @type {import('pixi.js').Container[]} */
@@ -525,32 +524,20 @@ export async function animateWinHighlight(opts) {
       glowLayer.addChild(g);
       glows.push(g);
     }
+    if (cell.__sprite) cell.__sprite.tint = 0xffffaa;
     if (playWinClip) winPlays.push(playWinClip(cell));
-  }
-
-  for (let c = 0; c < layout.cols; c++) {
-    for (let r = 0; r < layout.rows; r++) {
-      const cell = cells[c][r];
-      if (set.has(`${c},${r}`)) {
-        if (cell.__sprite) cell.__sprite.tint = 0xffffaa;
-        cell.alpha = 1;
-      } else {
-        cell.alpha = 0.1;
-        if (cell.__spine) cell.__spine.alpha = 0.1;
-      }
-    }
   }
 
   const highlightMs = durationMs > 0 ? durationMs : 0;
 
   if (highlightMs <= 0 && winPlays.length > 0) {
     await Promise.all(winPlays);
-    await animate(ticker, 180, (t) => {
+    await animate(ticker, 60, (t) => {
       glowLayer.alpha = 0.5 * (1 - t);
     });
-  } else {
+  } else if (highlightMs > 0) {
     await Promise.all([
-      animate(ticker, highlightMs > 0 ? highlightMs : 680, (t) => {
+      animate(ticker, highlightMs, (t) => {
         const pulse = 1 + Math.sin(t * Math.PI * 4) * 0.12;
         const wobble = Math.sin(t * Math.PI * 6) * 0.04;
         for (const [c, r] of positions) {
@@ -564,12 +551,22 @@ export async function animateWinHighlight(opts) {
       }),
       ...winPlays,
     ]);
+  } else if (winPlays.length > 0) {
+    await Promise.all(winPlays);
   }
+
+  for (const [c, r] of positions) {
+    const cell = cells[c][r];
+    cell.scale.set(1);
+    cell.rotation = 0;
+    if (cell.__sprite) cell.__sprite.tint = 0xffffff;
+  }
+  glowLayer.removeChildren();
 }
 
 /** Fade + shrink disperse (ref cluster remove) */
 export async function animateRemove(opts) {
-  const { ticker, cells, positions, durationMs = 280 } = opts;
+  const { ticker, cells, positions, durationMs = 280, cellPos } = opts;
   await animate(ticker, durationMs, (t) => {
     const ease = easeOutCubic(t);
     for (const [c, r] of positions) {
@@ -581,15 +578,54 @@ export async function animateRemove(opts) {
     }
   });
   for (const [c, r] of positions) {
-    cells[c][r].visible = false;
-    cells[c][r].alpha = 1;
-    cells[c][r].scale.set(1);
-    cells[c][r].rotation = 0;
+    const cell = cells[c][r];
+    cell.visible = false;
+    cell.alpha = 1;
+    cell.scale.set(1);
+    cell.rotation = 0;
+    if (cellPos) cell.y = cellPos(c, r).y;
   }
 }
 
 /**
- * Per-column cascade tumble with gravity — survivors fall, new symbols drop from above.
+ * Match server tumbleGrid: survivors keep order and shift down, new symbols fill top rows.
+ * @returns {{ toRow: number, fromRow: number, sym: number, isNew: boolean }[]}
+ */
+function planColumnTumbleMotions(col, layout, prevGrid, targetGrid, removed) {
+  /** @type {{ sym: number, fromRow: number }[]} */
+  const kept = [];
+  for (let r = 0; r < layout.rows; r++) {
+    if (removed.has(`${col},${r}`)) continue;
+    kept.push({ sym: prevGrid[col][r], fromRow: r });
+  }
+
+  const newCount = layout.rows - kept.length;
+  const startRow = newCount;
+  /** @type {{ toRow: number, fromRow: number, sym: number, isNew: boolean }[]} */
+  const motions = [];
+
+  for (let i = 0; i < kept.length; i++) {
+    const toRow = startRow + i;
+    const fromRow = kept[i].fromRow;
+    if (fromRow !== toRow) {
+      motions.push({ toRow, fromRow, sym: kept[i].sym, isNew: false });
+    }
+  }
+
+  for (let r = 0; r < newCount; r++) {
+    motions.push({
+      toRow: r,
+      fromRow: -(layout.rows + 2 - r),
+      sym: targetGrid[col][r],
+      isNew: true,
+    });
+  }
+
+  return motions;
+}
+
+/**
+ * Per-column cascade tumble — matched cells vanish, survivors fall down, new symbols drop from top.
  */
 export async function animateColumnTumble(opts) {
   const {
@@ -604,25 +640,29 @@ export async function animateColumnTumble(opts) {
     paintCellScroll,
     cellPos,
     cellH,
+    rowH = cellH ?? GRID.rowPitch,
     getMult,
-    staggerMs = DROP_PHYSICS.reelDelay,
-    blockDelayMs = DROP_PHYSICS.blockDelay,
+    staggerMs = TUMBLE_PHYSICS.reelDelay,
+    blockDelayMs = TUMBLE_PHYSICS.blockDelay,
+    tumblePhysics = TUMBLE_PHYSICS,
     playLandClip,
     shouldPlayLand,
     onSymbolLand,
     speedMult = 1,
   } = opts;
 
-  const stagger = Math.max(8, staggerMs / speedMult);
-  const blockDelay = Math.max(4, blockDelayMs / speedMult);
+  void paintCellScroll;
+
+  const stagger = Math.max(4, staggerMs / speedMult);
+  const blockDelay = Math.max(2, blockDelayMs / speedMult);
   const physics =
     speedMult > 1
       ? {
-          ...DROP_PHYSICS,
-          acceleration: DROP_PHYSICS.acceleration * speedMult,
-          bounceDuration: Math.max(80, DROP_PHYSICS.bounceDuration / speedMult),
+          ...tumblePhysics,
+          acceleration: tumblePhysics.acceleration * speedMult,
+          bounceDuration: Math.max(70, tumblePhysics.bounceDuration / speedMult),
         }
-      : DROP_PHYSICS;
+      : tumblePhysics;
 
   const removed = new Set(removedPositions.map(([c, r]) => `${c},${r}`));
 
@@ -631,43 +671,52 @@ export async function animateColumnTumble(opts) {
       (async () => {
         if (c > 0) await new Promise((r) => setTimeout(r, c * stagger));
 
-        /** @type {{ toRow: number, fromRow: number, sym: number, isNew: boolean }[]} */
-        const motions = [];
-        const kept = [];
-        for (let r = 0; r < layout.rows; r++) {
-          if (!removed.has(`${c},${r}`)) kept.push({ sym: prevGrid[c][r], fromRow: r });
-        }
-        const newCount = layout.rows - kept.length;
-        const startRow = newCount;
+        const motions = planColumnTumbleMotions(c, layout, prevGrid, targetGrid, removed);
+        const survivorMotions = motions.filter((m) => !m.isNew).sort((a, b) => b.toRow - a.toRow);
+        const newMotions = motions.filter((m) => m.isNew).sort((a, b) => a.toRow - b.toRow);
 
-        for (let i = 0; i < kept.length; i++) {
-          motions.push({
-            toRow: startRow + i,
-            fromRow: kept[i].fromRow,
-            sym: kept[i].sym,
-            isNew: false,
-          });
-        }
-        for (let r = 0; r < newCount; r++) {
-          motions.push({
-            toRow: r,
-            fromRow: -(newCount - r),
-            sym: targetGrid[c][r],
-            isNew: true,
-          });
+        for (const m of survivorMotions) {
+          const src = cells[c][m.fromRow];
+          src.visible = true;
+          src.alpha = 1;
+          src.scale.set(1);
+          src.rotation = 0;
+          src.y = cellPos(c, m.fromRow).y;
+
+          await runGravityDrop(
+            ticker,
+            m.fromRow,
+            m.toRow,
+            rowH,
+            physics,
+            0,
+            (state) => {
+              src.y = state.y;
+              if (state.bounceT >= 0) applyLandingSquash(src, state.bounceT);
+            },
+            true
+          );
+
+          const dst = cells[c][m.toRow];
+          const mult = getMult?.(multGrid, c, m.toRow) ?? 0;
+          src.visible = false;
+          src.y = cellPos(c, m.fromRow).y;
+          src.scale.set(1);
+          src.rotation = 0;
+          const srcBase = spriteBaseScale(src);
+          src.__sprite?.scale.set(srcBase);
+          src.__spine?.scale.set(spineBaseScale(src));
+
+          paintCell(dst, m.sym, mult);
+          dst.y = cellPos(c, m.toRow).y;
+          dst.visible = true;
+          dst.alpha = 1;
         }
 
-        for (const m of motions) {
+        for (const m of newMotions) {
           const cell = cells[c][m.toRow];
           const mult = getMult?.(multGrid, c, m.toRow) ?? 0;
-          if (m.isNew) {
-            if (paintCellScroll) paintCellScroll(cell);
-            else paintCell(cell, m.sym, mult);
-          } else if (m.fromRow !== m.toRow) {
-            paintCell(cell, m.sym, mult);
-            cells[c][m.fromRow].visible = false;
-          }
-
+          paintCell(cell, m.sym, mult);
           cell.visible = true;
           cell.alpha = 1;
           cell.scale.set(1);
@@ -675,42 +724,51 @@ export async function animateColumnTumble(opts) {
           cell.y = cellPos(c, m.fromRow).y;
         }
 
-        motions.sort((a, b) => b.toRow - a.toRow);
-
         await Promise.all(
-          motions.map((m, idx) =>
-            runGravityDrop(
+          newMotions.map((m, idx) => {
+            const cell = cells[c][m.toRow];
+            return runGravityDrop(
               ticker,
               m.fromRow,
               m.toRow,
-              cellH,
+              rowH,
               physics,
               idx * blockDelay,
               (state) => {
-                const cell = cells[c][m.toRow];
                 cell.y = state.y;
-                if (m.isNew && state.bounceT >= 0) applyLandingSquash(cell, state.bounceT);
-              }
+                if (state.bounceT >= 0) applyLandingSquash(cell, state.bounceT);
+              },
+              true
             ).then(async () => {
-              const cell = cells[c][m.toRow];
               cell.y = cellPos(c, m.toRow).y;
               const base = spriteBaseScale(cell);
               cell.__sprite?.scale.set(base);
               cell.__spine?.scale.set(spineBaseScale(cell));
-              if (m.isNew) {
-                paintCell(cell, m.sym, getMult?.(multGrid, c, m.toRow) ?? 0);
-                if (playLandClip && (shouldPlayLand?.(m.sym) ?? true)) await playLandClip(cell);
-                onSymbolLand?.(m.sym, c, m.toRow);
-              }
-            })
-          )
+              if (playLandClip && (shouldPlayLand?.(m.sym) ?? true)) await playLandClip(cell);
+              onSymbolLand?.(m.sym, c, m.toRow);
+            });
+          })
         );
       })()
     )
   );
+
+  for (let c = 0; c < layout.cols; c++) {
+    for (let r = 0; r < layout.rows; r++) {
+      const cell = cells[c][r];
+      const sym = targetGrid[c][r];
+      const mult = getMult?.(multGrid, c, r) ?? 0;
+      if (cell.__sym !== sym) paintCell(cell, sym, mult);
+      cell.y = cellPos(c, r).y;
+      cell.visible = true;
+      cell.alpha = 1;
+      cell.scale.set(1);
+      cell.rotation = 0;
+    }
+  }
 }
 
-export function resetCellVisuals(cells, layout) {
+export function resetCellVisuals(cells, layout, cellPos) {
   for (let c = 0; c < layout.cols; c++) {
     for (let r = 0; r < layout.rows; r++) {
       const cell = cells[c][r];
@@ -718,6 +776,7 @@ export function resetCellVisuals(cells, layout) {
       cell.alpha = 1;
       cell.scale.set(1);
       cell.rotation = 0;
+      if (cellPos) cell.y = cellPos(c, r).y;
       if (cell.__sprite) {
         cell.__sprite.tint = 0xffffff;
         cell.__sprite.scale.set(spriteBaseScale(cell));

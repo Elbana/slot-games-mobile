@@ -3,7 +3,7 @@
  */
 
 import { getClientMultiplier } from './AssetLoader.js';
-import { GRID, TIMING, LAND_ANIM_SYMBOLS, SCATTER_SYMBOL, cellPosition, DROP_PHYSICS } from './config.js';
+import { GRID, TIMING, LAND_ANIM_SYMBOLS, SCATTER_SYMBOL, cellPosition, DROP_PHYSICS, TUMBLE_PHYSICS } from './config.js';
 import {
   animate,
   animateColumnTumble,
@@ -78,6 +78,8 @@ export function createEventReplayer(ctx) {
     rowH: GRID.rowPitch,
     getMult: getClientMultiplier,
     staggerMs: TIMING.tumbleStagger,
+    blockDelayMs: TUMBLE_PHYSICS.blockDelay,
+    tumblePhysics: TUMBLE_PHYSICS,
     playLandClip,
     shouldPlayLand,
     get speedMult() {
@@ -162,7 +164,6 @@ export function createEventReplayer(ctx) {
         }
         onWinTick?.(runningWin);
 
-        const winFx = ctx.spawnWinFx?.(positions);
         await animateWinHighlight({
           ticker,
           cells,
@@ -173,12 +174,16 @@ export function createEventReplayer(ctx) {
           durationMs: TIMING.winHighlight / speedMult,
           playWinClip,
         });
-        await winFx;
-        await ctx.endWinFx?.();
 
         playThronesSound('trail');
         ctx.spawnTrailFx?.(positions);
-        await animateRemove({ ticker, cells, positions, durationMs: TIMING.remove / speedMult });
+        await animateRemove({
+          ticker,
+          cells,
+          positions,
+          durationMs: TIMING.remove / speedMult,
+          cellPos,
+        });
         await animateColumnTumble({
           ...tumbleOpts,
           prevGrid,
@@ -187,7 +192,7 @@ export function createEventReplayer(ctx) {
           multGrid: ev.multipliers,
         });
 
-        resetCellVisuals(cells, layout);
+        resetCellVisuals(cells, layout, cellPos);
         glowLayer.removeChildren();
         lastGrid = ev.grid;
         lastMult = ev.multipliers;

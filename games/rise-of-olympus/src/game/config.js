@@ -42,6 +42,16 @@ export const DROP_PHYSICS = {
   reelDelay: 40,
 };
 
+/** Faster drops for cascade refills — survivors fall + new symbols from top. */
+export const TUMBLE_PHYSICS = {
+  ...DROP_PHYSICS,
+  acceleration: 7e-5,
+  bounceDuration: 130,
+  maxBounceAmplitude: 0.08,
+  blockDelay: 4,
+  reelDelay: 22,
+};
+
 /** Ref timing — synced to PG sound clips (~30fps spine) */
 export const TIMING = {
   shuffle: 0,
@@ -49,12 +59,12 @@ export const TIMING = {
   dealStagger: DROP_PHYSICS.reelDelay,
   dealDrop: 0,
   winHighlight: 0,
-  remove: 333,
-  tumbleStagger: DROP_PHYSICS.reelDelay,
+  remove: 200,
+  tumbleStagger: TUMBLE_PHYSICS.reelDelay,
   tumbleDrop: 0,
   tumbleDisperseOut: 333,
   multiplierPulse: 400,
-  tumblePanelPulse: 280,
+  tumblePanelPulse: 160,
   signpostPulse: 400,
   bigWinIn: 500,
   bigWinHold: 1200,
