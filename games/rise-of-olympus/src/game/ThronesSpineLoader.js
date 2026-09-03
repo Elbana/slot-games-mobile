@@ -104,12 +104,59 @@ export function getSpineAnimDurationMs(spine, names) {
   return 680;
 }
 
-function fitAndCenterSpine(spine, targetSize) {
+/** @type {number | null} Shared stop-pose fit size — measured from Hades (Symbol7). */
+let symbolFitReferenceMax = null;
+
+/** Premium board symbols sized to one reference (gods, scatter, multipliers). */
+const UNIFORM_FIT_SYMBOLS = new Set([7, 8, 9, 10, 11, 12, 13, 14]);
+
+/** 7=Hades (red), 8=Poseidon (green), 9=Zeus (blue). */
+
+function applySymbolFitPose(spine, symbolId = -1) {
+  if (symbolId >= 12 && symbolId <= 14) {
+    const tier = symbolId === 14 ? 'gold' : symbolId === 13 ? 'silver' : 'bronze';
+    if (hasAnim(spine, tier)) {
+      spine.state.setAnimation(0, tier, true);
+      return;
+    }
+  }
+  if (hasAnim(spine, 'stop')) {
+    spine.state.setAnimation(0, 'stop', true);
+    return;
+  }
+  if (hasAnim(spine, 'stop1')) {
+    spine.state.setAnimation(0, 'stop1', true);
+    return;
+  }
+  if (hasAnim(spine, 'idle')) spine.state.setAnimation(0, 'idle', true);
+}
+
+function measureSymbolFitReference() {
+  try {
+    const skel = symbolAliases.get(7);
+    if (!skel) return;
+    const spine = spawnSpine(skel, 'roo-sym-atlas');
+    applySymbolFitPose(spine, 7);
+    spine.update(0);
+    const bounds = spine.getLocalBounds();
+    symbolFitReferenceMax = Math.max(bounds.width, bounds.height, 1);
+    spine.destroy({ children: true });
+  } catch {
+    symbolFitReferenceMax = null;
+  }
+}
+
+function fitAndCenterSpine(spine, targetSize, symbolId = -1) {
   spine.scale.set(1);
+  applySymbolFitPose(spine, symbolId);
   spine.update(0);
   const bounds = spine.getLocalBounds();
-  const max = Math.max(bounds.width, bounds.height, 1);
-  const scale = targetSize / max;
+  const rawMax = Math.max(bounds.width, bounds.height, 1);
+  let fitMax = rawMax;
+  if (symbolFitReferenceMax != null && UNIFORM_FIT_SYMBOLS.has(symbolId)) {
+    fitMax = symbolFitReferenceMax;
+  }
+  const scale = targetSize / fitMax;
   spine.scale.set(scale);
   spine.__baseScale = scale;
   spine.x = targetSize / 2 - (bounds.x + bounds.width / 2) * scale;
@@ -155,6 +202,7 @@ export async function loadThronesSpineAssets() {
     { alias: 'roo-fs-bg-skel', src: `${BASE}/background/freespin_bg.json`, data: { spineAtlas: 'roo-bg-atlas' } },
   ]).catch((err) => console.warn('[Thrones] bg spine load failed', err));
 
+  measureSymbolFitReference();
   ready = true;
 }
 
@@ -196,7 +244,7 @@ function spawnSpine(skel, atlas) {
 export function createSymbolSpine(symbolId, displaySize = GRID.clip) {
   const skel = symbolAliases.get(symbolId) ?? symbolAliases.get(0);
   const spine = spawnSpine(skel, 'roo-sym-atlas');
-  fitAndCenterSpine(spine, displaySize);
+  fitAndCenterSpine(spine, displaySize, symbolId);
   playSymbolIdle(spine, symbolId);
   return spine;
 }
