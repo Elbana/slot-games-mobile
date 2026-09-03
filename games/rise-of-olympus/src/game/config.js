@@ -44,7 +44,8 @@ export const DROP_PHYSICS = {
 
 /** Ref timing — synced to PG sound clips (~30fps spine) */
 export const TIMING = {
-  shuffle: 280,
+  shuffle: 0,
+  clearExitStagger: DROP_PHYSICS.reelDelay,
   dealStagger: DROP_PHYSICS.reelDelay,
   dealDrop: 0,
   winHighlight: 0,

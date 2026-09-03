@@ -150,7 +150,7 @@ export async function mountRiseOfOlympus(mount) {
 
     try {
       const spinPromise = requestSpin(GAME.slug, { bet, balance });
-      if (grid.shuffleAnimation) await grid.shuffleAnimation();
+      await grid.runSpinTransition?.(spinPromise);
       const result = await spinPromise;
 
       const featureTypes = [

@@ -64,7 +64,7 @@ import {
   swapGodPortraitSpine,
   playGodAction,
 } from './ThronesSpineLoader.js';
-import { animate, animateShuffle } from './GridAnimator.js';
+import { animate } from './GridAnimator.js';
 import { createEventReplayer } from './EventReplayer.js';
 import {
   loadGameSounds,
@@ -776,16 +776,8 @@ export async function createThronesScene(opts) {
     showFsSummary,
   });
 
-  async function shuffleAnimation() {
-    playThronesSound('spin');
-    await animateShuffle({
-      ticker,
-      cells,
-      layout,
-      cellPos: cellPosition,
-      durationMs: TIMING.shuffle,
-      paintCellScroll,
-    });
+  async function runSpinTransition(spinPromise) {
+    await replayer.runSpinTransition(spinPromise);
   }
 
   function syncFreeSpinState(fs) {
@@ -802,7 +794,7 @@ export async function createThronesScene(opts) {
     width: gridW,
     height: gridH,
     setSymbols: setSymbolsImmediate,
-    shuffleAnimation,
+    runSpinTransition,
     replayEvents: replayer.replay,
     setAnimationSpeed: replayer.setAnimationSpeed,
     layout: layoutScene,

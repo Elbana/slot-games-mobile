@@ -73,7 +73,7 @@ function applyLandingSquash(cell, bounceT, impactStart = 0.72) {
  * @param {number} [startDelayMs]
  * @param {(state: { y: number, bounceT: number }) => void} [onFrame]
  */
-export function runGravityDrop(ticker, fromRow, targetRow, cellH, physics, startDelayMs, onFrame) {
+export function runGravityDrop(ticker, fromRow, targetRow, cellH, physics, startDelayMs, onFrame, landBounce = true) {
   const p = physics ?? DROP_PHYSICS;
   const delay = startDelayMs ?? 0;
 
@@ -118,7 +118,13 @@ export function runGravityDrop(ticker, fromRow, targetRow, cellH, physics, start
       velocity += p.acceleration * dt;
       pos += velocity * dt;
 
-      if (pos > targetRow) {
+      if (pos >= targetRow) {
+        if (!landBounce) {
+          onFrame?.({ y: targetRow * cellH, bounceT: 1 });
+          ticker.remove(step);
+          resolve();
+          return;
+        }
         bouncing = true;
         bounceAmp = Math.min(velocity * p.bounceScale, p.maxBounceAmplitude);
         bounceStart = now;
@@ -132,6 +138,226 @@ export function runGravityDrop(ticker, fromRow, targetRow, cellH, physics, start
 
     ticker.add(step);
   });
+}
+
+/**
+ * Drop one column's symbols from above (deal / spin landing).
+ */
+async function animateColumnDropOne(col, opts) {
+  const {
+    ticker,
+    cells,
+    layout,
+    targetGrid,
+    multGrid,
+    paintCell,
+    cellPos,
+    rowH,
+    getMult,
+    blockDelayMs = DROP_PHYSICS.blockDelay,
+    playLandClip,
+    shouldPlayLand,
+    onSymbolLand,
+    physics,
+    speedMult = 1,
+  } = opts;
+
+  const blockDelay = Math.max(4, blockDelayMs / speedMult);
+  /** @type {{ cell: import('pixi.js').Container, fromRow: number, toRow: number, sym: number }[]} */
+  const motions = [];
+
+  for (let r = 0; r < layout.rows; r++) {
+    const mult = getMult?.(multGrid, col, r) ?? 0;
+    paintCell(cells[col][r], targetGrid[col][r], mult);
+    const pos = cellPos(col, r);
+    cells[col][r].y = pos.y - rowH * (layout.rows + 2);
+    cells[col][r].alpha = 1;
+    cells[col][r].scale.set(1);
+    cells[col][r].visible = true;
+    motions.push({
+      cell: cells[col][r],
+      fromRow: -(layout.rows + 2 - r),
+      toRow: r,
+      sym: targetGrid[col][r],
+    });
+  }
+
+  motions.sort((a, b) => b.toRow - a.toRow);
+
+  await Promise.all(
+    motions.map((m, idx) =>
+      runGravityDrop(
+        ticker,
+        m.fromRow,
+        m.toRow,
+        rowH,
+        physics,
+        idx * blockDelay,
+        (state) => {
+          m.cell.y = state.y;
+          if (state.bounceT >= 0) applyLandingSquash(m.cell, state.bounceT);
+        },
+        true
+      ).then(async () => {
+        m.cell.y = cellPos(col, m.toRow).y;
+        const base = spriteBaseScale(m.cell);
+        m.cell.__sprite?.scale.set(base);
+        m.cell.__spine?.scale.set(spineBaseScale(m.cell));
+        if (playLandClip && (shouldPlayLand?.(m.sym) ?? true)) await playLandClip(m.cell);
+        onSymbolLand?.(m.sym, col, m.toRow);
+      })
+    )
+  );
+}
+
+/**
+ * Fall one column's current symbols off the bottom.
+ */
+async function animateColumnExitOne(col, opts) {
+  const {
+    ticker,
+    cells,
+    layout,
+    cellPos,
+    rowH,
+    blockDelayMs = DROP_PHYSICS.blockDelay,
+    physics,
+    speedMult = 1,
+  } = opts;
+
+  const blockDelay = Math.max(3, blockDelayMs / speedMult);
+  const exitRow = layout.rows + 2;
+  /** @type {{ cell: import('pixi.js').Container, fromRow: number }[]} */
+  const motions = [];
+
+  for (let r = 0; r < layout.rows; r++) {
+    const cell = cells[col][r];
+    if (!cell.__spine && !cell.__sprite) continue;
+    cell.visible = true;
+    cell.alpha = 1;
+    cell.y = cellPos(col, r).y;
+    motions.push({ cell, fromRow: r });
+  }
+
+  motions.sort((a, b) => b.fromRow - a.fromRow);
+
+  await Promise.all(
+    motions.map((m, idx) =>
+      runGravityDrop(
+        ticker,
+        m.fromRow,
+        exitRow,
+        rowH,
+        physics,
+        idx * blockDelay,
+        (state) => {
+          m.cell.y = state.y;
+          if (state.bounceT < 0) {
+            const progress = (state.y / rowH - m.fromRow) / (exitRow - m.fromRow);
+            m.cell.alpha = Math.max(0.3, 1 - progress * 0.45);
+          } else {
+            m.cell.alpha = Math.max(0, 1 - state.bounceT);
+          }
+        },
+        false
+      ).then(() => {
+        m.cell.visible = false;
+        m.cell.alpha = 0;
+      })
+    )
+  );
+}
+
+/**
+ * Spin transition — each column: current symbols fall out, then new ones drop in.
+ * Fetches spin result while columns exit so there is no blank board pause.
+ */
+export async function animateSpinTransition(opts) {
+  const {
+    ticker,
+    cells,
+    layout,
+    cellPos,
+    rowH = GRID.rowPitch,
+    getSpinData,
+    paintCell,
+    multGrid: initialMultGrid,
+    targetGrid: initialTargetGrid,
+    getMult,
+    exitStaggerMs = DROP_PHYSICS.reelDelay,
+    blockDelayMs = DROP_PHYSICS.blockDelay,
+    playLandClip,
+    shouldPlayLand,
+    onColumnStart,
+    onColumnLand,
+    onSymbolLand,
+    speedMult = 1,
+  } = opts;
+
+  const exitStagger = Math.max(6, exitStaggerMs / speedMult);
+  const exitPhysics = {
+    ...DROP_PHYSICS,
+    acceleration: DROP_PHYSICS.acceleration * 2.4,
+  };
+  const dropPhysics =
+    speedMult > 1
+      ? {
+          ...DROP_PHYSICS,
+          acceleration: DROP_PHYSICS.acceleration * speedMult,
+          bounceDuration: Math.max(80, DROP_PHYSICS.bounceDuration / speedMult),
+        }
+      : DROP_PHYSICS;
+
+  /** @type {Promise<{ targetGrid: number[][], multGrid?: number[][] | null }> | null} */
+  let spinDataPromise = null;
+  const ensureSpinData = () => {
+    if (initialTargetGrid) {
+      return Promise.resolve({ targetGrid: initialTargetGrid, multGrid: initialMultGrid ?? null });
+    }
+    if (!spinDataPromise) spinDataPromise = getSpinData();
+    return spinDataPromise;
+  };
+
+  await Promise.all(
+    Array.from({ length: layout.cols }, (_, c) =>
+      (async () => {
+        if (c > 0) await new Promise((r) => setTimeout(r, c * exitStagger));
+
+        await animateColumnExitOne(c, {
+          ticker,
+          cells,
+          layout,
+          cellPos,
+          rowH,
+          blockDelayMs,
+          physics: exitPhysics,
+          speedMult,
+        });
+
+        const { targetGrid, multGrid } = await ensureSpinData();
+
+        onColumnStart?.(c);
+        await animateColumnDropOne(c, {
+          ticker,
+          cells,
+          layout,
+          targetGrid,
+          multGrid,
+          paintCell,
+          cellPos,
+          rowH,
+          getMult,
+          blockDelayMs,
+          playLandClip,
+          shouldPlayLand,
+          onSymbolLand,
+          physics: dropPhysics,
+          speedMult,
+        });
+        onColumnLand?.(c);
+      })()
+    )
+  );
 }
 
 /**
@@ -149,6 +375,7 @@ export async function animateColumnDrop(opts) {
     paintCellScroll,
     cellPos,
     cellH,
+    rowH = cellH ?? GRID.rowPitch,
     getMult,
     staggerMs = DROP_PHYSICS.reelDelay,
     blockDelayMs = DROP_PHYSICS.blockDelay,
@@ -160,8 +387,9 @@ export async function animateColumnDrop(opts) {
     speedMult = 1,
   } = opts;
 
+  void paintCellScroll;
+
   const stagger = Math.max(8, staggerMs / speedMult);
-  const blockDelay = Math.max(4, blockDelayMs / speedMult);
   const physics =
     speedMult > 1
       ? {
@@ -171,61 +399,78 @@ export async function animateColumnDrop(opts) {
         }
       : DROP_PHYSICS;
 
-  /** @type {{ cell: import('pixi.js').Container, fromRow: number, toRow: number, sym: number, col: number }[]} */
-  const motions = [];
-
-  for (let c = 0; c < layout.cols; c++) {
-    for (let r = 0; r < layout.rows; r++) {
-      const mult = getMult?.(multGrid, c, r) ?? 0;
-      paintCell(cells[c][r], targetGrid[c][r], mult);
-      const pos = cellPos(c, r);
-      cells[c][r].y = pos.y - cellH * (layout.rows + 2);
-      cells[c][r].alpha = 1;
-      cells[c][r].scale.set(1);
-      cells[c][r].visible = true;
-      motions.push({
-        cell: cells[c][r],
-        fromRow: -(layout.rows + 2 - r),
-        toRow: r,
-        sym: targetGrid[c][r],
-        col: c,
-      });
-    }
-  }
-
   await Promise.all(
     Array.from({ length: layout.cols }, (_, c) =>
       (async () => {
         if (c > 0) await new Promise((r) => setTimeout(r, c * stagger));
         onColumnStart?.(c);
-
-        const colMotions = motions.filter((m) => m.col === c);
-        /** bottom row drops first (ref: s from n-1 down to 0) */
-        colMotions.sort((a, b) => b.toRow - a.toRow);
-
-        await Promise.all(
-          colMotions.map((m, idx) =>
-            runGravityDrop(ticker, m.fromRow, m.toRow, cellH, physics, idx * blockDelay, (state) => {
-              m.cell.y = state.y;
-              if (state.bounceT >= 0) applyLandingSquash(m.cell, state.bounceT);
-            }).then(async () => {
-              m.cell.y = cellPos(c, m.toRow).y;
-              const base = spriteBaseScale(m.cell);
-              m.cell.__sprite?.scale.set(base);
-              m.cell.__spine?.scale.set(spineBaseScale(m.cell));
-              if (playLandClip && (shouldPlayLand?.(m.sym) ?? true)) await playLandClip(m.cell);
-              onSymbolLand?.(m.sym, c, m.toRow);
-            })
-          )
-        );
-
+        await animateColumnDropOne(c, {
+          ticker,
+          cells,
+          layout,
+          targetGrid,
+          multGrid,
+          paintCell,
+          cellPos,
+          rowH,
+          getMult,
+          blockDelayMs,
+          playLandClip,
+          shouldPlayLand,
+          onSymbolLand,
+          physics,
+          speedMult,
+        });
         onColumnLand?.(c);
       })()
     )
   );
 }
 
-/** Pre-spin shuffle — blurred symbols scroll vertically (ref Symbol_blurred_dummy). */
+/**
+ * Pre-spin clear — current symbols fall off the bottom (column stagger), then deal drops new ones.
+ */
+export async function animateColumnExit(opts) {
+  const {
+    ticker,
+    cells,
+    layout,
+    cellPos,
+    cellH,
+    rowH = cellH ?? GRID.rowPitch,
+    staggerMs = DROP_PHYSICS.reelDelay,
+    blockDelayMs = DROP_PHYSICS.blockDelay,
+    onColumnStart,
+    speedMult = 1,
+  } = opts;
+
+  const stagger = Math.max(6, staggerMs / speedMult);
+  const exitPhysics = {
+    ...DROP_PHYSICS,
+    acceleration: DROP_PHYSICS.acceleration * 2.4,
+  };
+
+  await Promise.all(
+    Array.from({ length: layout.cols }, (_, c) =>
+      (async () => {
+        if (c > 0) await new Promise((r) => setTimeout(r, c * stagger));
+        onColumnStart?.(c);
+        await animateColumnExitOne(c, {
+          ticker,
+          cells,
+          layout,
+          cellPos,
+          rowH,
+          blockDelayMs,
+          physics: exitPhysics,
+          speedMult,
+        });
+      })()
+    )
+  );
+}
+
+/** @deprecated Use animateColumnExit + animateColumnDrop for spin transitions. */
 export async function animateShuffle(opts) {
   const { ticker, cells, layout, cellPos, durationMs = 280, paintCellScroll } = opts;
 

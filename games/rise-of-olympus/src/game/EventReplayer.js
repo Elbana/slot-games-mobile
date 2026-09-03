@@ -3,12 +3,12 @@
  */
 
 import { getClientMultiplier } from './AssetLoader.js';
-import { GRID, TIMING, LAND_ANIM_SYMBOLS, SCATTER_SYMBOL, cellPosition } from './config.js';
+import { GRID, TIMING, LAND_ANIM_SYMBOLS, SCATTER_SYMBOL, cellPosition, DROP_PHYSICS } from './config.js';
 import {
   animate,
-  animateColumnDrop,
   animateColumnTumble,
   animateRemove,
+  animateSpinTransition,
   animateWinHighlight,
   resetCellVisuals,
 } from './GridAnimator.js';
@@ -45,9 +45,11 @@ export function createEventReplayer(ctx) {
     paintCell,
     paintCellScroll,
     cellPos,
-    cellH: GRID.cellH,
+    rowH: GRID.rowPitch,
+    cellH: GRID.rowPitch,
     getMult: getClientMultiplier,
     staggerMs: TIMING.dealStagger,
+    blockDelayMs: DROP_PHYSICS.blockDelay,
     playLandClip,
     shouldPlayLand,
     get speedMult() {
@@ -72,7 +74,8 @@ export function createEventReplayer(ctx) {
     paintCell,
     paintCellScroll,
     cellPos,
-    cellH: GRID.cellH,
+    cellH: GRID.rowPitch,
+    rowH: GRID.rowPitch,
     getMult: getClientMultiplier,
     staggerMs: TIMING.tumbleStagger,
     playLandClip,
@@ -84,6 +87,37 @@ export function createEventReplayer(ctx) {
       if (sym === SCATTER_SYMBOL) playThronesSound('scatter');
     },
   };
+
+  /**
+   * Exit current symbols column-by-column, then drop new ones as spin result arrives.
+   * @param {Promise<import('../api/spin-types.js').SpinResult>} spinPromise
+   */
+  async function runSpinTransition(spinPromise) {
+    playThronesSound('spin');
+    glowLayer.removeChildren();
+    ctx.hideSignpost?.();
+    void ctx.resetTumbleWin?.();
+
+    await animateSpinTransition({
+      ...dropOpts,
+      getSpinData: async () => {
+        const result = await spinPromise;
+        const deal =
+          result.events?.find((e) => e.type === 'deal') ??
+          { grid: result.symbols, multipliers: null, scatterPositions: [] };
+        pendingScatters = deal.scatterPositions ?? [];
+        if (!pendingScatters.length && deal.grid) {
+          for (let c = 0; c < layout.cols; c++) {
+            for (let r = 0; r < layout.rows; r++) {
+              if (deal.grid[c]?.[r] === SCATTER_SYMBOL) pendingScatters.push([c, r]);
+            }
+          }
+        }
+        return { targetGrid: deal.grid, multGrid: deal.multipliers ?? null };
+      },
+      exitStaggerMs: TIMING.clearExitStagger,
+    });
+  }
 
   /**
    * @param {import('../../api/spin-api.js').SpinEvent[]} events
@@ -101,9 +135,6 @@ export function createEventReplayer(ctx) {
       playEventSound(ev);
 
       if (ev.type === 'deal') {
-        glowLayer.removeChildren();
-        ctx.hideSignpost?.();
-        await ctx.resetTumbleWin?.();
         pendingScatters = ev.scatterPositions ?? [];
         if (!pendingScatters.length && ev.grid) {
           for (let c = 0; c < layout.cols; c++) {
@@ -112,11 +143,6 @@ export function createEventReplayer(ctx) {
             }
           }
         }
-        await animateColumnDrop({
-          ...dropOpts,
-          targetGrid: ev.grid,
-          multGrid: ev.multipliers,
-        });
         lastGrid = ev.grid;
         lastMult = ev.multipliers;
         if (ev.multiplierSum > 0) ctx.setMultiplierSum(ev.multiplierSum);
@@ -241,6 +267,7 @@ export function createEventReplayer(ctx) {
 
   return {
     replay,
+    runSpinTransition,
     setAnimationSpeed(mult = 1) {
       speedMult = Math.max(1, Math.min(4, mult));
     },
