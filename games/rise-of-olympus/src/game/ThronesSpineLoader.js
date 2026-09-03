@@ -105,25 +105,13 @@ export function ensureTumbleWinValueSlotVisible(spine, visible) {
   if (slot) slot.color.set(1, 1, 1, visible ? 1 : 0);
 }
 
-/** Offset of tumbleWinValue bone from spine root (stop pose). */
-const TUMBLE_WIN_LABEL_OFFSET = { x: 0.78, y: -3.35 };
+/** Frame center in spine local space (tumble_pivot + container offset). */
+const TUMBLE_WIN_LABEL_OFFSET = { x: -0.45, y: 4.65 };
 
-/** Place win text on the value bone — avoids slot alpha hiding the label. */
+/** Place win text in the center of the tumble frame bounds. */
 export function layoutTumbleWinLabel(spine) {
   const label = spine?.__tumbleWinLabel;
   if (!label) return;
-  try {
-    if (spine.skeleton) {
-      spine.skeleton.updateWorldTransform();
-      const bone = spine.skeleton.findBone('value');
-      if (bone) {
-        label.position.set(bone.worldX, bone.worldY);
-        return;
-      }
-    }
-  } catch {
-    /* use static offset */
-  }
   label.position.set(TUMBLE_WIN_LABEL_OFFSET.x, TUMBLE_WIN_LABEL_OFFSET.y);
 }
 
@@ -413,6 +401,7 @@ export function createTumbleWinSpine() {
   spine.position.set(CHROME_SPINE.tumbleWin.x, CHROME_SPINE.tumbleWin.y);
   spine.sortableChildren = true;
   const label = createTumbleWinValueLabel();
+  label.anchor.set(0.5);
   label.visible = false;
   label.alpha = 0;
   label.zIndex = 20;
