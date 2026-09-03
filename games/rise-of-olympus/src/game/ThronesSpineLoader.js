@@ -467,10 +467,57 @@ export function createWinboxSpine() {
   return spine;
 }
 
+export function createWinlabelValueLabel() {
+  return new Text({
+    text: '',
+    style: {
+      fill: 0xfff8dc,
+      fontSize: 28,
+      fontWeight: '900',
+      fontFamily: 'Arial Black, Arial, sans-serif',
+      align: 'center',
+      stroke: { color: 0x2a1200, width: 3 },
+      dropShadow: { color: 0x000000, blur: 2, distance: 2, alpha: 0.85 },
+      letterSpacing: 0.5,
+    },
+  });
+}
+
 export function createWinlabelSpine() {
   const spine = spawnSpine('roo-winlabel-skel', 'roo-ui-atlas');
   spine.visible = false;
+  attachSpineSlotLabel(spine, 'winLabelValue', createWinlabelValueLabel());
   return spine;
+}
+
+/** @param {import('@esotericsoftware/spine-pixi-v8').Spine} spine @param {number} amount */
+export function setWinlabelValue(spine, amount) {
+  setSpineSlotLabel(spine, 'winLabelValue', amount > 0 ? amount.toLocaleString() : '');
+}
+
+/**
+ * Tiered win banner — ref WinCounter levels [1,3,7,15]× bet.
+ * @param {import('@esotericsoftware/spine-pixi-v8').Spine} spine
+ * @param {number} tier 0–4
+ */
+export function applyWinlabelTier(spine, tier) {
+  if (!spine?.skeleton) return;
+  const blueSlot = spine.skeleton.findSlot('roo1000_blue_background');
+  const yellowSlot = spine.skeleton.findSlot('roo1000_yellow_background');
+  const blueAtt = spine.skeleton.getAttachmentByName(
+    'roo1000_blue_background',
+    'normal/winlable/roo1000_blue_background',
+  );
+  const yellowAtt = spine.skeleton.getAttachmentByName(
+    'roo1000_yellow_background',
+    'normal/winlable/roo1000_yellow_background',
+  );
+  if (blueSlot) blueSlot.setAttachment(tier >= 1 ? blueAtt : null);
+  if (yellowSlot) yellowSlot.setAttachment(tier >= 2 ? yellowAtt : null);
+  if (blueSlot) blueSlot.color.set(1, 1, 1, 1);
+  if (yellowSlot) yellowSlot.color.set(1, 1, 1, tier >= 3 ? 1 : 0.85);
+  const scale = tier >= 4 ? 1.28 : tier >= 3 ? 1.16 : tier >= 2 ? 1.08 : tier >= 1 ? 1 : 0.92;
+  spine.scale.set(scale);
 }
 
 export function createTrailMultiSpine() {
@@ -787,7 +834,8 @@ export function playWinboxOut(spine) {
   });
 }
 
-export function playWinlabelShow(spine) {
+export function playWinlabelShow(spine, tier = 1) {
+  applyWinlabelTier(spine, tier);
   spine.visible = true;
   return playSpineAnim(spine, ['show', 'idle'], true);
 }
@@ -875,36 +923,44 @@ export function setSignpostMultiplier(spine, sum) {
 
 export function setTumbleWinValue(spine, value) {
   if (!spine) return;
-  spine.__tumbleWinAmount = value;
+  setTumbleWinText(spine, value > 0 ? value.toLocaleString() : '', value);
+}
+
+/** @param {import('@esotericsoftware/spine-pixi-v8').Spine} spine @param {string} text @param {number} [amount] */
+export function setTumbleWinText(spine, text, amount = 0) {
+  if (!spine) return;
+  spine.__tumbleWinAmount = amount;
   layoutTumbleWinLabel(spine);
   const label = spine.__tumbleWinLabel;
-  const text = value > 0 ? value.toLocaleString() : '';
   if (label) {
+    label.style.fontSize = text.includes('×') ? 28 : 34;
     label.text = text;
-    label.visible = value > 0;
-    label.alpha = value > 0 ? 1 : 0;
+    label.visible = Boolean(text);
+    label.alpha = text ? 1 : 0;
     label.scale.set(1);
   }
 }
 
 /**
- * Pop the win value into the frame after charge / pay (ref tumbleWinFont reveal).
+ * Pop text into the tumble frame (number or "20 × 2" formula).
  * @param {import('@esotericsoftware/spine-pixi-v8').Spine} spine
  * @param {import('pixi.js').Ticker} ticker
- * @param {number} [value]
+ * @param {string} text
+ * @param {number} [amount]
  */
-export async function animateTumbleWinValueReveal(spine, ticker, value = spine?.__tumbleWinAmount ?? 0) {
-  if (!spine || value <= 0) return;
+export async function animateTumbleWinTextReveal(spine, ticker, text, amount = 0) {
+  if (!spine || !text) return;
   const label = spine.__tumbleWinLabel;
   if (!label || !ticker) {
-    setTumbleWinValue(spine, value);
+    setTumbleWinText(spine, text, amount);
     return;
   }
 
-  label.text = value.toLocaleString();
+  label.style.fontSize = text.includes('×') ? 28 : 34;
+  label.text = text;
   label.visible = true;
   layoutTumbleWinLabel(spine);
-  spine.__tumbleWinAmount = value;
+  spine.__tumbleWinAmount = amount;
   label.alpha = 0;
   label.scale.set(0.35);
 
@@ -919,6 +975,17 @@ export async function animateTumbleWinValueReveal(spine, ticker, value = spine?.
   label.scale.set(1);
   label.visible = true;
   layoutTumbleWinLabel(spine);
+}
+
+/**
+ * Pop the win value into the frame after charge / pay (ref tumbleWinFont reveal).
+ * @param {import('@esotericsoftware/spine-pixi-v8').Spine} spine
+ * @param {import('pixi.js').Ticker} ticker
+ * @param {number} [value]
+ */
+export async function animateTumbleWinValueReveal(spine, ticker, value = spine?.__tumbleWinAmount ?? 0) {
+  if (!spine || value <= 0) return;
+  await animateTumbleWinTextReveal(spine, ticker, value.toLocaleString(), value);
 }
 
 export function refreshTumbleWinValueDisplay(spine) {

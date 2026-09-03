@@ -511,19 +511,10 @@ export async function animateWinHighlight(opts) {
   const { ticker, cells, layout, positions, glowLayer, cellSize, durationMs = 680, playWinClip } = opts;
 
   glowLayer.removeChildren();
-  /** @type {import('pixi.js').Container[]} */
-  const glows = [];
   /** @type {Promise<void>[]} */
   const winPlays = [];
   for (const [c, r] of positions) {
     const cell = cells[c][r];
-    const g = glowLayer.__makeGlow?.(cellSize) ?? null;
-    if (g) {
-      g.x = cell.x + cellSize / 2;
-      g.y = cell.y + cellSize / 2;
-      glowLayer.addChild(g);
-      glows.push(g);
-    }
     if (cell.__sprite) cell.__sprite.tint = 0xffffaa;
     if (playWinClip) winPlays.push(playWinClip(cell));
   }
@@ -543,10 +534,6 @@ export async function animateWinHighlight(opts) {
         for (const [c, r] of positions) {
           cells[c][r].scale.set(pulse);
           cells[c][r].rotation = wobble;
-        }
-        glowLayer.alpha = 0.35 + Math.sin(t * Math.PI * 5) * 0.5;
-        for (const g of glows) {
-          g.scale.set(0.8 + Math.sin(t * Math.PI * 7) * 0.25);
         }
       }),
       ...winPlays,

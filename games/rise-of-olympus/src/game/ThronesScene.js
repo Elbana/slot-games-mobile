@@ -49,6 +49,8 @@ import {
   tumbleWinDisperse,
   tumbleWinResetIdle,
   animateTumbleWinValueReveal,
+  animateTumbleWinTextReveal,
+  setTumbleWinText,
   refreshTumbleWinValueDisplay,
   layoutTumbleWinLabel,
   showBigWinCelebration,
@@ -61,6 +63,7 @@ import {
   playWinboxOut,
   playWinlabelShow,
   playWinlabelHide,
+  setWinlabelValue,
   playTrailCollect,
   showRunningMultiplier,
   updateRunningMultiplier,
@@ -71,6 +74,7 @@ import {
 import { animate } from './GridAnimator.js';
 import { createEventReplayer } from './EventReplayer.js';
 import { animateMultiplierCollectTrails, findMultiplierCells } from './MultiplierEffects.js';
+import { resolveWinCelebrationTier, startCoinShower, preloadCoinShowerAssets } from './WinCelebrationEffects.js';
 import {
   loadGameSounds,
   unlockAudio,
@@ -105,6 +109,7 @@ export async function createThronesScene(opts) {
   await loadThronesAssets();
   await loadThronesSpineAssets();
   await loadThronesChromeSpines();
+  await preloadCoinShowerAssets();
   await loadGameSounds().catch((err) => console.warn('[Thrones] sounds failed', err));
   void unlockAudio().then((ok) => {
     if (ok) startBaseMusic();
@@ -135,6 +140,7 @@ export async function createThronesScene(opts) {
   const fxLayer = new Container();
   const uiLayer = new Container();
   const overlayLayer = new Container();
+  overlayLayer.sortableChildren = true;
   // bg → platform → frame → grid (plate + symbols) → fx → ui → overlay
   stageContent.addChild(bgLayer, platformLayer, frameLayer, gridLayer, fxLayer, uiLayer, overlayLayer);
 
@@ -263,23 +269,33 @@ export async function createThronesScene(opts) {
     if (s) overlayLayer.addChild(s);
   }
 
-  /** @type {import('@esotericsoftware/spine-pixi-v8').Spine | null} */
-  let winboxSpine = null;
+  /** @type {import('@esotericsoftware/spine-pixi-v8').Spine[]} */
+  const winboxPool = [];
+  /** @type {import('@esotericsoftware/spine-pixi-v8').Spine[]} */
+  let activeWinboxes = [];
   /** @type {import('@esotericsoftware/spine-pixi-v8').Spine | null} */
   let winlabelSpine = null;
+  /** @type {{ stop: () => void } | null} */
+  let activeCoinShower = null;
+  /** @type {{ x: number, y: number } | null} */
+  let winlabelHome = null;
   /** @type {import('@esotericsoftware/spine-pixi-v8').Spine | null} */
   let runningMultSpine = null;
   /** @type {import('@esotericsoftware/spine-pixi-v8').Spine | null} */
   let introPanelSpine = null;
   try {
-    winboxSpine = createWinboxSpine();
-    fxLayer.addChild(winboxSpine);
+    for (let i = 0; i < 30; i++) {
+      const wb = createWinboxSpine();
+      fxLayer.addChild(wb);
+      winboxPool.push(wb);
+    }
   } catch (err) {
     console.warn('[Thrones] winbox failed', err);
   }
   try {
     winlabelSpine = createWinlabelSpine();
     winlabelSpine.position.set(STAGE.width / 2, CHROME.tumbleWin.y + 40);
+    winlabelHome = { x: winlabelSpine.x, y: winlabelSpine.y };
     fxLayer.addChild(winlabelSpine);
   } catch (err) {
     console.warn('[Thrones] winlabel failed', err);
@@ -459,7 +475,7 @@ export async function createThronesScene(opts) {
     tumbleWinValue = value;
   }
 
-  async function onMultiplierApply(totalWin, sum, _baseWin) {
+  async function onMultiplierApply(totalWin, sum, baseWin) {
     const sources = findMultiplierCells(cells, layout);
     const target = tumbleWinCollectTarget();
 
@@ -477,15 +493,25 @@ export async function createThronesScene(opts) {
 
     if (signpostSpine) setSignpostMultiplier(signpostSpine, sum);
 
-    updateTumbleText(totalWin);
     if (tumbleWinSpine) {
+      const base = baseWin ?? tumbleWinValue;
+      if (sum > 0 && base > 0) {
+        await animateTumbleWinTextReveal(
+          tumbleWinSpine,
+          ticker,
+          `${base.toLocaleString()} × ${sum}`,
+          base
+        );
+        await new Promise((r) => setTimeout(r, TIMING.multiplierPulse));
+      }
+      tumbleWinValue = totalWin;
       await tumbleWinPay(tumbleWinSpine);
       await animateTumbleWinValueReveal(tumbleWinSpine, ticker, totalWin);
       await new Promise((r) => setTimeout(r, TIMING.tumbleDisperseOut));
       await tumbleWinDisperse(tumbleWinSpine);
       await tumbleWinResetIdle(tumbleWinSpine);
     } else {
-      updateTumbleText(0);
+      updateTumbleText(totalWin);
     }
   }
 
@@ -500,31 +526,73 @@ export async function createThronesScene(opts) {
     if (signpostSpine) void showSignpostIdle(signpostSpine);
   }
 
-  function spawnWinFx(positions) {
-    if (!winboxSpine && !winlabelSpine) return Promise.resolve();
+  function clusterCenter(positions) {
     let cx = 0;
     let cy = 0;
     for (const [c, r] of positions) {
       cx += cells[c][r].x + GRID.cell / 2;
       cy += cells[c][r].y + GRID.cell / 2;
     }
-    cx = ORIGIN.x + cx / positions.length;
-    cy = ORIGIN.y + cy / positions.length;
-    if (winboxSpine) {
-      winboxSpine.x = cx;
-      winboxSpine.y = cy;
+    return {
+      x: ORIGIN.x + cx / positions.length,
+      y: ORIGIN.y + cy / positions.length,
+    };
+  }
+
+  function spawnWinFx(positions, clusterPay = 0, bet = 20) {
+    if (!positions.length) return Promise.resolve();
+    const tier = resolveWinCelebrationTier(clusterPay, bet);
+    if (tier < 0) return Promise.resolve();
+
+    activeWinboxes = [];
+    for (let i = 0; i < positions.length; i++) {
+      let wb = winboxPool[i];
+      if (!wb) {
+        wb = createWinboxSpine();
+        fxLayer.addChild(wb);
+        winboxPool.push(wb);
+      }
+      const [c, r] = positions[i];
+      wb.position.set(
+        ORIGIN.x + cells[c][r].x + GRID.cell / 2,
+        ORIGIN.y + cells[c][r].y + GRID.cell / 2,
+      );
+      wb.scale.set(1.12);
+      activeWinboxes.push(wb);
     }
-    return Promise.all([
-      winboxSpine ? playWinboxIn(winboxSpine) : Promise.resolve(),
-      winlabelSpine ? playWinlabelShow(winlabelSpine) : Promise.resolve(),
-    ]);
+
+    if (winlabelSpine && tier >= 1) {
+      const { x: cx, y: cy } = clusterCenter(positions);
+      winlabelSpine.position.set(cx, cy - 10);
+      setWinlabelValue(winlabelSpine, clusterPay);
+    }
+
+    activeCoinShower?.stop();
+    activeCoinShower = null;
+
+    const tasks = [
+      startCoinShower(overlayLayer, STAGE, tier).then((shower) => {
+        activeCoinShower = shower;
+      }),
+      ...activeWinboxes.map((wb) => playWinboxIn(wb)),
+    ];
+    if (winlabelSpine && tier >= 1) {
+      tasks.push(playWinlabelShow(winlabelSpine, tier));
+    }
+    return Promise.all(tasks);
   }
 
   async function endWinFx() {
     await Promise.all([
-      winboxSpine ? playWinboxOut(winboxSpine) : Promise.resolve(),
-      winlabelSpine ? playWinlabelHide(winlabelSpine) : Promise.resolve(),
+      ...activeWinboxes.map((wb) => playWinboxOut(wb)),
+      winlabelSpine?.visible ? playWinlabelHide(winlabelSpine) : Promise.resolve(),
     ]);
+    activeWinboxes = [];
+    if (winlabelSpine && winlabelHome) {
+      winlabelSpine.position.set(winlabelHome.x, winlabelHome.y);
+      winlabelSpine.scale.set(1);
+      setWinlabelValue(winlabelSpine, 0);
+    }
   }
 
   function spawnTrailFx(positions) {

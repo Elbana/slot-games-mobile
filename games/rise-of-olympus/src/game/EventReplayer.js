@@ -199,17 +199,13 @@ export function createEventReplayer(ctx) {
 
       if (ev.type === 'cluster_win') {
         const positions = ev.wins.flatMap((w) => w.positions);
+        const clusterPay = ev.wins.reduce((a, w) => a + w.pay, 0);
         const prevGrid = lastGrid ?? ev.grid;
-        runningWin += ev.wins.reduce((a, w) => a + w.pay, 0);
+        runningWin += clusterPay;
         sweetenerStep += 1;
         playWinCounterSweetener(sweetenerStep);
-        await ctx.onCascadeWin?.(runningWin);
-        if (ctx.pulseTumblePanel) {
-          await animate(ticker, TIMING.tumblePanelPulse / speedMult, (t) => ctx.pulseTumblePanel(t));
-          ctx.resetPanelScale?.();
-        }
-        onWinTick?.(runningWin);
 
+        const winFx = ctx.spawnWinFx?.(positions, clusterPay, bet);
         await animateWinHighlight({
           ticker,
           cells,
@@ -220,6 +216,15 @@ export function createEventReplayer(ctx) {
           durationMs: TIMING.winHighlight / speedMult,
           playWinClip,
         });
+        await winFx;
+        await ctx.endWinFx?.();
+
+        await ctx.onCascadeWin?.(runningWin);
+        if (ctx.pulseTumblePanel) {
+          await animate(ticker, TIMING.tumblePanelPulse / speedMult, (t) => ctx.pulseTumblePanel(t));
+          ctx.resetPanelScale?.();
+        }
+        onWinTick?.(runningWin);
 
         playThronesSound('trail');
         ctx.spawnTrailFx?.(positions);
