@@ -1,0 +1,478 @@
+/**
+ * RoO1000 clone HUD — portrait #gamepanel.pt / .fg.pt (PG mobile_videoslot.css).
+ */
+
+.gc-hud--thrones {
+  pointer-events: none;
+  height: 100%;
+  position: relative;
+}
+
+.gc-hud--thrones .gc-hud__top--thrones {
+  background: transparent;
+  border: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 4;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25rem 0.35rem;
+}
+
+.gc-hud--thrones .gc-hud__back,
+.gc-hud--thrones .gc-hud__rules {
+  pointer-events: auto;
+  opacity: 0.45;
+  font-size: 0.72rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ccc;
+  text-decoration: none;
+}
+
+.gc-hud--thrones .gc-hud__rules {
+  border: 1px solid rgba(255, 215, 79, 0.25);
+  color: #ffe082;
+  cursor: pointer;
+}
+
+.roo-gamepanel {
+  font-family: 'Roboto Condensed', Arial, sans-serif;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.roo-gamepanel.pt {
+  height: 14cqh;
+  font-size: 2cqh;
+  line-height: 3.5cqh;
+}
+
+.roo-gamepanel #backgroundImg {
+  position: absolute;
+  inset: 0;
+  background-image: var(--roo-bottom-bg);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+.roo-gamepanel.pt #backgroundImg::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  content: '';
+  background: radial-gradient(#ffffff, #808080, #000000);
+}
+
+.roo-gamepanel #bottomPanelWrapper {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+}
+
+.roo-gamepanel #moneyBalanceWrapper,
+.roo-gamepanel #moneyWinWrapper,
+.roo-gamepanel #coinsBetWrapper {
+  position: absolute;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+#roo-gamepanel.pt #moneyBalanceWrapper {
+  right: 56cqw;
+  top: 7.5cqh;
+  min-width: 40%;
+  text-align: left;
+}
+
+#roo-gamepanel.pt.fg #moneyBalanceWrapper {
+  right: 9cqh;
+  top: 2.2cqh;
+  left: auto;
+  min-width: 33%;
+  display: inline-table;
+  text-align: right;
+}
+
+#roo-gamepanel.pt #moneyWinWrapper {
+  top: 10.5cqh;
+  min-width: 40%;
+  display: inline-table;
+  text-align: right;
+  right: 4cqw;
+}
+
+#roo-gamepanel.pt.fg #moneyWinWrapper {
+  right: 1cqw;
+  top: 10.5cqh;
+  min-width: 40%;
+}
+
+#roo-gamepanel.pt #coinsBetWrapper {
+  top: 2.2cqh;
+  bottom: auto;
+  right: 9cqh;
+  min-width: 30%;
+  text-align: right;
+  pointer-events: auto;
+}
+
+#roo-gamepanel #buttonsWrapper.pt {
+  position: absolute;
+  left: 50%;
+  right: 50%;
+  bottom: 23cqw;
+  height: 12%;
+  transform: none;
+  width: auto;
+}
+
+#roo-gamepanel.pt #spinBtnWrapper {
+  position: absolute;
+  width: 12cqw;
+  height: 12cqw;
+  top: -2.5cqw;
+  left: 10px;
+  right: auto;
+  bottom: auto;
+  inset: auto;
+  pointer-events: auto;
+}
+
+.roo-gamepanel #balanceText,
+.roo-gamepanel #winText,
+.roo-gamepanel .coinsText {
+  color: #fff;
+  font-weight: 400;
+}
+
+.roo-gamepanel #moneyBalance,
+.roo-gamepanel .moneyWin {
+  color: #fc3;
+  margin-left: 0.35rem;
+  font-weight: 700;
+}
+
+.roo-gamepanel .coinsBet {
+  color: #fc3;
+  margin-left: 0.35rem;
+  margin-right: 0.35rem;
+  font-weight: 700;
+  min-width: 2.5em;
+  display: inline-block;
+  text-align: center;
+  background: transparent;
+  border: none;
+  font: inherit;
+  pointer-events: auto;
+  cursor: pointer;
+  padding: 0.1em 0.25em;
+  border-radius: 4px;
+}
+
+.roo-gamepanel .coinsBet:hover:not(:disabled) {
+  background: rgba(255, 204, 51, 0.12);
+}
+
+.roo-gamepanel .coinsBet:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.roo-chip-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.roo-chip-overlay[hidden] {
+  display: none !important;
+}
+
+.roo-chip-overlay__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.roo-chip-overlay__panel {
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(180deg, #1a2040 0%, #0d1228 100%);
+  border: 2px solid rgba(255, 204, 51, 0.35);
+  border-radius: 12px;
+  padding: 1rem 1.25rem 1.1rem;
+  min-width: min(92vw, 320px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+}
+
+.roo-chip-overlay__title {
+  margin: 0 0 0.75rem;
+  text-align: center;
+  color: #ffe082;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+}
+
+.roo-chip-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.roo-chip-btn {
+  border: 1px solid rgba(255, 204, 51, 0.25);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fc3;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 0.55rem 0.35rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.roo-chip-btn:hover {
+  background: rgba(255, 204, 51, 0.15);
+}
+
+.roo-chip-btn--active {
+  background: rgba(255, 204, 51, 0.28);
+  border-color: #fc3;
+  color: #fff;
+}
+
+.roo-chip-overlay__close {
+  display: block;
+  margin: 0.85rem auto 0;
+  padding: 0.35rem 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.roo-chip-overlay__close:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.roo-bet-btn {
+  width: 2.8cqh;
+  height: 2.8cqh;
+  min-width: 22px;
+  min-height: 22px;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  vertical-align: middle;
+  background-color: transparent;
+  background-image: var(--roo-ui-elements);
+  background-size: 402.78% 709.72%;
+  pointer-events: auto;
+}
+
+.roo-bet-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.roo-bet-btn--dec {
+  background-position: 0% 67.995%;
+}
+
+.roo-bet-btn--inc {
+  background-position: 0% 84.738%;
+}
+
+.roo-gamepanel.fg #moneyBalanceWrapper #balanceText,
+.roo-gamepanel.fg #moneyBalanceWrapper #moneyBalance {
+  color: #fc3;
+}
+
+.roo-gamepanel #spinBtn {
+  width: 100%;
+  height: 100%;
+  min-width: 56px;
+  min-height: 56px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  background-color: transparent;
+  background-size: 402.78% 709.72%;
+  background-position: 33.72% 63.78%;
+  background-image: var(--roo-ui-elements);
+}
+
+.roo-gamepanel #spinBtn.roo-spin--free {
+  filter: hue-rotate(85deg) saturate(1.2);
+}
+
+.roo-gamepanel #spinBtn.roo-spin--disabled,
+.roo-gamepanel #spinBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.roo-gamepanel #spinBtnPulse {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 4%;
+  pointer-events: none;
+  background-size: 370% 100%;
+  background-position: 74.2% 0%;
+  background-image: var(--roo-ui);
+  animation: roo-spin-pulse 2s 0.5s infinite;
+  opacity: 0;
+}
+
+#roo-gamepanel.pt #spinBtnWrapper:not(.roo-spin--disabled) #spinBtnPulse {
+  opacity: 0;
+  animation-name: roo-spin-pulse;
+}
+
+@keyframes roo-spin-pulse {
+  0% {
+    opacity: 0;
+    animation-timing-function: ease-out;
+  }
+  50% {
+    opacity: 1;
+    animation-timing-function: ease-in;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.roo-gamepanel .roo-feature {
+  position: absolute;
+  top: -3.5cqh;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff59f;
+  font-size: 2.4cqh;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
+.roo-gamepanel .roo-msg {
+  position: absolute;
+  top: -6cqh;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  font-size: 2cqh;
+  pointer-events: none;
+}
+
+.roo-gamepanel .moneyWin.roo-win--active {
+  color: #ffe082;
+}
+
+@media (min-width: 900px) {
+  .roo-gamepanel.pt {
+    height: 72px;
+    font-size: 14px;
+    line-height: 1.2;
+  }
+
+  #roo-gamepanel.pt #moneyBalanceWrapper {
+    left: 20px;
+    right: auto;
+    top: auto;
+    bottom: 14px;
+    min-width: 0;
+    text-align: left;
+  }
+
+  #roo-gamepanel.pt.fg #moneyBalanceWrapper {
+    right: 120px;
+    left: auto;
+    top: auto;
+    bottom: 14px;
+  }
+
+  #roo-gamepanel.pt #moneyWinWrapper {
+    right: 20px;
+    left: auto;
+    top: auto;
+    bottom: 8px;
+    min-width: 0;
+  }
+
+  #roo-gamepanel.pt #coinsBetWrapper {
+    right: 120px;
+    left: auto;
+    top: auto;
+    bottom: 14px;
+    min-width: 0;
+  }
+
+  #roo-gamepanel #buttonsWrapper.pt {
+    left: 50%;
+    right: auto;
+    bottom: 4px;
+    transform: translateX(-50%);
+    width: 64px;
+    height: 64px;
+  }
+
+  #roo-gamepanel.pt #spinBtnWrapper {
+    inset: 0;
+    width: auto;
+    height: auto;
+    top: auto;
+    left: auto;
+  }
+
+  .roo-gamepanel .roo-feature {
+    top: -28px;
+    font-size: 14px;
+  }
+
+  .roo-gamepanel .roo-msg {
+    top: -48px;
+    font-size: 13px;
+  }
+}
+
+@font-face {
+  font-family: 'Roboto Condensed';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/assets/rise-of-olympus/ROBOTO_CONDENSED_REGULAR.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Roboto Condensed';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/assets/rise-of-olympus/ROBOTO_CONDENSED_BOLD.woff') format('woff');
+}
