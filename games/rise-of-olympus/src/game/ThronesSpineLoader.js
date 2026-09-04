@@ -729,7 +729,7 @@ export function hideBigWinCelebration(stack) {
 export async function showFsCounterAward(spine, count) {
   if (!spine) return;
   spine.visible = true;
-  const intro = count >= 12 ? 'win_to_trigger' : 'show';
+  const intro = count >= 5 ? 'win_to_trigger' : 'show';
   await playSpineAnim(spine, [intro, 'show_alt', 'show'], false);
   await playSpineAnim(spine, ['idle'], true);
 }

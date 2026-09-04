@@ -755,7 +755,7 @@ export async function createThronesScene(opts) {
   }
 
   async function showFsBanner(count) {
-    if (introPanelSpine && count >= 12) {
+    if (introPanelSpine && count >= 5) {
       await showIntroPanel(introPanelSpine);
       await new Promise((r) => setTimeout(r, TIMING.fsBannerHold));
       await hideIntroPanel(introPanelSpine);

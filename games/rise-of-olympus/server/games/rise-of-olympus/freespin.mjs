@@ -1,10 +1,10 @@
 import { COLS, ROWS, SYMBOL } from './config.mjs';
 
-/** Paytable (IDS_ROO1K_PT20/21/23A): 3+ scatters → 12 FS; retrigger → +3; cap 36. */
+/** 3+ scatters trigger FS. Initial award 5; one retrigger +3 (max 8 total per FS session). */
 export const FS_TRIGGER_MIN = 3;
-export const FS_INITIAL_AWARD = 12;
+export const FS_INITIAL_AWARD = 5;
 export const FS_RETRIGGER_AWARD = 3;
-export const FS_MAX_TOTAL = 36;
+export const FS_MAX_TOTAL = 8;
 
 export function countScatters(grid) {
   let n = 0;
@@ -16,13 +16,21 @@ export function countScatters(grid) {
   return n;
 }
 
-/** Award free spins for scatter count (0 if below threshold). */
-export function scatterFreeSpinAward(scatterCount, { inFreeSpins = false } = {}) {
-  if (scatterCount < FS_TRIGGER_MIN) return 0;
-  return inFreeSpins ? FS_RETRIGGER_AWARD : FS_INITIAL_AWARD;
+/** @param {object} session */
+export function ensureFreeSpinState(session) {
+  if (!session.thronesFs) session.thronesFs = createFreeSpinState();
+  if (!session.rooFs) session.rooFs = session.thronesFs;
+  return session.thronesFs;
 }
 
-/** Clamp total FS (played + remaining) to game max. */
+/** Award free spins for scatter count (0 if below threshold). */
+export function scatterFreeSpinAward(scatterCount, { inFreeSpins = false, retriggerUsed = false } = {}) {
+  if (scatterCount < FS_TRIGGER_MIN) return 0;
+  if (inFreeSpins) return retriggerUsed ? 0 : FS_RETRIGGER_AWARD;
+  return FS_INITIAL_AWARD;
+}
+
+/** @deprecated kept for callers — use fsTotalAwarded + retriggerUsed instead */
 export function clampFreeSpinTotal(played, remaining, add) {
   const room = Math.max(0, FS_MAX_TOTAL - played - remaining);
   return Math.min(add, room);
@@ -35,6 +43,9 @@ export function createFreeSpinState() {
     fsTotalWin: 0,
     goUltra: false,
     lastFsResolvedSpin: 0,
+    freespinCnt: 0,
+    fsTotalAwarded: 0,
+    retriggerUsed: false,
   };
 }
 
@@ -43,28 +54,26 @@ export const createThronesFreeSpinState = createFreeSpinState;
 
 /** True when session has active free spins. */
 export function isInFreeSpins(session) {
-  return (session?.thronesFs?.freeSpinsLeft ?? session?.rooFs?.freeSpinsLeft ?? 0) > 0;
+  ensureFreeSpinState(session);
+  return (session.thronesFs?.freeSpinsLeft ?? 0) > 0;
 }
 
-/**
- * Emit cmd-2 scatter FS intro block only when this spin actually awards FS.
- * Requires 3+ scatters on the initial grid AND a non-zero award (+12 trigger or +3 retrigger).
- */
+/** Emit scatter FS intro only when this spin actually awards FS. */
 export function shouldEmitScatterFeature(scatterCount, fsAwardAdded) {
   return scatterCount >= FS_TRIGGER_MIN && (fsAwardAdded ?? 0) > 0;
 }
 
 /**
  * Apply SPINEND free-spin fields from round result.
- * Trigger (base game, 3+ scatters): SET initial award once.
- * Retrigger (during FS, 3+ scatters): ADD +3 once, capped at FS_MAX_TOTAL.
- * Same spin never applies both paths; repeat calls for the same spinId are ignored.
+ * - Base game 3+ scatters: start FS with 5 spins, multiplier 1.
+ * - During FS: consume 1 spin per round; at most one +3 retrigger (cap 8 awarded total).
  */
 export function resolveFreeSpinEnd(
   session,
   { scatterCount = 0, roundWin = 0, fsMulti = 0, spinId = null } = {}
 ) {
-  const fs = session.thronesFs ?? session.rooFs ?? createFreeSpinState();
+  const fs = ensureFreeSpinState(session);
+
   if (spinId != null && fs.lastFsResolvedSpin === spinId) {
     return {
       freeSpinsLeft: fs.freeSpinsLeft,
@@ -80,11 +89,14 @@ export function resolveFreeSpinEnd(
   let freeSpinsLeft = fs.freeSpinsLeft;
   let freeSpinMultiplier = fs.freeSpinMultiplier ?? 0;
   let freespinCnt = fs.freespinCnt ?? 0;
+  let fsTotalAwarded = fs.fsTotalAwarded ?? 0;
+  let retriggerUsed = fs.retriggerUsed === true;
+  let fsTotalWin = fs.fsTotalWin ?? 0;
 
   if (wasInFs) {
     freeSpinsLeft = Math.max(0, freeSpinsLeft - 1);
-    fs.fsTotalWin = (fs.fsTotalWin ?? 0) + roundWin;
     freespinCnt += 1;
+    fsTotalWin += roundWin;
     if (fsMulti > 0) freeSpinMultiplier = fsMulti;
   }
 
@@ -93,28 +105,36 @@ export function resolveFreeSpinEnd(
   let fsAwardAdded = 0;
 
   if (scatterCount >= FS_TRIGGER_MIN) {
-    if (wasInFs) {
-      const add = clampFreeSpinTotal(freespinCnt, freeSpinsLeft, FS_RETRIGGER_AWARD);
+    if (!wasInFs) {
+      freeSpinsLeft = FS_INITIAL_AWARD;
+      freeSpinMultiplier = 1;
+      fsTotalAwarded = FS_INITIAL_AWARD;
+      retriggerUsed = false;
+      freespinCnt = 0;
+      fsTotalWin = 0;
+      fsAwardAdded = FS_INITIAL_AWARD;
+      triggered = true;
+    } else if (!retriggerUsed && fsTotalAwarded < FS_MAX_TOTAL) {
+      const add = Math.min(FS_RETRIGGER_AWARD, FS_MAX_TOTAL - fsTotalAwarded);
       if (add > 0) {
         freeSpinsLeft += add;
+        fsTotalAwarded += add;
+        retriggerUsed = true;
         fsAwardAdded = add;
         retriggered = true;
-      }
-    } else {
-      const initial = clampFreeSpinTotal(0, 0, FS_INITIAL_AWARD);
-      if (initial > 0) {
-        freeSpinsLeft = initial;
-        fsAwardAdded = initial;
-        triggered = true;
       }
     }
   }
 
-  const fsTotalWin = fs.fsTotalWin ?? 0;
   const fsEnded = wasInFs && freeSpinsLeft === 0;
 
   if (freeSpinsLeft === 0) {
     freeSpinMultiplier = 0;
+    fsTotalAwarded = 0;
+    retriggerUsed = false;
+    freespinCnt = 0;
+    if (fsEnded) fsTotalWin = fsTotalWin;
+    else fsTotalWin = 0;
   }
 
   session.thronesFs = {
@@ -123,6 +143,8 @@ export function resolveFreeSpinEnd(
     freeSpinMultiplier,
     freespinCnt: freeSpinsLeft > 0 ? freespinCnt : 0,
     fsTotalWin: freeSpinsLeft > 0 ? fsTotalWin : 0,
+    fsTotalAwarded: freeSpinsLeft > 0 ? fsTotalAwarded : 0,
+    retriggerUsed: freeSpinsLeft > 0 ? retriggerUsed : false,
     lastFsResolvedSpin: spinId ?? fs.lastFsResolvedSpin ?? 0,
   };
   session.rooFs = session.thronesFs;
@@ -140,6 +162,5 @@ export function resolveFreeSpinEnd(
 
 /** Bet cost — zero during free spins. */
 export function effectiveBet(session, bet) {
-  const fs = session?.thronesFs ?? session?.rooFs;
-  return isInFreeSpins({ thronesFs: fs }) ? 0 : bet;
+  return isInFreeSpins(session) ? 0 : bet;
 }

@@ -3,7 +3,7 @@
  */
 
 import { spinThronesOfOlympus } from './games/rise-of-olympus/spin.mjs';
-import { effectiveBet } from './games/rise-of-olympus/freespin.mjs';
+import { effectiveBet, ensureFreeSpinState } from './games/rise-of-olympus/freespin.mjs';
 import { BET_LEVELS, RATE_LIMIT_SPIN_MS, REQUIRE_AUTH, API_KEY } from './config.mjs';
 import { loadSession, saveSession, cacheSpinResult, getCachedSpin } from './session-store.mjs';
 import { auditSpin } from './audit.mjs';
@@ -29,10 +29,10 @@ function resolvePlayer(req) {
 }
 
 function sessionState(session) {
-  const fs = session.thronesFs;
+  const fs = ensureFreeSpinState(session);
   return {
-    fsRemaining: fs?.freeSpinsLeft ?? 0,
-    fsMultiplier: fs?.freeSpinMultiplier ?? 0,
+    fsRemaining: fs.freeSpinsLeft ?? 0,
+    fsMultiplier: fs.freeSpinMultiplier ?? 0,
   };
 }
 

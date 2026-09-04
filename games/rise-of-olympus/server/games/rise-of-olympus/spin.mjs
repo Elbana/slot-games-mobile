@@ -3,6 +3,7 @@ import { spinRooRound } from './spin-round.mjs';
 import {
   createFreeSpinState,
   effectiveBet,
+  ensureFreeSpinState,
   resolveFreeSpinEnd,
 } from './freespin.mjs';
 import { extractGridMultipliers, sumMultipliers } from './grid.mjs';
@@ -121,7 +122,8 @@ function buildEvents(round, { totalWin, fsAwardAdded, fsEnded, fsSessionTotalWin
  * @param {{ forceWin?: boolean, spinId?: number }} [opts]
  */
 export function spinThronesOfOlympus(session, bet, opts = {}) {
-  const fs = session.thronesFs ?? createFreeSpinState();
+  ensureFreeSpinState(session);
+  const fs = session.thronesFs;
   const inFreeSpins = fs.freeSpinsLeft > 0;
   const charge = effectiveBet(session, bet);
   const baseBet = session.bet || bet;
@@ -131,7 +133,6 @@ export function spinThronesOfOlympus(session, bet, opts = {}) {
     process.env.ROO_GO_ULTRA === '1';
 
   const prevFsMulti = fs.freeSpinMultiplier ?? 0;
-  if (!session.thronesFs) session.thronesFs = createFreeSpinState();
   session.thronesFs.goUltra = goUltra;
 
   const round = spinRooRound(bet, {
@@ -165,6 +166,7 @@ export function spinThronesOfOlympus(session, bet, opts = {}) {
   });
 
   if (fsResult.triggered && !inFreeSpins) {
+    session.thronesFs.freeSpinMultiplier = 1;
     events.push({ type: 'fs_multiplier_update', value: 1 });
   } else if (inFreeSpins && round.fsMulti > prevFsMulti) {
     events.push({ type: 'fs_multiplier_update', value: round.fsMulti });

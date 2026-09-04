@@ -191,6 +191,11 @@ export async function mountRiseOfOlympus(mount) {
       phase = 'idle';
       syncHud();
     }
+
+    if ((gameState.fsRemaining ?? 0) > 0) {
+      await new Promise((r) => setTimeout(r, turbo ? 120 : 280));
+      await doSpin();
+    }
   }
 
   const initial = [];
