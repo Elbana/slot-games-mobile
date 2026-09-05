@@ -57,7 +57,7 @@ export async function mountRiseOfOlympus(mount) {
   app.renderer.on('resize', onResize);
 
   let balance = 0;
-  let bet = 20;
+  let bet = DEFAULT_BET_LEVELS[0];
   let betLevels = DEFAULT_BET_LEVELS;
   /** @type {GamePhase} */
   let phase = 'idle';
@@ -108,13 +108,15 @@ export async function mountRiseOfOlympus(mount) {
   try {
     const session = await fetchSession(GAME.slug);
     balance = session.balance;
-    bet = session.bet ?? bet;
     betLevels = session.betLevels ?? betLevels;
     gameState = session.state ?? {};
+    bet = betLevels[0] ?? DEFAULT_BET_LEVELS[0];
     hud.setBet?.(bet);
   } catch (err) {
     console.warn('[RiseOfOlympus] session init failed', err);
     balance = 2_500_000;
+    bet = betLevels[0] ?? DEFAULT_BET_LEVELS[0];
+    hud.setBet?.(bet);
     hud.setMessage?.(err instanceof Error ? err.message : 'Could not load session');
   }
 

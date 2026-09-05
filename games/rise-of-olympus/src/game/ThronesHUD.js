@@ -56,20 +56,30 @@ export function createThronesHUD(root, opts) {
               <strong class="roo-stat__value moneyWin" id="moneyWin">$ 0</strong>
             </div>
           </div>
-          <div id="buttonsWrapper" class="roo-controls-row pt">
-            <button type="button" id="betDec" class="roo-ctrl roo-bet-btn roo-bet-btn--dec" aria-label="Decrease bet"></button>
-            <button type="button" id="turboBtn" class="roo-ctrl roo-ctrl--turbo" aria-label="Faster animations">
-              <span class="roo-ctrl__icon roo-ctrl__icon--bolt"></span>
-              <span class="roo-ctrl__label" id="turboLabel">SPEED</span>
+          <div id="buttonsWrapper" class="roo-controls-row">
+            <button type="button" id="turboBtn" class="roo-btn roo-btn--aux" aria-label="Faster animations">
+              <span class="roo-btn__icon-wrap" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z" fill="currentColor"/></svg>
+              </span>
+              <span class="roo-btn__tag" id="turboLabel">SPEED</span>
             </button>
-            <div id="spinBtnWrapper">
-              <button type="button" id="spinBtn" aria-label="Spin"></button>
-              <div id="spinBtnPulse"></div>
+            <button type="button" id="betDec" class="roo-btn roo-btn--round" aria-label="Decrease bet">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg>
+            </button>
+            <div id="spinBtnWrapper" class="roo-spin-wrap">
+              <button type="button" id="spinBtn" class="roo-btn roo-btn--spin" aria-label="Spin">
+                <span class="roo-btn__spin-ring" aria-hidden="true"></span>
+                <span class="roo-btn__spin-core">SPIN</span>
+              </button>
             </div>
-            <button type="button" id="betInc" class="roo-ctrl roo-bet-btn roo-bet-btn--inc" aria-label="Increase bet"></button>
-            <button type="button" id="autoBtn" class="roo-ctrl roo-ctrl--auto" aria-label="Auto play">
-              <span class="roo-ctrl__icon roo-ctrl__icon--auto"></span>
-              <span class="roo-ctrl__label" id="autoLabel">AUTO</span>
+            <button type="button" id="betInc" class="roo-btn roo-btn--round" aria-label="Increase bet">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6v12M6 12h12" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg>
+            </button>
+            <button type="button" id="autoBtn" class="roo-btn roo-btn--aux" aria-label="Auto play">
+              <span class="roo-btn__icon-wrap" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08a5.99 5.99 0 01-5.65 4 6 6 0 110-12c1.66 0 3.14.67 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor"/></svg>
+              </span>
+              <span class="roo-btn__tag" id="autoLabel">AUTO</span>
             </button>
           </div>
         </div>
@@ -90,6 +100,7 @@ export function createThronesHUD(root, opts) {
   const winEl = root.querySelector('#moneyWin');
   const statusEl = root.querySelector('#roo-status');
   const spinBtn = root.querySelector('#spinBtn');
+  const spinCore = root.querySelector('.roo-btn__spin-core');
   const spinWrap = root.querySelector('#spinBtnWrapper');
   const betEl = root.querySelector('#betOpen');
   const betDec = root.querySelector('#betDec');
@@ -129,26 +140,25 @@ export function createThronesHUD(root, opts) {
   }
 
   function syncBetButtons() {
-    betDec.disabled = !betEnabled || betIndex <= 0;
-    betInc.disabled = !betEnabled || betIndex >= levels.length - 1;
     betEl.disabled = !betEnabled;
   }
 
   function setBetIndex(idx, notify = true) {
-    betIndex = Math.max(0, Math.min(levels.length - 1, idx));
+    const next = Math.max(0, Math.min(levels.length - 1, idx));
+    const changed = next !== betIndex;
+    betIndex = next;
     betEl.textContent = formatMoney(levels[betIndex]);
-    syncBetButtons();
-    if (notify) opts.onBetChange?.(levels[betIndex]);
+    if (changed && notify) opts.onBetChange?.(levels[betIndex]);
   }
 
   function syncTurbo() {
-    turboBtn.classList.toggle('roo-ctrl--turbo-on', turboOn);
+    turboBtn.classList.toggle('roo-btn--active', turboOn);
     turboLabel.textContent = turboOn ? 'FAST' : 'SPEED';
     opts.onTurboToggle?.(turboOn);
   }
 
   function syncAuto() {
-    autoBtn.classList.toggle('roo-ctrl--auto-on', autoOn);
+    autoBtn.classList.toggle('roo-btn--active', autoOn);
     autoLabel.textContent = autoOn ? 'STOP' : 'AUTO';
     opts.onAutoToggle?.(autoOn);
   }
@@ -160,10 +170,12 @@ export function createThronesHUD(root, opts) {
   });
   root.querySelector('#gc-rules').addEventListener('click', () => opts.onRules?.());
   betDec.addEventListener('click', () => {
+    if (!betEnabled || betIndex <= 0) return;
     playThronesSound('ui_interact');
     setBetIndex(betIndex - 1);
   });
   betInc.addEventListener('click', () => {
+    if (!betEnabled || betIndex >= levels.length - 1) return;
     playThronesSound('ui_interact');
     setBetIndex(betIndex + 1);
   });
@@ -203,9 +215,15 @@ export function createThronesHUD(root, opts) {
       statusEl.textContent = text || 'GOOD LUCK';
     },
     setBet(v) {
-      const idx = levels.indexOf(v);
-      if (idx >= 0) setBetIndex(idx, false);
-      else betEl.textContent = formatMoney(v);
+      let idx = levels.indexOf(v);
+      if (idx < 0 && v != null && Number.isFinite(v)) {
+        idx = levels.reduce(
+          (best, lv, i) => (Math.abs(lv - v) < Math.abs(levels[best] - v) ? i : best),
+          0
+        );
+      }
+      if (idx < 0) idx = 0;
+      setBetIndex(idx, false);
     },
     getBet() {
       return levels[betIndex] ?? parseInt(String(betEl.textContent).replace(/[^\d]/g, ''), 10);
@@ -226,8 +244,8 @@ export function createThronesHUD(root, opts) {
     },
     setSpinEnabled(on) {
       spinBtn.disabled = !on;
-      spinBtn.classList.toggle('roo-spin--disabled', !on);
-      spinWrap.classList.toggle('roo-spin--disabled', !on);
+      spinBtn.classList.toggle('roo-btn--disabled', !on);
+      spinWrap.classList.toggle('roo-spin-wrap--disabled', !on);
     },
     setSpinLabel(_t) {
       /* sprite-only spin button */
@@ -256,13 +274,15 @@ export function createThronesHUD(root, opts) {
       if (fs.remaining > 0) {
         const mult = fs.multiplier > 0 ? ` · ×${fs.multiplier}` : '';
         this.setFeature(`FREE SPIN ${fs.remaining}${mult}`);
-        spinBtn.classList.add('roo-spin--free');
+        spinBtn.classList.add('roo-btn--free');
+        if (spinCore) spinCore.textContent = 'FREE';
         gamepanel?.classList.add('fg');
         this.setBetEnabled(false);
         closeChipSelector();
       } else {
         this.setFeature('');
-        spinBtn.classList.remove('roo-spin--free');
+        spinBtn.classList.remove('roo-btn--free');
+        if (spinCore) spinCore.textContent = 'SPIN';
         gamepanel?.classList.remove('fg');
         this.setBetEnabled(true);
       }

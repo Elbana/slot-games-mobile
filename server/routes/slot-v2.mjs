@@ -52,7 +52,7 @@ export async function handleGetSession(req, res) {
 
   const q = { ...req.query, ...req.body };
   const session = loadSession(ctx.sessionKey);
-  session.bet = parseInt(q.bet, 10) || session.bet || 20;
+  session.bet = parseInt(q.bet, 10) || session.bet || BET_LEVELS[0];
 
   try {
     session.balance = await ctx.wallet.getBalance(ctx);
@@ -63,7 +63,7 @@ export async function handleGetSession(req, res) {
   res.json({
     game: slug,
     balance: session.balance,
-    bet: session.bet ?? 20,
+    bet: session.bet ?? BET_LEVELS[0],
     betLevels: BET_LEVELS,
     state: sessionState(session),
     playerId: ctx.playerId,
@@ -78,7 +78,7 @@ export async function handleV2Spin(req, res) {
 
   const q = { ...req.query, ...req.body };
   const session = loadSession(ctx.sessionKey);
-  const bet = parseInt(q.bet, 10) || session.bet || 20;
+  const bet = parseInt(q.bet, 10) || session.bet || BET_LEVELS[0];
   if (!BET_LEVELS.includes(bet)) {
     return res.status(400).json({ error: `Invalid bet. Allowed: ${BET_LEVELS.join(', ')}` });
   }

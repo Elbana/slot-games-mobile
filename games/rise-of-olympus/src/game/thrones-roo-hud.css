@@ -160,167 +160,229 @@
 }
 
 .roo-controls-row {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr auto 1fr;
+  --btn-gold: #ffd54f;
+  --btn-gold-deep: #c9a227;
+  --btn-face: linear-gradient(165deg, #2a3560 0%, #141c38 55%, #0a1028 100%);
+  --btn-face-hover: linear-gradient(165deg, #354575 0%, #1a2448 55%, #0f1630 100%);
+  display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  gap: clamp(8px, 2.4vw, 14px);
+  padding: 2px 6px 0;
   pointer-events: auto;
 }
 
-.roo-ctrl {
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  padding: 0;
-  font-family: inherit;
-}
-
-.roo-ctrl--turbo {
-  grid-column: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  min-width: 44px;
-  min-height: 44px;
-  color: #ddd;
-}
-
-.roo-ctrl--turbo-on .roo-ctrl__label {
-  color: #ffe082;
-}
-
-.roo-ctrl--auto-on .roo-ctrl__label {
-  color: #ffe082;
-}
-
-.roo-ctrl__icon {
-  width: 28px;
-  height: 28px;
-  background: var(--roo-ui-elements) no-repeat;
-  background-size: 402.78% 709.72%;
-}
-
-.roo-ctrl__icon--bolt {
-  background-position: 0% 50.87%;
-}
-
-.roo-ctrl__icon--auto {
-  background-position: 33.72% 50.87%;
-}
-
-.roo-ctrl__label {
-  font-size: 0.58rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-}
-
-.roo-ctrl--auto:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-.roo-bet-btn {
-  width: 44px;
-  height: 44px;
-  background-color: transparent;
-  background-image: var(--roo-ui-elements);
-  background-size: 402.78% 709.72%;
-}
-
-.roo-bet-btn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-.roo-ctrl--auto {
-  grid-column: 5;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  min-width: 44px;
-  min-height: 44px;
-  color: #ddd;
-}
-
-.roo-bet-btn--dec {
-  grid-column: 1;
-  background-position: 0% 67.995%;
-  justify-self: end;
-}
-
-.roo-bet-btn--inc {
-  grid-column: 4;
-  background-position: 0% 84.738%;
-  justify-self: start;
-}
-
-#roo-gamepanel #spinBtnWrapper {
+.roo-btn {
   position: relative;
-  width: clamp(64px, 18vw, 78px);
-  height: clamp(64px, 18vw, 78px);
-  justify-self: center;
-  grid-column: 3;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  color: #ffe082;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease,
+    filter 0.12s ease;
 }
 
-#roo-gamepanel.pt #spinBtnWrapper {
-  inset: auto;
-  top: auto;
-  left: auto;
+.roo-btn:active:not(:disabled) {
+  transform: scale(0.94);
 }
 
-.roo-gamepanel #spinBtn {
+.roo-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  filter: grayscale(0.35);
+}
+
+/* ± bet */
+.roo-btn--round {
+  flex: 0 0 auto;
+  width: clamp(46px, 12vw, 52px);
+  height: clamp(46px, 12vw, 52px);
+  border-radius: 50%;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  background: var(--btn-face);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.45),
+    0 0 0 2px rgba(255, 213, 79, 0.55),
+    0 4px 14px rgba(0, 0, 0, 0.45);
+}
+
+.roo-btn--round::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 213, 79, 0.22);
+  pointer-events: none;
+}
+
+.roo-btn--round svg {
+  width: 22px;
+  height: 22px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+}
+
+.roo-btn--round:not(:disabled):hover {
+  background: var(--btn-face-hover);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.45),
+    0 0 0 2px rgba(255, 228, 120, 0.85),
+    0 6px 16px rgba(0, 0, 0, 0.5);
+}
+
+/* Speed + Auto */
+.roo-btn--aux {
+  flex: 0 0 auto;
+  min-width: clamp(52px, 14vw, 58px);
+  height: clamp(52px, 14vw, 58px);
+  padding: 6px 4px 4px;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: var(--btn-face);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.4),
+    0 0 0 1.5px rgba(255, 213, 79, 0.35),
+    0 3px 10px rgba(0, 0, 0, 0.4);
+}
+
+.roo-btn__icon-wrap {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  color: #ffe082;
+}
+
+.roo-btn__icon-wrap svg {
+  width: 20px;
+  height: 20px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55));
+}
+
+.roo-btn__tag {
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  color: #c8c8d8;
+}
+
+.roo-btn--aux.roo-btn--active {
+  background: linear-gradient(165deg, #3d4a28 0%, #263018 55%, #182010 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.4),
+    0 0 0 2px rgba(164, 255, 120, 0.75),
+    0 0 18px rgba(120, 255, 80, 0.25),
+    0 3px 10px rgba(0, 0, 0, 0.4);
+}
+
+.roo-btn--aux.roo-btn--active .roo-btn__tag {
+  color: #d4ff9a;
+}
+
+.roo-btn--aux.roo-btn--active .roo-btn__icon-wrap {
+  color: #e8ffb0;
+}
+
+/* Spin */
+.roo-spin-wrap {
+  position: relative;
+  flex: 0 0 auto;
+  width: clamp(68px, 19vw, 82px);
+  height: clamp(68px, 19vw, 82px);
+}
+
+.roo-btn--spin {
   width: 100%;
   height: 100%;
-  border: none;
-  padding: 0;
-  cursor: pointer;
   border-radius: 50%;
-  background: transparent var(--roo-ui-elements) no-repeat;
-  background-size: 402.78% 709.72%;
-  background-position: 33.72% 63.78%;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  background: transparent;
 }
 
-.roo-gamepanel #spinBtn.roo-spin--free {
-  filter: hue-rotate(85deg) saturate(1.2);
-}
-
-.roo-gamepanel #spinBtn.roo-spin--disabled,
-.roo-gamepanel #spinBtn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.roo-gamepanel #spinBtnPulse {
+.roo-btn__spin-ring {
   position: absolute;
   inset: 0;
-  top: 4%;
-  pointer-events: none;
-  background: var(--roo-ui) no-repeat;
-  background-size: 370% 100%;
-  background-position: 74.2% 0%;
-  animation: roo-spin-pulse 2s 0.5s infinite;
-  opacity: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 210deg, #fff6c0, #ffd54f, #c9a227, #ffe082, #fff6c0);
+  box-shadow:
+    0 0 0 2px rgba(255, 220, 100, 0.35),
+    0 8px 22px rgba(0, 0, 0, 0.55),
+    0 0 28px rgba(255, 200, 60, 0.22);
+  animation: roo-spin-idle 3s ease-in-out infinite;
 }
 
-#roo-gamepanel.pt #spinBtnWrapper:not(.roo-spin--disabled) #spinBtnPulse {
-  opacity: 0;
+.roo-spin-wrap:not(.roo-spin-wrap--disabled) .roo-btn__spin-ring {
+  animation: roo-spin-idle 2.4s ease-in-out infinite;
 }
 
-@keyframes roo-spin-pulse {
-  0% {
-    opacity: 0;
-    animation-timing-function: ease-out;
+.roo-btn__spin-core {
+  position: relative;
+  z-index: 1;
+  width: calc(100% - 10px);
+  height: calc(100% - 10px);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: clamp(0.72rem, 2.8vw, 0.82rem);
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  color: #2a1800;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+  background: radial-gradient(circle at 35% 28%, #fff9d6 0%, #ffd54f 42%, #e6a820 78%, #b8860b 100%);
+  box-shadow:
+    inset 0 3px 8px rgba(255, 255, 255, 0.55),
+    inset 0 -4px 10px rgba(120, 70, 0, 0.35);
+}
+
+.roo-btn--spin:not(:disabled):hover .roo-btn__spin-core {
+  filter: brightness(1.06);
+}
+
+.roo-btn--spin.roo-btn--free .roo-btn__spin-core {
+  color: #102018;
+  background: radial-gradient(circle at 35% 28%, #e8ffe0 0%, #8fd46a 42%, #4a9e3a 78%, #2d6b28 100%);
+}
+
+.roo-btn--spin.roo-btn--free .roo-btn__spin-ring {
+  background: conic-gradient(from 210deg, #e8ffd0, #9fe870, #5cb840, #c8ff98, #e8ffd0);
+}
+
+.roo-btn--spin.roo-btn--disabled,
+.roo-btn--spin:disabled {
+  filter: grayscale(0.25) brightness(0.72);
+}
+
+@keyframes roo-spin-idle {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 0 2px rgba(255, 220, 100, 0.35),
+      0 8px 22px rgba(0, 0, 0, 0.55),
+      0 0 22px rgba(255, 200, 60, 0.18);
   }
   50% {
-    opacity: 1;
-    animation-timing-function: ease-in;
-  }
-  100% {
-    opacity: 0;
+    transform: scale(1.03);
+    box-shadow:
+      0 0 0 2px rgba(255, 230, 130, 0.55),
+      0 10px 26px rgba(0, 0, 0, 0.55),
+      0 0 32px rgba(255, 210, 70, 0.32);
   }
 }
 
