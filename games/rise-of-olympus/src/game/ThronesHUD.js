@@ -26,6 +26,7 @@ export function formatMoney(v) {
  *   onBetChange?: (bet: number) => void,
  *   onRules?: () => void,
  *   onTurboToggle?: (enabled: boolean) => void,
+ *   onAutoToggle?: (enabled: boolean) => void,
  * }} opts
  */
 export function createThronesHUD(root, opts) {
@@ -56,19 +57,19 @@ export function createThronesHUD(root, opts) {
             </div>
           </div>
           <div id="buttonsWrapper" class="roo-controls-row pt">
-            <button type="button" id="turboBtn" class="roo-ctrl roo-ctrl--turbo" aria-label="Turbo spin">
-              <span class="roo-ctrl__icon roo-ctrl__icon--bolt"></span>
-              <span class="roo-ctrl__label" id="turboLabel">OFF</span>
-            </button>
             <button type="button" id="betDec" class="roo-ctrl roo-bet-btn roo-bet-btn--dec" aria-label="Decrease bet"></button>
+            <button type="button" id="turboBtn" class="roo-ctrl roo-ctrl--turbo" aria-label="Faster animations">
+              <span class="roo-ctrl__icon roo-ctrl__icon--bolt"></span>
+              <span class="roo-ctrl__label" id="turboLabel">SPEED</span>
+            </button>
             <div id="spinBtnWrapper">
               <button type="button" id="spinBtn" aria-label="Spin"></button>
               <div id="spinBtnPulse"></div>
             </div>
             <button type="button" id="betInc" class="roo-ctrl roo-bet-btn roo-bet-btn--inc" aria-label="Increase bet"></button>
-            <button type="button" id="autoBtn" class="roo-ctrl roo-ctrl--auto" aria-label="Auto play" disabled>
+            <button type="button" id="autoBtn" class="roo-ctrl roo-ctrl--auto" aria-label="Auto play">
               <span class="roo-ctrl__icon roo-ctrl__icon--auto"></span>
-              <span class="roo-ctrl__label">AUTO</span>
+              <span class="roo-ctrl__label" id="autoLabel">AUTO</span>
             </button>
           </div>
         </div>
@@ -95,6 +96,8 @@ export function createThronesHUD(root, opts) {
   const betInc = root.querySelector('#betInc');
   const turboBtn = root.querySelector('#turboBtn');
   const turboLabel = root.querySelector('#turboLabel');
+  const autoBtn = root.querySelector('#autoBtn');
+  const autoLabel = root.querySelector('#autoLabel');
   const chipOverlay = root.querySelector('#chipSelectorWrapper');
   const chipGrid = root.querySelector('#chipGrid');
   const msgEl = root.querySelector('#gc-msg');
@@ -104,6 +107,7 @@ export function createThronesHUD(root, opts) {
   let betIndex = 0;
   let betEnabled = true;
   let turboOn = false;
+  let autoOn = false;
 
   function renderChipGrid() {
     chipGrid.innerHTML = levels
@@ -139,8 +143,14 @@ export function createThronesHUD(root, opts) {
 
   function syncTurbo() {
     turboBtn.classList.toggle('roo-ctrl--turbo-on', turboOn);
-    turboLabel.textContent = turboOn ? 'ON' : 'OFF';
+    turboLabel.textContent = turboOn ? 'FAST' : 'SPEED';
     opts.onTurboToggle?.(turboOn);
+  }
+
+  function syncAuto() {
+    autoBtn.classList.toggle('roo-ctrl--auto-on', autoOn);
+    autoLabel.textContent = autoOn ? 'STOP' : 'AUTO';
+    opts.onAutoToggle?.(autoOn);
   }
 
   root.querySelector('#gc-menu').addEventListener('click', () => opts.onRules?.());
@@ -163,6 +173,11 @@ export function createThronesHUD(root, opts) {
     turboOn = !turboOn;
     syncTurbo();
   });
+  autoBtn.addEventListener('click', () => {
+    playThronesSound('ui_interact');
+    autoOn = !autoOn;
+    syncAuto();
+  });
   root.querySelector('#chipClose').addEventListener('click', closeChipSelector);
   root.querySelector('.roo-chip-overlay__backdrop').addEventListener('click', closeChipSelector);
   chipGrid.addEventListener('click', (e) => {
@@ -174,6 +189,7 @@ export function createThronesHUD(root, opts) {
 
   setBetIndex(0, false);
   syncTurbo();
+  syncAuto();
 
   return {
     setBalance(v) {
@@ -196,6 +212,13 @@ export function createThronesHUD(root, opts) {
     },
     getTurbo() {
       return turboOn;
+    },
+    getAuto() {
+      return autoOn;
+    },
+    setAuto(on) {
+      autoOn = !!on;
+      syncAuto();
     },
     setBetEnabled(on) {
       betEnabled = on;

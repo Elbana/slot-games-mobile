@@ -38,8 +38,8 @@ export const DROP_PHYSICS = {
   bounceDuration: 200,
   bounceCount: 1,
   maxBounceAmplitude: 0.1,
-  blockDelay: 10,
-  reelDelay: 40,
+  blockDelay: 8,
+  reelDelay: 30,
 };
 
 /** Faster drops for cascade refills — survivors fall + new symbols from top. */
@@ -48,35 +48,41 @@ export const TUMBLE_PHYSICS = {
   acceleration: 7e-5,
   bounceDuration: 130,
   maxBounceAmplitude: 0.08,
-  blockDelay: 4,
-  reelDelay: 22,
+  blockDelay: 3,
+  reelDelay: 16,
 };
 
-/** Ref timing — synced to PG sound clips (~30fps spine) */
+/** Default animation speed multipliers (1 = reference timings). */
+export const ANIM_SPEED = {
+  normal: 1.35,
+  fast: 2.75,
+};
+
+/** Ref timing — synced to PG sound clips (~30fps spine), tuned faster for mobile. */
 export const TIMING = {
   shuffle: 0,
   clearExitStagger: DROP_PHYSICS.reelDelay,
   dealStagger: DROP_PHYSICS.reelDelay,
   dealDrop: 0,
   winHighlight: 0,
-  remove: 200,
+  remove: 160,
   tumbleStagger: TUMBLE_PHYSICS.reelDelay,
   tumbleDrop: 0,
-  tumbleDisperseOut: 333,
-  multiplierPulse: 400,
-  tumblePanelPulse: 160,
-  signpostPulse: 400,
-  bigWinIn: 500,
-  bigWinHold: 1200,
-  bigWinOut: 400,
-  fsBannerIn: 500,
-  fsBannerHold: 1800,
-  fsBannerOut: 350,
+  tumbleDisperseOut: 260,
+  multiplierPulse: 320,
+  tumblePanelPulse: 120,
+  signpostPulse: 320,
+  bigWinIn: 400,
+  bigWinHold: 900,
+  bigWinOut: 320,
+  fsBannerIn: 400,
+  fsBannerHold: 1400,
+  fsBannerOut: 280,
   scatterFlash: 0,
-  godLand: 400,
-  orbLand: 350,
-  winCountUp: 800,
-  trailCollect: 420,
+  godLand: 320,
+  orbLand: 280,
+  winCountUp: 620,
+  trailCollect: 340,
 };
 
 /** Absolute stage-space chrome — config_mobile iPhone_p layout_mobile.json */

@@ -21,9 +21,10 @@ let ready = false;
 export async function loadThronesAssets() {
   if (ready) return { symbolTextures, uiTextures, backgroundTexture, bgFxTextures };
 
-  const [symSheet, bgSheet, bgJpg] = await Promise.all([
+  const [symSheet, bgSheet, mobileBg, bgJpg] = await Promise.all([
     Assets.load(`${BASE}/spine_roo_1000_alpha_sym_10_22_level2.json`),
     Assets.load(`${BASE}/spine_RoO1000_background_0922_level2.json`),
+    Assets.load(`${BASE}/mobile-bg.jpg`).catch(() => null),
     Assets.load(`${BASE}/spine_RoO1000_background_0922_level2.jpg`).catch(() => null),
   ]);
 
@@ -31,6 +32,7 @@ export async function loadThronesAssets() {
   uiTextures.clear();
   bgFxTextures = [];
   backgroundTexture =
+    (mobileBg instanceof Texture ? mobileBg : mobileBg?.texture) ??
     (bgJpg instanceof Texture ? bgJpg : bgJpg?.texture) ??
     bgSheet?.textures?.bg_0 ??
     null;

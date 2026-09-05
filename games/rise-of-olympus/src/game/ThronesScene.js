@@ -15,8 +15,6 @@ import {
   loadThronesChromeSpines,
   createSymbolSpine,
   createScrollSymbolSpine,
-  createBackgroundSpine,
-  createFreespinBackgroundSpine,
   createPlatformSpine,
   createLogoSpine,
   createSignpostSpine,
@@ -156,22 +154,6 @@ export async function createThronesScene(opts) {
   } catch (err) {
     console.warn('[Thrones] static bg failed', err);
   }
-
-  try {
-    bgLayer.addChild(createBackgroundSpine());
-  } catch (err) {
-    console.warn('[Thrones] background spine failed', err);
-  }
-
-  /** @type {import('@esotericsoftware/spine-pixi-v8').Spine | null} */
-  let fsBgSpine = null;
-  try {
-    fsBgSpine = createFreespinBackgroundSpine();
-    bgLayer.addChild(fsBgSpine);
-  } catch (err) {
-    console.warn('[Thrones] fs bg spine failed', err);
-  }
-
 
   /** @type {import('@esotericsoftware/spine-pixi-v8').Spine | null} */
   let reelFrameSpine = null;
@@ -647,15 +629,8 @@ export async function createThronesScene(opts) {
   }
 
   function setFreeSpinMode(inFs) {
-    if (fsBgSpine) {
-      fsBgSpine.visible = inFs;
-      if (inFs) {
-        void playSpineAnim(fsBgSpine, ['transition'], false).then(() =>
-          playSpineAnim(fsBgSpine, ['loop_freespin'], true)
-        );
-      } else {
-        fsBgSpine.visible = false;
-      }
+    if (staticBgSprite) {
+      staticBgSprite.tint = inFs ? 0xd8c8ff : 0xffffff;
     }
     if (!inFs && runningMultSpine) void hideRunningMultiplier(runningMultSpine);
   }
@@ -834,17 +809,17 @@ export async function createThronesScene(opts) {
     viewportBg.rect(-screenW / 2, -playH / 2, screenW, screenH).fill({ color: STAGE_BG_COLOR });
 
     const canvasOffsetY = (screenH - playH) / 2;
+    const canvasOffsetY = (screenH - playH) / 2;
     if (viewportBleedSprite?.texture) {
       const tex = viewportBleedSprite.texture;
       viewportBleedSprite.position.set(0, canvasOffsetY);
-      const cover = Math.max(screenW / tex.width, screenH / tex.height) * 1.1;
+      const cover = Math.max(screenW / tex.width, screenH / tex.height) * 1.02;
       viewportBleedSprite.scale.set(cover);
     }
 
     if (staticBgSprite?.texture) {
       const tex = staticBgSprite.texture;
-      const cover =
-        Math.max(STAGE.width / tex.width, STAGE.height / tex.height) * 1.35;
+      const cover = Math.max(STAGE.width / tex.width, STAGE.height / tex.height) * 1.08;
       staticBgSprite.scale.set(cover);
     }
 

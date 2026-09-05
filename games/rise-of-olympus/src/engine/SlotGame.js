@@ -8,7 +8,7 @@ import { createThronesScene } from '../game/ThronesScene.js';
 import { createThronesHUD } from '../game/ThronesHUD.js';
 import { mountPaytablePanel } from '../game/PaytablePanel.js';
 import { animateWinCount } from './WinCount.js';
-import { TIMING } from '../game/config.js';
+import { TIMING, ANIM_SPEED } from '../game/config.js';
 import { unlockAudio } from '../game/ThronesSound.js';
 
 const GAME = {
@@ -65,16 +65,36 @@ export async function mountRiseOfOlympus(mount) {
   /** @type {import('../api/spin-types.js').SpinState} */
   let gameState = {};
   let turbo = false;
+  let autoSpin = false;
 
   const paytable = mountPaytablePanel(paytableMount);
+
+  function animSpeed() {
+    return turbo ? ANIM_SPEED.fast : ANIM_SPEED.normal;
+  }
+
+  function spinGapMs() {
+    return turbo ? 70 : 160;
+  }
 
   const hud = createThronesHUD(hudMount, {
     betLevels,
     onTurboToggle: (on) => {
       turbo = on;
+      if (phase === 'spinning' || phase === 'feature' || phase === 'showingWin') {
+        grid.setAnimationSpeed?.(animSpeed());
+      }
+    },
+    onAutoToggle: (on) => {
+      autoSpin = on;
+      if (on && phase === 'idle') void doSpin();
     },
     onSpin: async () => {
       await unlockAudio();
+      if (autoSpin) {
+        autoSpin = false;
+        hud.setAuto(false);
+      }
       await doSpin();
     },
     onBetChange: async (v) => {
@@ -110,7 +130,7 @@ export async function mountRiseOfOlympus(mount) {
 
   function syncHud() {
     hud.setBalance(balance);
-    hud.setSpinEnabled(canSpin());
+    hud.setSpinEnabled(canSpin() || autoSpin);
     hud.setFreeSpins?.({
       remaining: gameState.fsRemaining ?? 0,
       multiplier: gameState.fsMultiplier ?? 0,
@@ -129,19 +149,38 @@ export async function mountRiseOfOlympus(mount) {
       displayedWin = to;
       return;
     }
-    await animateWinCount(displayedWin, to, TIMING.winCountUp, (v) => hud.setWin(v));
+    const countMs = TIMING.winCountUp / animSpeed();
+    await animateWinCount(displayedWin, to, countMs, (v) => hud.setWin(v));
     displayedWin = to;
   }
 
-  async function doSpin() {
-    if (phase === 'spinning' || phase === 'feature' || phase === 'showingWin') {
-      grid.setAnimationSpeed?.(3);
+  async function chainNextSpin() {
+    if ((gameState.fsRemaining ?? 0) > 0) {
+      await new Promise((r) => setTimeout(r, spinGapMs()));
+      await doSpin();
       return;
     }
+    if (autoSpin && canSpin()) {
+      await new Promise((r) => setTimeout(r, spinGapMs()));
+      await doSpin();
+      return;
+    }
+    if (autoSpin && !canSpin()) {
+      autoSpin = false;
+      hud.setAuto(false);
+      hud.setMessage?.('Auto stopped — insufficient balance');
+    }
+  }
+
+  async function doSpin() {
     if (phase !== 'idle') return;
     if (hud.getBet) bet = hud.getBet();
     const charge = gameState.fsRemaining > 0 ? 0 : bet;
     if (balance < charge) {
+      if (autoSpin) {
+        autoSpin = false;
+        hud.setAuto(false);
+      }
       hud.setMessage?.('Insufficient balance');
       syncHud();
       return;
@@ -152,7 +191,7 @@ export async function mountRiseOfOlympus(mount) {
     hud.setWin(0);
     hud.setMessage?.('');
     grid.showTumbleWin?.(0);
-    grid.setAnimationSpeed?.(turbo ? 2 : 1);
+    grid.setAnimationSpeed?.(animSpeed());
 
     try {
       const spinPromise = requestSpin(GAME.slug, { bet, balance });
@@ -187,15 +226,16 @@ export async function mountRiseOfOlympus(mount) {
     } catch (err) {
       console.error('[RiseOfOlympus] spin error', err);
       hud.setMessage?.(err instanceof Error ? err.message : 'Spin failed');
+      if (autoSpin) {
+        autoSpin = false;
+        hud.setAuto(false);
+      }
     } finally {
       phase = 'idle';
       syncHud();
     }
 
-    if ((gameState.fsRemaining ?? 0) > 0) {
-      await new Promise((r) => setTimeout(r, turbo ? 120 : 280));
-      await doSpin();
-    }
+    await chainNextSpin();
   }
 
   const initial = [];
@@ -209,6 +249,7 @@ export async function mountRiseOfOlympus(mount) {
 
   return {
     destroy() {
+      autoSpin = false;
       app.renderer.off('resize', onResize);
       app.destroy(true, { children: true });
       mount.innerHTML = '';

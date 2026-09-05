@@ -176,7 +176,7 @@
 }
 
 .roo-ctrl--turbo {
-  grid-column: 1;
+  grid-column: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -188,6 +188,10 @@
 }
 
 .roo-ctrl--turbo-on .roo-ctrl__label {
+  color: #ffe082;
+}
+
+.roo-ctrl--auto-on .roo-ctrl__label {
   color: #ffe082;
 }
 
@@ -243,7 +247,7 @@
 }
 
 .roo-bet-btn--dec {
-  grid-column: 2;
+  grid-column: 1;
   background-position: 0% 67.995%;
   justify-self: end;
 }
