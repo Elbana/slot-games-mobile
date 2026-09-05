@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Greedy — Local Clone</title>
+  <link rel="stylesheet" href="/lottery/greedy/greedy.css" />
+</head>
+<body>
+  <div class="mockup-bg">
+    <div class="screen">
+      <div class="greedy-game" id="app">
+        <div class="popup-content">
+          <div class="header">
+            <div class="left-icons">
+              <a href="/"><img class="icon-btn" src="/lottery/greedy/home-icon@2x.png" alt="home" /></a>
+              <img class="icon-btn" id="btn-help" src="/lottery/greedy/help-icon.png" alt="help" />
+              <img class="icon-btn" id="btn-history" src="/lottery/greedy/time-icon.png" alt="history" />
+            </div>
+            <span class="period-text" id="period-label">Today's round --</span>
+          </div>
+
+          <div class="main" id="arena">
+            <img class="bg" src="/lottery/greedy/gameBg.png" alt="" />
+            <div class="startBox" id="start-box">
+              <img class="loading-gif" src="/lottery/petsbeasts/loading.gif" alt="" />
+              <img class="startButton" src="/lottery/greedy/bet-entrance.png" alt="" />
+              <div class="time">
+                <div class="time-label" id="time-label">Select time</div>
+                <div class="time-num" id="countdown">30<span class="time-unit">s</span></div>
+              </div>
+            </div>
+
+            <div class="bottom">
+              <div class="bottom-one combo-bets">
+                <div class="bottom-left combo-bet" id="bet-veg">
+                  <img class="combo-label" src="/lottery/greedy/salad@2x.png" alt="Salad" />
+                  <span class="combo-odd" id="odd-veg">?x</span>
+                </div>
+                <div class="bottom-right combo-bet" id="bet-meat">
+                  <img class="combo-label" src="/lottery/greedy/pizza@2x.png" alt="Pizza" />
+                  <span class="combo-odd" id="odd-meat">?x</span>
+                </div>
+              </div>
+              <div class="bottom-two">
+                <div class="gold-row" id="chips"></div>
+              </div>
+              <div class="bottom-three" id="bet-package">
+                <img class="x4-icon" src="/lottery/greedy/x-4@2x.png" alt="Set package" />
+                <span class="text">Set package, place bet ></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="footer">
+            <img class="footerbg" src="/lottery/greedy/bottom-bg.png" alt="" />
+            <div class="footMain">
+              <div class="one account-row">
+                <div class="switch-wrap">
+                  <img class="switch-img" src="/lottery/greedy/switch-icon.png" alt="switch" />
+                </div>
+                <div class="balance-btn">
+                  <span class="balance-label">Balance</span>
+                  <div class="balance-value">
+                    <img class="coin-icon" src="/lottery/greedy/zs@2x.png" alt="" />
+                    <span id="balance">0</span>
+                    <span class="arrow-sm">›</span>
+                  </div>
+                </div>
+                <div class="reward-btn">
+                  <span class="reward-label">Today's reward</span>
+                  <div class="reward-value">
+                    <img class="coin-icon" src="/lottery/greedy/zs@2x.png" alt="" />
+                    <span id="today-reward">0</span>
+                  </div>
+                </div>
+              </div>
+              <div class="two history-row">
+                <span class="history-label">Result</span>
+                <div class="history-icons" id="history"></div>
+              </div>
+              <div class="three ranking-row">
+                <div class="ranking-avatar">
+                  <div class="avatar-placeholder" id="rank-avatar">$</div>
+                  <div class="rank-badge">1</div>
+                </div>
+                <div class="ranking-info">
+                  <div class="ranking-title">Today's earnings leaderboard</div>
+                  <div class="ranking-detail">
+                    <img src="/lottery/greedy/zs@2x.png" alt="" />
+                    <span id="rank-detail">No data</span>
+                  </div>
+                </div>
+                <span class="arrow">›</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="overlay bottom" id="result-overlay" hidden>
+          <div class="result">
+            <div class="count-down" id="result-countdown"></div>
+            <div class="main">
+              <div class="result-banner">
+                <img class="banner-image" id="result-banner" src="" alt="" />
+              </div>
+              <div class="result-row">
+                <span id="result-period-text"></span>
+                <img class="result-food" id="result-img" src="" alt="" />
+              </div>
+              <div class="divider-row">
+                <div class="divider-line"></div>
+                <div class="divider-text">Top winners this round</div>
+                <div class="divider-line"></div>
+              </div>
+              <div id="winners-container"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+  <script type="module" src="/lottery/greedy/greedy.js"></script>
+</body>
+</html>

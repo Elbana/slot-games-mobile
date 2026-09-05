@@ -1,0 +1,64 @@
+{
+  "operators": [
+    {
+      "id": "demo-all",
+      "token": "op_demo_all",
+      "name": "Demo — all games",
+      "enabledGames": ["rise-of-olympus", "greedy", "pets-beasts"],
+      "wallet": { "mode": "mock" },
+      "economy": {
+        "houseEdgePercent": 3,
+        "poolContributionPercent": 35,
+        "poolWinTriggerChance": 0.06,
+        "maxPoolWinMultiplier": 25,
+        "slotMathProfile": "voice_social",
+        "lotteryHouseEdgePercent": 5
+      }
+    },
+    {
+      "id": "demo-lottery",
+      "token": "op_lottery_only",
+      "name": "Demo — lottery only",
+      "enabledGames": ["greedy", "pets-beasts"],
+      "wallet": { "mode": "mock" },
+      "economy": {
+        "houseEdgePercent": 3,
+        "poolContributionPercent": 35,
+        "poolWinTriggerChance": 0.06,
+        "maxPoolWinMultiplier": 25,
+        "slotMathProfile": "voice_social",
+        "lotteryHouseEdgePercent": 5
+      }
+    },
+    {
+      "id": "demo-slots",
+      "token": "op_slots_only",
+      "name": "Demo — slots only",
+      "enabledGames": ["rise-of-olympus"],
+      "wallet": { "mode": "mock" },
+      "economy": {
+        "houseEdgePercent": 3,
+        "poolContributionPercent": 35,
+        "poolWinTriggerChance": 0.06,
+        "maxPoolWinMultiplier": 25,
+        "slotMathProfile": "voice_social",
+        "lotteryHouseEdgePercent": 5
+      }
+    },
+    {
+      "id": "voice-chat-demo",
+      "token": "op_voice_chat",
+      "name": "Voice chat demo",
+      "enabledGames": ["rise-of-olympus", "greedy", "pets-beasts"],
+      "wallet": { "mode": "mock" },
+      "economy": {
+        "houseEdgePercent": 3,
+        "poolContributionPercent": 40,
+        "poolWinTriggerChance": 0.07,
+        "maxPoolWinMultiplier": 30,
+        "slotMathProfile": "voice_social",
+        "lotteryHouseEdgePercent": 5
+      }
+    }
+  ]
+}

@@ -6,7 +6,16 @@
 /** @typedef {import('./spin-types.js').SessionInfo} SessionInfo */
 
 const SESSION_KEY = 'roo-session';
-const PLAYER_KEY = 'roo-player';
+
+function platformParams() {
+  const injected = typeof window !== 'undefined' ? window.__PLATFORM__ || {} : {};
+  const params = new URLSearchParams(window.location.search);
+  return {
+    token: injected.token || params.get('token') || 'op_demo_all',
+    player: injected.player || params.get('player') || getSessionId(),
+    session: getSessionId(),
+  };
+}
 
 /** @returns {string} */
 export function getSessionId() {
@@ -22,26 +31,9 @@ export function getSessionId() {
   }
 }
 
-export function getPlayerToken() {
-  try {
-    const urlToken = new URLSearchParams(window.location.search).get('token');
-    if (urlToken) {
-      localStorage.setItem(PLAYER_KEY, urlToken);
-      return urlToken;
-    }
-    let id = localStorage.getItem(PLAYER_KEY);
-    if (!id) {
-      id = globalThis.crypto?.randomUUID?.() ?? `p-${Date.now()}`;
-      localStorage.setItem(PLAYER_KEY, id);
-    }
-    return id;
-  } catch {
-    return getSessionId();
-  }
-}
-
 function authParams() {
-  return { session: getSessionId(), token: getPlayerToken() };
+  const { token, player, session } = platformParams();
+  return { token, player, session };
 }
 
 /**
@@ -77,7 +69,6 @@ export async function fetchSession(game) {
 export async function requestSpin(game, opts = {}) {
   const params = new URLSearchParams({ game, ...authParams() });
   if (opts.bet != null) params.set('bet', String(opts.bet));
-  if (opts.balance != null) params.set('balance', String(opts.balance));
   const spinId = opts.spinId ?? globalThis.crypto?.randomUUID?.() ?? String(Date.now());
   params.set('spinId', spinId);
 

@@ -1,0 +1,328 @@
+:root {
+  color-scheme: dark;
+  --bg0: #050814;
+  --bg1: #0c1228;
+  --bg2: #141c3a;
+  --gold: #e8c547;
+  --gold-dim: #a8892a;
+  --text: #eef1ff;
+  --muted: #8b93b8;
+  --line: rgba(255, 255, 255, 0.08);
+  --card: rgba(18, 24, 48, 0.92);
+  --radius: 18px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background:
+    radial-gradient(ellipse 120% 80% at 50% -20%, rgba(88, 120, 255, 0.18), transparent 55%),
+    radial-gradient(circle at 100% 0%, rgba(232, 197, 71, 0.08), transparent 40%),
+    linear-gradient(180deg, var(--bg0) 0%, var(--bg1) 45%, #070a16 100%);
+  color: var(--text);
+}
+
+body {
+  padding: 20px 16px calc(24px + var(--safe-bottom));
+}
+
+.launcher {
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+.launcher__header {
+  margin-bottom: 24px;
+}
+
+.launcher__brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.launcher__logo {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #2a3568, #121830);
+  border: 1px solid rgba(232, 197, 71, 0.35);
+  color: var(--gold);
+  font-size: 1.4rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.launcher__eyebrow {
+  margin: 0 0 2px;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+}
+
+.launcher__title {
+  margin: 0;
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: linear-gradient(90deg, #fff 0%, #c9d4ff 55%, var(--gold) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.launcher__subtitle {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.launcher__panel {
+  padding: 18px;
+  margin-bottom: 28px;
+  border-radius: var(--radius);
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+}
+
+.session-form {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.field__label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.field__input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.28);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.95rem;
+}
+
+.field__input:focus {
+  outline: none;
+  border-color: rgba(232, 197, 71, 0.55);
+  box-shadow: 0 0 0 3px rgba(232, 197, 71, 0.12);
+}
+
+.btn {
+  border: none;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn--ghost {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+
+.btn--ghost:active {
+  transform: scale(0.98);
+}
+
+.session-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.pill--ok {
+  color: #b8f0c8;
+  border-color: rgba(120, 220, 150, 0.25);
+  background: rgba(40, 120, 70, 0.15);
+}
+
+.section-title {
+  margin: 0 0 14px;
+  font-size: 0.82rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.game-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.game-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: inherit;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--card);
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+
+.game-card:active {
+  transform: scale(0.985);
+}
+
+.game-card__glow {
+  position: absolute;
+  inset: 0;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.game-card--olympus .game-card__glow {
+  background: linear-gradient(135deg, rgba(80, 120, 255, 0.22) 0%, transparent 55%);
+}
+
+.game-card--greedy .game-card__glow {
+  background: linear-gradient(135deg, rgba(255, 120, 60, 0.2) 0%, transparent 55%);
+}
+
+.game-card--pets .game-card__glow {
+  background: linear-gradient(135deg, rgba(120, 200, 100, 0.18) 0%, transparent 55%);
+}
+
+.game-card--default .game-card__glow {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, transparent 55%);
+}
+
+.game-card__icon {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  font-size: 1.75rem;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.game-card__body {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+}
+
+.game-card__badge {
+  display: inline-block;
+  margin-bottom: 6px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgba(232, 197, 71, 0.15);
+  color: var(--gold);
+}
+
+.game-card__title {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.game-card__tagline {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.game-card__play {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.empty {
+  margin: 0;
+  padding: 24px;
+  text-align: center;
+  color: var(--muted);
+  border-radius: var(--radius);
+  border: 1px dashed var(--line);
+}
+
+.launcher__footer {
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.launcher__footer code {
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  font-size: 0.74rem;
+  color: #c5cce8;
+}
+
+.muted {
+  opacity: 0.85;
+}
+
+@media (min-width: 480px) {
+  .session-form {
+    grid-template-columns: 1fr 1fr auto;
+    align-items: end;
+  }
+
+  .btn--ghost {
+    height: 46px;
+    align-self: end;
+  }
+}

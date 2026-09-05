@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node server/index.mjs --dev",
+    "dev": "node ../../server/index.mjs --dev",
     "build": "vite build",
-    "start": "node server/index.mjs",
+    "start": "node ../../server/index.mjs",
     "preview": "vite preview",
     "fetch-sounds": "node scripts/fetch-roo-sounds.mjs"
   },

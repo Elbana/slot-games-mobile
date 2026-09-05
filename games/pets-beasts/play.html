@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Pets & Beasts — Local Clone</title>
+  <link rel="stylesheet" href="/lottery/pets-beasts/pets-beasts.css" />
+</head>
+<body>
+  <div class="mockup-bg">
+    <div class="screen">
+      <div class="pets-game" id="app">
+        <div class="popup-content">
+          <div class="header">
+            <div class="left-icons">
+              <a href="/"><img class="icon-btn" src="/lottery/petsbeasts/home-icon@2x.png" alt="home" /></a>
+              <img class="icon-btn" id="btn-help" src="/lottery/petsbeasts/help-icon.png" alt="help" />
+              <img class="icon-btn" id="btn-history" src="/lottery/petsbeasts/time-icon.png" alt="history" />
+            </div>
+            <span class="period-text" id="period-label">Round --</span>
+          </div>
+
+          <div class="main" id="arena">
+            <img class="bg" src="/lottery/petsbeasts/gameBg.png" alt="" />
+            <div class="startBox" id="start-box">
+              <img class="loading-gif" src="/lottery/petsbeasts/loading.gif" alt="" />
+              <div class="time">
+                <span class="ct-num" id="countdown">30<span class="ct-s">s</span></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bottom">
+            <div class="bottom-one">
+              <div class="batch-btn-wrap" id="bet-pets">
+                <img class="batch-img" src="/lottery/petsbeasts/x-1@2x.png" alt="pets" />
+                <span class="batch-odd" id="odd-pets">?x</span>
+                <span class="batch-amount" id="amt-pets" hidden></span>
+              </div>
+              <div class="batch-btn-wrap" id="bet-beasts">
+                <img class="batch-img" src="/lottery/petsbeasts/x-2@2x.png" alt="beasts" />
+                <span class="batch-odd" id="odd-beasts">?x</span>
+                <span class="batch-amount" id="amt-beasts" hidden></span>
+              </div>
+            </div>
+            <div class="bottom-two" id="chips"></div>
+          </div>
+
+          <div class="footer">
+            <img class="footerbg" src="/lottery/petsbeasts/bottom-bg.png" alt="" />
+            <div class="footMain">
+              <div class="history-row">
+                <span class="history-label">History</span>
+                <div class="history-scroll" id="history"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="overlay" id="result-overlay" hidden>
+          <div class="result-popup">
+            <img class="animal-img-lg" id="result-img" src="" alt="" />
+            <div class="animal-name" id="result-name"></div>
+            <div class="period-info" id="result-period"></div>
+            <div id="result-msg"></div>
+            <button type="button" class="close-popup-btn" id="close-result">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+  <script type="module" src="/lottery/pets-beasts/pets-beasts.js"></script>
+</body>
+</html>

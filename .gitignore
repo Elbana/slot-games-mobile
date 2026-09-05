@@ -2,6 +2,7 @@ node_modules/
 dist/
 **/data/sessions/
 **/data/audit/
+**/data/pools/
 *.log
 .env
 .env.*
