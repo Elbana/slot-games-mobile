@@ -809,7 +809,6 @@ export async function createThronesScene(opts) {
     viewportBg.rect(-screenW / 2, -playH / 2, screenW, screenH).fill({ color: STAGE_BG_COLOR });
 
     const canvasOffsetY = (screenH - playH) / 2;
-    const canvasOffsetY = (screenH - playH) / 2;
     if (viewportBleedSprite?.texture) {
       const tex = viewportBleedSprite.texture;
       viewportBleedSprite.position.set(0, canvasOffsetY);
