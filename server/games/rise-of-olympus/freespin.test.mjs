@@ -27,7 +27,7 @@ describe('freespin rules', () => {
     const session = {
       thronesFs: { ...createFreeSpinState(), freeSpinsLeft: 5, freeSpinMultiplier: 1, fsTotalAwarded: 5 },
     };
-    assert.equal(effectiveBet(session, 20), 0);
+    assert.equal(effectiveBet(session, 200), 0);
     const r = resolveFreeSpinEnd(session, { scatterCount: 0, roundWin: 100, spinId: 2 });
     assert.equal(r.freeSpinsLeft, 4);
     assert.equal(session.thronesFs.fsTotalWin, 100);
@@ -107,7 +107,7 @@ describe('freespin integration', () => {
 
     for (let i = 0; i < 5; i++) {
       const before = session.thronesFs.freeSpinsLeft;
-      const result = spinThronesOfOlympus(session, 20, { spinId: 2000 + i });
+      const result = spinThronesOfOlympus(session, 200, { spinId: 2000 + i });
       assert.equal(result.bet, 0, `spin ${i} should be free`);
       assert.equal(result.state.fsRemaining, before - 1);
     }

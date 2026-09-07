@@ -2,30 +2,9 @@
 
 html, body {
   height: 100%;
+  min-height: 100dvh;
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", sans-serif;
-  background: #0a1628;
-}
-
-.mockup-bg {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(160deg, #1a3050 0%, #081018 100%);
-  padding: 12px;
-}
-
-.screen {
-  width: min(100%, 420px);
-  height: min(100vh - 24px, 820px);
-  overflow: hidden;
-  border-radius: 24px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
-  background: #1e3a5f;
-  position: relative;
-  container-type: inline-size;
-  --r: calc(100cqw / 750);
 }
 
 .pets-game {
@@ -381,8 +360,8 @@ html, body {
 }
 
 .toast {
-  position: fixed;
-  top: 16px;
+  position: absolute;
+  top: calc(16px + env(safe-area-inset-top, 0px));
   left: 50%;
   transform: translateX(-50%);
   background: rgba(0, 0, 0, 0.85);
@@ -393,6 +372,7 @@ html, body {
   z-index: 100;
   opacity: 0;
   transition: opacity 0.2s;
+  pointer-events: none;
 }
 
 .toast.show { opacity: 1; }

@@ -4,7 +4,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import { DEFAULT_BALANCE, IDEMPOTENCY_CACHE_SIZE, SESSION_DIR } from '../config.mjs';
+import { DEFAULT_BALANCE, DEFAULT_CHIP, IDEMPOTENCY_CACHE_SIZE, SESSION_DIR } from '../config.mjs';
 
 /** @type {Map<string, object>} */
 const cache = new Map();
@@ -45,7 +45,7 @@ export function loadSession(sessionKey, balanceHint) {
 
   const session = {
     balance: balanceHint ?? DEFAULT_BALANCE,
-    bet: 20,
+    bet: DEFAULT_CHIP,
     thronesFs: null,
     thronesLastWin: null,
     lottery: {},

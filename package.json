@@ -6,7 +6,7 @@
     "dev": "node server/index.mjs --dev",
     "build": "npm run build --prefix games/rise-of-olympus",
     "start": "node server/index.mjs",
-    "test": "node --test server/games/rise-of-olympus/*.test.mjs server/auth/*.test.mjs server/economy/*.test.mjs server/math-profile.test.mjs",
+    "test": "node --test server/games/rise-of-olympus/*.test.mjs server/auth/*.test.mjs server/economy/*.test.mjs server/betting/*.test.mjs server/math-profile.test.mjs games/bet-advisor/engine.test.mjs",
     "smoke": "node tools/smoke-games.mjs",
     "cache-lottery": "node tools/cache-lottery-assets.mjs"
   },

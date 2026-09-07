@@ -6,6 +6,7 @@ import { requireOperator, isGameEnabled } from '../auth/operator-auth.mjs';
 import { getGame, listGames } from '../registry/games.mjs';
 import { getPoolStats } from '../economy/prize-pool.mjs';
 import { getOperatorEconomy } from '../economy/operator-economy.mjs';
+import { bettingPayload, getBetConfig } from '../betting/bet-config.mjs';
 
 export function handleGetEconomy(req, res) {
   const operator = requireOperator(req, res);
@@ -21,7 +22,10 @@ export function handleGetEconomy(req, res) {
     if (!isGameEnabled(operator, gameSlug)) {
       return res.status(403).json({ error: 'Game not enabled for this operator', slug: gameSlug });
     }
-    return res.json(getPoolStats(operator, gameSlug));
+    return res.json({
+      ...getPoolStats(operator, gameSlug),
+      betting: bettingPayload(getBetConfig(operator)),
+    });
   }
 
   const games = listGames()
@@ -31,6 +35,7 @@ export function handleGetEconomy(req, res) {
   res.json({
     operator: { id: operator.id, name: operator.name },
     economy: getOperatorEconomy(operator),
+    betting: bettingPayload(getBetConfig(operator)),
     games,
   });
 }

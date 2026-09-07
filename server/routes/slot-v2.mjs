@@ -4,7 +4,7 @@
 
 import { spinThronesOfOlympus } from '../games/rise-of-olympus/spin.mjs';
 import { effectiveBet, ensureFreeSpinState } from '../games/rise-of-olympus/freespin.mjs';
-import { BET_LEVELS, RATE_LIMIT_SPIN_MS } from '../config.mjs';
+import { RATE_LIMIT_SPIN_MS } from '../config.mjs';
 import { loadSession, saveSession, cacheSpinResult, getCachedSpin } from '../session/session-store.mjs';
 import { auditSpin, auditWallet } from '../audit.mjs';
 import { requireGameAccess } from '../auth/operator-auth.mjs';
@@ -13,6 +13,7 @@ import { createWalletForOperator } from '../wallet/wallet-adapter.mjs';
 import { getOperatorEconomy } from '../economy/operator-economy.mjs';
 import { recordRound, tryPoolWin } from '../economy/prize-pool.mjs';
 import { runWithMathProfileAsync } from '../math-profile.mjs';
+import { bettingPayload, getBetConfig, validateBetAmount } from '../betting/bet-config.mjs';
 
 /** @type {Map<string, number>} */
 const lastSpinAt = new Map();
@@ -33,6 +34,7 @@ function buildContext(req, res, slug) {
     sessionKey: key,
     wallet: createWalletForOperator(operator),
     economy: getOperatorEconomy(operator),
+    betting: getBetConfig(operator),
     slug,
   };
 }
@@ -45,6 +47,17 @@ function sessionState(session) {
   };
 }
 
+function resolveSessionBet(q, session, betting) {
+  const parsed = parseInt(q.bet, 10);
+  if (Number.isFinite(parsed) && parsed > 0) {
+    const check = validateBetAmount(parsed, betting);
+    if (check.ok) return check.amount;
+  }
+  const stored = session.bet;
+  if (Number.isFinite(stored) && betting.chipUnits.includes(stored)) return stored;
+  return betting.defaultChip;
+}
+
 export async function handleGetSession(req, res) {
   const slug = resolveGameSlug(req);
   const ctx = buildContext(req, res, slug);
@@ -52,7 +65,7 @@ export async function handleGetSession(req, res) {
 
   const q = { ...req.query, ...req.body };
   const session = loadSession(ctx.sessionKey);
-  session.bet = parseInt(q.bet, 10) || session.bet || BET_LEVELS[0];
+  session.bet = resolveSessionBet(q, session, ctx.betting);
 
   try {
     session.balance = await ctx.wallet.getBalance(ctx);
@@ -60,11 +73,14 @@ export async function handleGetSession(req, res) {
     return res.status(502).json({ error: err.message || 'Wallet unavailable' });
   }
 
+  const betting = bettingPayload(ctx.betting);
+
   res.json({
     game: slug,
     balance: session.balance,
-    bet: session.bet ?? BET_LEVELS[0],
-    betLevels: BET_LEVELS,
+    bet: session.bet,
+    betLevels: ctx.betting.chipUnits,
+    betting,
     state: sessionState(session),
     playerId: ctx.playerId,
     operatorId: ctx.operator.id,
@@ -78,10 +94,12 @@ export async function handleV2Spin(req, res) {
 
   const q = { ...req.query, ...req.body };
   const session = loadSession(ctx.sessionKey);
-  const bet = parseInt(q.bet, 10) || session.bet || BET_LEVELS[0];
-  if (!BET_LEVELS.includes(bet)) {
-    return res.status(400).json({ error: `Invalid bet. Allowed: ${BET_LEVELS.join(', ')}` });
+  const betRaw = parseInt(q.bet, 10) || session.bet || ctx.betting.defaultChip;
+  const betCheck = validateBetAmount(betRaw, ctx.betting);
+  if (!betCheck.ok) {
+    return res.status(400).json({ error: betCheck.error });
   }
+  const bet = betCheck.amount;
   session.bet = bet;
 
   const spinId = q.spinId != null ? String(q.spinId) : null;
@@ -196,11 +214,14 @@ export async function handleV2Spin(req, res) {
 
   result.balance = session.balance;
 
+  const betting = bettingPayload(ctx.betting);
+
   const response = {
     game: slug,
     spinId: txId,
     ...result,
-    betLevels: BET_LEVELS,
+    betLevels: ctx.betting.chipUnits,
+    betting,
     playerId: ctx.playerId,
     operatorId: ctx.operator.id,
     poolWin,

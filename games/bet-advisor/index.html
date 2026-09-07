@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0f0a1a" />
+  <title>Bet Advisor</title>
+  <link rel="stylesheet" href="/bet-advisor/advisor.css" />
+  <link rel="manifest" href="/bet-advisor/manifest.webmanifest" />
+</head>
+<body>
+  <div class="ba-app">
+    <header class="ba-header">
+      <h1>🎯 Bet Advisor</h1>
+      <p>Watermelon ×2 · Fig ×2 · 77 ×8</p>
+    </header>
+
+    <!-- SETUP: enter existing game history -->
+    <section id="setup-screen" class="ba-screen active">
+      <div class="ba-card">
+        <h2>Step 1 — Enter game history</h2>
+        <p class="ba-hint">
+          Tap each result from the game's history grid, <strong>oldest first</strong>, ending with the most recent (top-left in the game).
+          Need at least 3 picks to start.
+        </p>
+        <div id="setup-history" class="ba-history-grid"></div>
+        <p class="ba-section-label"><span id="setup-count">0</span> results entered</p>
+      </div>
+
+      <div class="ba-card">
+        <h2>Add result</h2>
+        <div class="ba-symbol-row">
+          <button type="button" class="ba-symbol-btn" data-id="watermelon">
+            <span class="emoji">🍉</span>
+            <span class="label">Watermelon</span>
+            <span class="mult">×2</span>
+          </button>
+          <button type="button" class="ba-symbol-btn" data-id="fig">
+            <span class="emoji">🍑</span>
+            <span class="label">Fig</span>
+            <span class="mult">×2</span>
+          </button>
+          <button type="button" class="ba-symbol-btn" data-id="77">
+            <span class="emoji">77</span>
+            <span class="label">77</span>
+            <span class="mult">×8</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="ba-card" id="setup-preview" hidden>
+        <h2>Preview — next bet suggestion</h2>
+        <div id="setup-rec-action" style="font-size:1.4rem;font-weight:800;margin:6px 0">—</div>
+        <p id="setup-rec-reason" class="ba-hint" style="margin:0">—</p>
+      </div>
+
+      <div class="ba-card">
+        <div class="ba-settings-row">
+          <label for="input-bankroll">Bankroll ($)</label>
+          <input id="input-bankroll" type="number" min="1" value="1000" inputmode="numeric" />
+        </div>
+        <div class="ba-settings-row">
+          <label for="input-window">Rolling window</label>
+          <input id="input-window" type="number" min="5" max="200" value="30" inputmode="numeric" />
+        </div>
+      </div>
+
+      <div class="ba-toolbar">
+        <button type="button" class="ba-btn ba-btn-secondary btn-undo">Undo</button>
+        <button type="button" id="btn-clear-setup" class="ba-btn ba-btn-secondary">Clear</button>
+        <button type="button" id="btn-start" class="ba-btn ba-btn-primary" disabled>Start session</button>
+      </div>
+    </section>
+
+    <!-- LIVE: suggestions + log new results -->
+    <section id="live-screen" class="ba-screen">
+      <div id="switch-banner" class="ba-card" hidden style="border-color:var(--ba-gold);background:rgba(251,191,36,0.1);font-size:0.85rem;font-weight:600;text-align:center"></div>
+
+      <div id="rec-card" class="ba-rec-card">
+        <div class="ba-section-label">Recommended bet this round</div>
+        <div id="rec-action" class="ba-rec-action">—</div>
+        <div id="rec-bet" style="font-size:0.9rem;color:var(--ba-muted)">—</div>
+        <div class="ba-rec-meta">
+          <span id="rec-mode" class="ba-badge">—</span>
+          <span id="rec-confidence" class="ba-badge">—</span>
+        </div>
+        <p id="rec-reason" class="ba-reason">—</p>
+        <p class="ba-section-label" style="margin-top:12px">Best value (highest EV)</p>
+        <p id="rec-best-value" style="margin:0;font-weight:700">—</p>
+        <p id="rec-cover" class="ba-cover-note">—</p>
+      </div>
+
+      <div class="ba-card">
+        <h2>Expected value (last <span id="live-count">0</span> in window)</h2>
+        <div id="ev-list" class="ba-ev-list"></div>
+      </div>
+
+      <div class="ba-card">
+        <h2>Log result — tap after each round</h2>
+        <div class="ba-symbol-row">
+          <button type="button" class="ba-symbol-btn" data-id="watermelon">
+            <span class="emoji">🍉</span>
+            <span class="label">Watermelon</span>
+          </button>
+          <button type="button" class="ba-symbol-btn" data-id="fig">
+            <span class="emoji">🍑</span>
+            <span class="label">Fig</span>
+          </button>
+          <button type="button" class="ba-symbol-btn" data-id="77">
+            <span class="emoji">77</span>
+            <span class="label">77</span>
+          </button>
+        </div>
+        <div id="live-history" class="ba-history-grid" style="margin-top:12px"></div>
+      </div>
+
+      <div class="ba-card">
+        <h2>Session stats (if you follow suggestions)</h2>
+        <div class="ba-stats-grid">
+          <div class="ba-stat">
+            <div id="stat-rounds" class="val">0</div>
+            <div class="lbl">Rounds tracked</div>
+          </div>
+          <div class="ba-stat">
+            <div id="stat-pnl" class="val">0</div>
+            <div class="lbl">Simulated P&amp;L</div>
+          </div>
+          <div class="ba-stat">
+            <div id="stat-winrate" class="val">—</div>
+            <div class="lbl">Win rate</div>
+          </div>
+          <div class="ba-stat">
+            <div id="stat-followed" class="val">0</div>
+            <div class="lbl">Bets logged</div>
+          </div>
+        </div>
+        <div id="session-log" class="ba-log-list" style="margin-top:10px"></div>
+      </div>
+
+      <div class="ba-toolbar">
+        <button type="button" class="ba-btn ba-btn-secondary btn-undo">Undo last</button>
+        <button type="button" id="btn-reset-session" class="ba-btn ba-btn-secondary">Reset all</button>
+      </div>
+    </section>
+
+    <p class="ba-footer-note">
+      Advisor uses rolling EV from your history. Gambling involves risk — this tool does not guarantee profit.
+    </p>
+  </div>
+
+  <script type="module" src="/bet-advisor/advisor.js"></script>
+</body>
+</html>

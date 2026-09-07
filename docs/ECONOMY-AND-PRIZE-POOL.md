@@ -59,9 +59,29 @@ In [`server/config/operators.json`](../server/config/operators.json), each opera
 | `poolWinTriggerChance` | Probability to attempt a pool-funded bonus when base win is low |
 | `maxPoolWinMultiplier` | Cap on pool bonus as multiple of current bet |
 | `slotMathProfile` | Slot RTP profile: `social`, `voice_social`, `generous`, `stingy` |
-| `lotteryHouseEdgePercent` | Documented/adjustable edge on lottery (odds already embed margin) |
+| `lotteryHouseEdgePercent` | Reserved for lottery-specific edge tuning (currently uses `houseEdgePercent` via `recordRound`) |
 
 Defaults apply when `economy` is omitted (see `server/economy/operator-economy.mjs`).
+
+## Betting config
+
+In the same `operators.json` entry:
+
+```json
+"betting": {
+  "chipUnits": [200, 1000, 5000, 10000, 50000, 100000],
+  "defaultChip": 200,
+  "minBalanceToPlay": 200
+}
+```
+
+| Field | Meaning |
+|-------|---------|
+| `chipUnits` | Allowed bet amounts — slot spins and lottery bets must match exactly |
+| `defaultChip` | Initial bet when session starts |
+| `minBalanceToPlay` | Minimum balance hint for clients |
+
+Implementation: [`server/betting/bet-config.mjs`](../server/betting/bet-config.mjs).
 
 ## Prize pool ledger
 
@@ -140,9 +160,10 @@ Population over time: house edge + unreleased pool balance ≈ operator’s allo
 
 ```
 GET /api/v1/economy?token=OP_TOKEN&game=rise-of-olympus
+GET /api/v1/betting?token=OP_TOKEN
 ```
 
-Returns configured economy + current pool stats (for operator dashboards, not end-user UI by default).
+Returns configured economy + betting chip tiers + current pool stats (for operator dashboards, not end-user UI by default). All amounts are raw integers — no currency formatting.
 
 ## Future (documented only)
 

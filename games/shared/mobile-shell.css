@@ -1,0 +1,84 @@
+/**
+ * Shared mobile WebView shell — same width/height on phone and desktop preview.
+ */
+
+:root {
+  --gm-max-width: 430px;
+  --gm-bg: #050510;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  min-height: 100dvh;
+  overflow: hidden;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  background: var(--gm-bg);
+}
+
+body {
+  display: flex;
+  justify-content: center;
+}
+
+.gm-shell {
+  width: 100%;
+  max-width: var(--gm-max-width);
+  min-height: 100dvh;
+  height: 100dvh;
+  max-height: 100dvh;
+  position: relative;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.gm-shell > #app,
+.gm-shell > .greedy-game,
+.gm-shell > .pets-game,
+.gm-shell > .launcher {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+}
+
+/* Lottery games — responsive scale from shell width (750 design px) */
+.gm-shell--greedy {
+  container-type: inline-size;
+  background: #3d2060;
+  --r: calc(100cqw / 750 * 0.93);
+  --result-r: calc(100cqw / 750 * 1.28);
+}
+
+.gm-shell--pets {
+  container-type: inline-size;
+  background: #1e3a5f;
+  --r: calc(100cqw / 750);
+}
+
+.gm-shell--launcher {
+  background:
+    radial-gradient(ellipse 120% 80% at 50% -20%, rgba(88, 120, 255, 0.18), transparent 55%),
+    radial-gradient(circle at 100% 0%, rgba(232, 197, 71, 0.08), transparent 40%),
+    linear-gradient(180deg, #050814 0%, #0c1228 45%, #070a16 100%);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 20px 16px calc(24px + env(safe-area-inset-bottom, 0px));
+}
+
+.gm-shell--olympus {
+  background: #0a1028;
+}
+
+@media (min-width: 431px) {
+  body {
+    background: #0a0a14;
+  }
+}

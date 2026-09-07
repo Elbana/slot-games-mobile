@@ -38,7 +38,7 @@ describe('thrones-of-olympus clusters', () => {
 describe('thrones-of-olympus spin', () => {
   it('returns 6×5 client grid and events', () => {
     const session = { balance: 1_000_000 };
-    const result = spinThronesOfOlympus(session, 20, { forceWin: true, spinId: 1 });
+    const result = spinThronesOfOlympus(session, 200, { forceWin: true, spinId: 1 });
     assert.equal(result.symbols.length, COLS);
     assert.equal(result.symbols[0].length, ROWS);
     assert.ok(result.events.some((e) => e.type === 'deal'));
@@ -47,7 +47,7 @@ describe('thrones-of-olympus spin', () => {
 
   it('force win produces cluster_win events', () => {
     const session = { balance: 1_000_000 };
-    const result = spinThronesOfOlympus(session, 20, { forceWin: true, spinId: 2 });
+    const result = spinThronesOfOlympus(session, 200, { forceWin: true, spinId: 2 });
     assert.ok(result.events.some((e) => e.type === 'cluster_win'));
   });
 
@@ -55,7 +55,7 @@ describe('thrones-of-olympus spin', () => {
     const session = { balance: 1_000_000 };
     let result = null;
     for (let i = 0; i < 5; i++) {
-      result = spinThronesOfOlympus(session, 20, { forceWin: true, spinId: 3 + i });
+      result = spinThronesOfOlympus(session, 200, { forceWin: true, spinId: 3 + i });
       if (result.events.some((e) => e.type === 'cluster_win')) break;
     }
     assert.equal(result.events[0].type, 'deal');
@@ -68,7 +68,7 @@ describe('thrones-of-olympus spin', () => {
   });
 
   it('cascade completes within safety limit', () => {
-    const round = runCascadeRound(20, { forceWin: true, coins: 1 });
+    const round = runCascadeRound(200, { forceWin: true, coins: 1 });
     assert.ok(round.steps.length <= 12);
   });
 
@@ -76,7 +76,7 @@ describe('thrones-of-olympus spin', () => {
     const session = { balance: 1_000_000 };
     let lands = [];
     for (let i = 0; i < 40 && lands.length === 0; i++) {
-      const result = spinThronesOfOlympus(session, 20, { spinId: 100 + i });
+      const result = spinThronesOfOlympus(session, 200, { spinId: 100 + i });
       lands = result.events.filter((e) => e.type === 'multiplier_land');
     }
     if (lands.length === 0) return;
@@ -99,7 +99,7 @@ describe('thrones-of-olympus spin', () => {
         lastFsResolvedSpin: 0,
       },
     };
-    const result = spinThronesOfOlympus(session, 20, { spinId: 999 });
+    const result = spinThronesOfOlympus(session, 200, { spinId: 999 });
     if (result.win > 0) {
       assert.ok(result.win >= result.events.find((e) => e.type === 'multiplier_apply')?.baseWin ?? 0);
     }
@@ -108,7 +108,7 @@ describe('thrones-of-olympus spin', () => {
 
   it('deal event includes scatter metadata', () => {
     const session = { balance: 1_000_000 };
-    const result = spinThronesOfOlympus(session, 20, { spinId: 50 });
+    const result = spinThronesOfOlympus(session, 200, { spinId: 50 });
     const deal = result.events.find((e) => e.type === 'deal');
     assert.ok(deal);
     assert.ok(Array.isArray(deal.scatterPositions));
@@ -127,7 +127,7 @@ describe('thrones-of-olympus spin', () => {
         lastFsResolvedSpin: 0,
       },
     };
-    const result = spinThronesOfOlympus(session, 20, { spinId: 888 });
+    const result = spinThronesOfOlympus(session, 200, { spinId: 888 });
     if (result.state.fsRemaining === 0 && result.win > 0) {
       assert.ok(result.events.some((e) => e.type === 'free_spins_end'));
     }
@@ -139,7 +139,7 @@ describe('thrones-of-olympus spin', () => {
     let found = false;
     for (let i = 0; i < 200 && !found; i++) {
       const s = { balance: 1_000_000 };
-      const result = spinThronesOfOlympus(s, 20, { spinId: 2000 + i });
+      const result = spinThronesOfOlympus(s, 200, { spinId: 2000 + i });
       if (result.events.some((e) => e.type === 'free_spins_awarded')) {
         assert.ok(result.events.some((e) => e.type === 'fs_multiplier_update' && e.value === 1));
         found = true;

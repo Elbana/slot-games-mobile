@@ -784,9 +784,8 @@ export async function createThronesScene(opts) {
   }
 
   function readHudReserve(screenH) {
-    const panel = document.getElementById('roo-gamepanel');
-    if (panel?.offsetHeight) return panel.offsetHeight + screenH * 0.045;
-    return screenH * 0.3;
+    // Stage canvas is clipped above #roo-gamepanel — only reserve space for status text.
+    return Math.min(screenH * 0.055, 32);
   }
 
   function layoutScene(screenW, screenH) {
@@ -806,13 +805,12 @@ export async function createThronesScene(opts) {
     root.y += Math.round(gridScreenY) - gridScreenY;
 
     viewportBg.clear();
-    viewportBg.rect(-screenW / 2, -playH / 2, screenW, screenH).fill({ color: STAGE_BG_COLOR });
+    viewportBg.rect(-screenW / 2, -playH / 2, screenW, playH).fill({ color: STAGE_BG_COLOR });
 
-    const canvasOffsetY = (screenH - playH) / 2;
     if (viewportBleedSprite?.texture) {
       const tex = viewportBleedSprite.texture;
-      viewportBleedSprite.position.set(0, canvasOffsetY);
-      const cover = Math.max(screenW / tex.width, screenH / tex.height) * 1.02;
+      viewportBleedSprite.position.set(0, 0);
+      const cover = Math.max(screenW / tex.width, playH / tex.height) * 1.02;
       viewportBleedSprite.scale.set(cover);
     }
 

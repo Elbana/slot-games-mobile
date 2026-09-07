@@ -23,21 +23,11 @@
 html,
 body {
   margin: 0;
-  min-height: 100%;
-  background:
-    radial-gradient(ellipse 120% 80% at 50% -20%, rgba(88, 120, 255, 0.18), transparent 55%),
-    radial-gradient(circle at 100% 0%, rgba(232, 197, 71, 0.08), transparent 40%),
-    linear-gradient(180deg, var(--bg0) 0%, var(--bg1) 45%, #070a16 100%);
   color: var(--text);
 }
 
-body {
-  padding: 20px 16px calc(24px + var(--safe-bottom));
-}
-
 .launcher {
-  max-width: 440px;
-  margin: 0 auto;
+  width: 100%;
 }
 
 .launcher__header {

@@ -72,13 +72,15 @@ export function handleGetLauncher(req, res) {
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#070b1a" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Games Mobile</title>
+  <link rel="stylesheet" href="/shared/mobile-shell.css" />
   <link rel="stylesheet" href="/launcher/launcher.css" />
 </head>
 <body>
+  <div class="gm-shell gm-shell--launcher">
   <div class="launcher">
     <header class="launcher__header">
       <div class="launcher__brand">
@@ -120,6 +122,7 @@ export function handleGetLauncher(req, res) {
       <p>API catalog: <code>GET /api/v1/games?token=…</code></p>
       <p class="muted">Demo tokens: <code>op_demo_all</code> · <code>op_lottery_only</code> · <code>op_slots_only</code></p>
     </footer>
+  </div>
   </div>
   <script src="/launcher/launcher.js"></script>
 </body>

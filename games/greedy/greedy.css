@@ -2,31 +2,9 @@
 
 html, body {
   height: 100%;
+  min-height: 100dvh;
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", sans-serif;
-  background: #1a1028;
-}
-
-.mockup-bg {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(160deg, #2a1840 0%, #0f0818 100%);
-  padding: 12px;
-}
-
-.screen {
-  width: min(100%, 375px);
-  height: min(100vh - 24px, 820px);
-  overflow: hidden;
-  border-radius: 24px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
-  background: #3d2060;
-  position: relative;
-  container-type: inline-size;
-  --r: calc(100cqw / 750 * 0.93);
-  --result-r: calc(100cqw / 750 * 1.28);
 }
 
 .greedy-game {
@@ -798,8 +776,8 @@ html, body {
 }
 
 .toast {
-  position: fixed;
-  top: 16px;
+  position: absolute;
+  top: calc(16px + env(safe-area-inset-top, 0px));
   left: 50%;
   transform: translateX(-50%);
   background: rgba(0, 0, 0, 0.85);
@@ -810,6 +788,7 @@ html, body {
   z-index: 100;
   opacity: 0;
   transition: opacity 0.2s;
+  pointer-events: none;
 }
 
 .toast.show { opacity: 1; }

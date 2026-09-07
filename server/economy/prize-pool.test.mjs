@@ -53,7 +53,7 @@ describe('prize pool ledger', () => {
     const { poolWin, poolBalance } = tryPoolWin({
       operator,
       game: 'greedy',
-      bet: 20,
+      bet: 1000,
       baseWin: 0,
       playerId: 'p1',
     });

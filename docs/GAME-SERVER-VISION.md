@@ -40,6 +40,40 @@ All amounts are **integers in abstract units**.
 
 - A bet of `5000` is five thousand units — the server never interprets whether that is coins, diamonds, or dollars.
 - The host app converts units for display and real-world value.
+- **No currency symbols** in server responses or audit logs.
+
+### Standard chip tiers
+
+Default allowed bet amounts (configurable per operator in `operators.json` → `betting.chipUnits`):
+
+| Chip | Units |
+|------|-------|
+| Min | 200 |
+| | 1,000 |
+| | 5,000 |
+| | 10,000 |
+| | 50,000 |
+| Max | 100,000 |
+
+Resolved by [`server/betting/bet-config.mjs`](../server/betting/bet-config.mjs). Slot and lottery games share the same whitelist for a given operator.
+
+Default demo balance: **10,000,000** units (`DEFAULT_BALANCE` env).
+
+## Unified betting
+
+| Field | Source |
+|-------|--------|
+| `betting.chipUnits` | Allowed bet amounts (integers only) |
+| `betting.defaultChip` | Starting bet (200) |
+| `betting.minBalanceToPlay` | Minimum balance hint (200) |
+| `betting.unitType` | Always `"integer"` |
+| `betting.displayHint` | `"host_formats_units"` — clients/host format display |
+
+Slot responses also include `betLevels` (alias of `chipUnits`) for backward compatibility.
+
+Lottery `POST /bigo/v1/bet` rejects amounts not in `chipUnits`.
+
+Optional host label: `wallet.unitLabel` in operator config (e.g. `"gems"`) — display only, returned by `GET /api/v1/betting`.
 
 ## Game types
 
@@ -62,6 +96,7 @@ Each integration (e.g. one voice chat product) is an **operator**:
 - Config in [`server/config/operators.json`](../server/config/operators.json):
   - `enabledGames` — which titles this app may load
   - `wallet` — mock (dev) or HTTP adapter to host wallet
+  - `betting` — chip tiers, default bet, min balance (see below)
   - `economy` — house edge, prize pool, slot math profile (see [ECONOMY-AND-PRIZE-POOL.md](ECONOMY-AND-PRIZE-POOL.md))
 
 Separate operators = separate economy tuning. Voice chat and a future partner app do not share pool config unless you explicitly design that.
@@ -71,10 +106,11 @@ Separate operators = separate economy tuning. Voice chat and a future partner ap
 | Method | Path | Purpose |
 |--------|------|---------|
 | GET | `/api/v1/games?token=` | Catalog of enabled games |
-| GET | `/api/v1/economy?token=&game=` | Pool stats and economy config (admin/debug) |
-| GET | `/api/v2/session?game=&token=&player=` | Slot session + balance |
+| GET | `/api/v1/betting?token=` | Chip tiers and unit metadata for integrators |
+| GET | `/api/v1/economy?token=&game=` | Pool stats, economy + betting config (admin/debug) |
+| GET | `/api/v2/session?game=&token=&player=` | Slot session + balance + `betting` |
 | POST | `/api/v2/spin?game=&token=&player=` | Slot round (returns `events[]`) |
-| GET | `/api/lottery/:id/init?token=&player=` | Lottery bootstrap |
+| GET | `/api/lottery/:id/init?token=&player=` | Lottery bootstrap + `betting` |
 | POST | `/bigo/v1/bet`, `/bet_state`, … | Lottery rounds |
 
 Every request includes `token` (operator) and `player` (player id in host app).

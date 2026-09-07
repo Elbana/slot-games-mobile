@@ -28,6 +28,7 @@ import {
 import { resolveEngineFromBody, resolveEngineForGameId } from '../games/lottery/routes.mjs';
 import { getOperatorEconomy } from '../economy/operator-economy.mjs';
 import { recordRound, tryPoolWin } from '../economy/prize-pool.mjs';
+import { bettingPayload, getBetConfig, validateBetAmount } from '../betting/bet-config.mjs';
 
 const GAME_DEFS = [GREEDY_GAME, PETS_BEASTS_GAME];
 
@@ -46,6 +47,7 @@ function buildContext(req, res, slug) {
     sessionKey: sessionKey(operator, playerId),
     wallet: createWalletForOperator(operator),
     economy: getOperatorEconomy(operator),
+    betting: getBetConfig(operator),
     slug,
   };
 }
@@ -96,6 +98,7 @@ export function mountLotteryRoutes(app) {
         balance,
         symbols: def.symbols,
         betState: engine.getBetState(),
+        betting: bettingPayload(ctx.betting),
         playerId: ctx.playerId,
         operatorId: ctx.operator.id,
       })
@@ -183,8 +186,9 @@ async function placeBetWithWallet(engine, lotterySession, ctx, playCode, amount)
   const phase = engine.getBetState();
   if (phase.Stage !== 1) return { ok: false, code: 400, message: 'Betting closed' };
 
-  const amt = Math.floor(Number(amount));
-  if (!Number.isFinite(amt) || amt <= 0) return { ok: false, code: 400, message: 'Invalid bet amount' };
+  const betCheck = validateBetAmount(amount, ctx.betting);
+  if (!betCheck.ok) return { ok: false, code: 400, message: betCheck.error };
+  const amt = betCheck.amount;
 
   let balance;
   try {

@@ -1,0 +1,10 @@
+{
+  "name": "Bet Advisor",
+  "short_name": "BetAdvisor",
+  "description": "Rolling EV advisor for fruit betting game",
+  "start_url": "/play/bet-advisor",
+  "display": "standalone",
+  "background_color": "#0f0a1a",
+  "theme_color": "#0f0a1a",
+  "orientation": "portrait"
+}

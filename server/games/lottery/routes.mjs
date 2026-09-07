@@ -180,9 +180,9 @@ export function handleIncomeRankToday(req, res) {
     res,
     {
       Ranks: [
-        { Index: 1, NickName: 'Player1', Head: '', Diamond: '12,500', Win: '850.00' },
-        { Index: 2, NickName: 'Player2', Head: '', Diamond: '8,200', Win: '420.50' },
-        { Index: 3, NickName: 'Player3', Head: '', Diamond: '5,100', Win: '210.00' },
+        { Index: 1, NickName: 'Player1', Head: '', Balance: 12500, Win: 8500 },
+        { Index: 2, NickName: 'Player2', Head: '', Balance: 8200, Win: 4200 },
+        { Index: 3, NickName: 'Player3', Head: '', Balance: 5100, Win: 2100 },
       ],
     },
     req

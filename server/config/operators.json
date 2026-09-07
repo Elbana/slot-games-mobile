@@ -6,6 +6,11 @@
       "name": "Demo — all games",
       "enabledGames": ["rise-of-olympus", "greedy", "pets-beasts"],
       "wallet": { "mode": "mock" },
+      "betting": {
+        "chipUnits": [200, 1000, 5000, 10000, 50000, 100000],
+        "defaultChip": 200,
+        "minBalanceToPlay": 200
+      },
       "economy": {
         "houseEdgePercent": 3,
         "poolContributionPercent": 35,
@@ -21,6 +26,11 @@
       "name": "Demo — lottery only",
       "enabledGames": ["greedy", "pets-beasts"],
       "wallet": { "mode": "mock" },
+      "betting": {
+        "chipUnits": [200, 1000, 5000, 10000, 50000, 100000],
+        "defaultChip": 200,
+        "minBalanceToPlay": 200
+      },
       "economy": {
         "houseEdgePercent": 3,
         "poolContributionPercent": 35,
@@ -36,6 +46,11 @@
       "name": "Demo — slots only",
       "enabledGames": ["rise-of-olympus"],
       "wallet": { "mode": "mock" },
+      "betting": {
+        "chipUnits": [200, 1000, 5000, 10000, 50000, 100000],
+        "defaultChip": 200,
+        "minBalanceToPlay": 200
+      },
       "economy": {
         "houseEdgePercent": 3,
         "poolContributionPercent": 35,
@@ -51,6 +66,11 @@
       "name": "Voice chat demo",
       "enabledGames": ["rise-of-olympus", "greedy", "pets-beasts"],
       "wallet": { "mode": "mock" },
+      "betting": {
+        "chipUnits": [200, 1000, 5000, 10000, 50000, 100000],
+        "defaultChip": 200,
+        "minBalanceToPlay": 200
+      },
       "economy": {
         "houseEdgePercent": 3,
         "poolContributionPercent": 40,
