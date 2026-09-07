@@ -16,7 +16,6 @@ import {
   createScrollSymbolSpine,
   createPlatformSpine,
   createLogoSpine,
-  createSignpostSpine,
   createReelFrameSpine,
   createTumbleWinSpine,
   createBigWinStack,
@@ -34,10 +33,6 @@ import {
   playSpineAnim,
   playScatterActivation,
   setGodMeterLevel,
-  showSignpostLoop,
-  showSignpostIdle,
-  hideSignpost,
-  setSignpostMultiplier,
   setTumbleWinValue,
   tumbleWinCharge,
   tumbleWinChargeStop,
@@ -212,15 +207,6 @@ export async function createThronesScene(opts) {
     uiLayer.addChild(logoSpine);
   } catch (err) {
     console.warn('[Thrones] logo spine failed', err);
-  }
-
-  /** @type {import('@esotericsoftware/spine-pixi-v8').Spine | null} */
-  let signpostSpine = null;
-  try {
-    signpostSpine = createSignpostSpine();
-    uiLayer.addChild(signpostSpine);
-  } catch (err) {
-    console.warn('[Thrones] signpost spine failed', err);
   }
 
   /** @type {import('@esotericsoftware/spine-pixi-v8').Spine | null} */
@@ -433,7 +419,6 @@ export async function createThronesScene(opts) {
     tumbleWinValue = 0;
     updateTumbleText(0);
     if (tumbleWinSpine) await tumbleWinResetIdle(tumbleWinSpine);
-    if (signpostSpine) setSignpostMultiplier(signpostSpine, 0);
   }
 
   async function onCascadeWin(value) {
@@ -462,8 +447,6 @@ export async function createThronesScene(opts) {
       });
     }
 
-    if (signpostSpine) setSignpostMultiplier(signpostSpine, sum);
-
     if (tumbleWinSpine) {
       const base = baseWin ?? tumbleWinValue;
       if (sum > 0 && base > 0) {
@@ -486,16 +469,7 @@ export async function createThronesScene(opts) {
     }
   }
 
-  function hideSignpostFn() {
-    if (signpostSpine) {
-      signpostSpine.visible = false;
-      void hideSignpost(signpostSpine);
-    }
-  }
-
-  function showSignpostIdleFn() {
-    if (signpostSpine) void showSignpostIdle(signpostSpine);
-  }
+  function hideSignpostFn() {}
 
   function clusterCenter(positions) {
     let cx = 0;
@@ -665,13 +639,6 @@ export async function createThronesScene(opts) {
 
   function setMultiplierSum(sum) {
     setGodMeterLevels(sum);
-    if (!signpostSpine) return;
-    if (sum > 0) {
-      setSignpostMultiplier(signpostSpine, sum);
-      void showSignpostLoop(signpostSpine, `×${sum}`);
-    } else {
-      showSignpostIdleFn();
-    }
   }
 
   let panelBaseScale = 1;
@@ -681,16 +648,10 @@ export async function createThronesScene(opts) {
     tumbleWinSpine.scale.set(panelBaseScale * pulse);
   }
 
-  let signpostBaseScale = CHROME.signpost.scale;
-  function pulseSignpost(t) {
-    if (!signpostSpine) return;
-    const pulse = 1 + Math.sin(t * Math.PI) * 0.15;
-    signpostSpine.scale.set(signpostBaseScale * pulse);
-  }
+  function pulseSignpost(_t) {}
 
   function resetPanelScale() {
     if (tumbleWinSpine) tumbleWinSpine.scale.set(panelBaseScale);
-    if (signpostSpine) signpostSpine.scale.set(signpostBaseScale);
   }
 
   async function showBigWin(amount, bet = 20) {
