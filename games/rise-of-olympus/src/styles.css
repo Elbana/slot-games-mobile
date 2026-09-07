@@ -89,8 +89,4 @@ body {
   .gc-game--thrones {
     --roo-hud-height: clamp(120px, 22cqh, 160px);
   }
-
-  .roo-status {
-    font-size: 0.85rem;
-  }
 }

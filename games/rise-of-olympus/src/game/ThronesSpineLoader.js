@@ -346,11 +346,30 @@ export function createFreespinBackgroundSpine() {
   return spine;
 }
 
+function freezeSpineSetupPose(spine) {
+  spine.state.clearTracks();
+  spine.skeleton.setToSetupPose();
+  spine.update(0);
+}
+
+/** Hold spine on the last frame of an animation (no loop / no bob). */
+function holdSpineAtAnimEnd(spine, animName) {
+  if (!hasAnim(spine, animName)) {
+    freezeSpineSetupPose(spine);
+    return;
+  }
+  const entry = spine.state.setAnimation(0, animName, false);
+  if (entry) {
+    entry.trackTime = entry.animationEnd;
+    entry.timeScale = 0;
+  }
+  spine.update(0);
+}
+
 export function createPlatformSpine() {
   const spine = spawnSpine('roo-platform-skel', 'roo-bg-atlas');
   spine.position.set(CHROME.platform.x, CHROME.platform.y);
-  // Static pose — base_idle/base_In scale pulse shimmers at platform hole vs grid edge.
-  void playSpineAnim(spine, ['stop', 'idle'], true);
+  void playSpineAnim(spine, ['base_In'], false).then(() => holdSpineAtAnimEnd(spine, 'base_In'));
   return spine;
 }
 
@@ -374,7 +393,7 @@ export function createSignpostSpine() {
 export function createReelFrameSpine() {
   const spine = spawnSpine(CHROME_SPINE.reelFrame.skel, CHROME_SPINE.reelFrame.atlas);
   spine.position.set(CHROME_SPINE.reelFrame.x, CHROME_SPINE.reelFrame.y);
-  void playSpineAnim(spine, ['show', 'stop'], true);
+  void playSpineAnim(spine, ['show'], false).then(() => playSpineAnim(spine, ['stop'], true));
   return spine;
 }
 

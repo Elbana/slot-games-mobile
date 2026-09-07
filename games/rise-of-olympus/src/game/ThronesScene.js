@@ -19,7 +19,6 @@ import {
   createSignpostSpine,
   createReelFrameSpine,
   createTumbleWinSpine,
-  createGodPortraitSpine,
   createBigWinStack,
   createFsCounterSpine,
   createWinboxSpine,
@@ -237,12 +236,6 @@ export async function createThronesScene(opts) {
 
   /** @type {import('@esotericsoftware/spine-pixi-v8').Spine | null} */
   let godPortraitSpine = null;
-  try {
-    godPortraitSpine = createGodPortraitSpine(MULTIPLIER_GOD_ID);
-    uiLayer.addChild(godPortraitSpine);
-  } catch (err) {
-    console.warn('[Thrones] god portrait spine failed', err);
-  }
 
   const bigWinStack = createBigWinStack();
   for (const s of [bigWinStack.bg, bigWinStack.shine, bigWinStack.stars, bigWinStack.banner]) {

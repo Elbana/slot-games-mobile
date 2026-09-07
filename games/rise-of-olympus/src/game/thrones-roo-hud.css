@@ -152,23 +152,6 @@
   font-family: inherit;
 }
 
-.roo-status {
-  position: absolute;
-  left: 50%;
-  bottom: calc(var(--roo-hud-height, 24cqh) + 4px);
-  transform: translateX(-50%);
-  margin: 0;
-  z-index: 4;
-  pointer-events: none;
-  color: #ffe082;
-  font-family: 'Roboto Condensed', Arial, sans-serif;
-  font-size: clamp(1rem, 4.2cqw, 1.35rem);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
-  white-space: nowrap;
-}
-
 .roo-gamepanel {
   font-family: 'Roboto Condensed', Arial, sans-serif;
   position: absolute;

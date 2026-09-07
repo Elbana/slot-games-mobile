@@ -116,7 +116,7 @@ export const GRID_BACKING_BLEED = 4;
 export const MOBILE_PLAYFIELD = {
   /** Frame lip below grid clip (stage px). */
   frameBottomPad: 18,
-  /** Space for “GOOD LUCK” + gap above wallet row (screen px). */
+  /** Space above wallet row (screen px). */
   gapAboveHud: 12,
   /** Left/right inset so the golden frame is visible (screen px). */
   sideInsetPx: 14,

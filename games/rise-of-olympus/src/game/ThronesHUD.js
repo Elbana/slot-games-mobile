@@ -57,7 +57,6 @@ export function createThronesHUD(root, opts) {
           <button type="button" class="roo-settings-overlay__close" id="settingsClose">Close</button>
         </div>
       </div>
-      <p class="roo-status" id="roo-status">GOOD LUCK</p>
       <footer id="roo-gamepanel" class="roo-gamepanel pt" style="--roo-bottom-bg: url('${ASSET_BASE}/bottomBg.png'); --roo-ui-elements: url('${ASSET_BASE}/uiElements2.png'); --roo-ui: url('${ASSET_BASE}/ui.png');">
         <div id="backgroundImg"></div>
         <div id="bottomPanelWrapper">
@@ -117,7 +116,6 @@ export function createThronesHUD(root, opts) {
 
   const balanceEl = root.querySelector('#moneyBalance');
   const winEl = root.querySelector('#moneyWin');
-  const statusEl = root.querySelector('#roo-status');
   const spinBtn = root.querySelector('#spinBtn');
   const spinCore = root.querySelector('.roo-btn__spin-core');
   const spinWrap = root.querySelector('#spinBtnWrapper');
@@ -277,9 +275,6 @@ export function createThronesHUD(root, opts) {
       winEl.textContent = formatMoney(v);
       winEl.classList.toggle('roo-win--active', v > 0);
     },
-    setStatus(text) {
-      statusEl.textContent = text || 'GOOD LUCK';
-    },
     setBet(v) {
       let idx = levels.indexOf(v);
       if (idx < 0 && v != null && Number.isFinite(v)) {
@@ -329,12 +324,10 @@ export function createThronesHUD(root, opts) {
       if (!text) {
         featureEl.hidden = true;
         featureEl.textContent = '';
-        this.setStatus('GOOD LUCK');
         return;
       }
       featureEl.hidden = false;
       featureEl.textContent = text;
-      this.setStatus(text);
     },
     setFreeSpins(fs) {
       if (fs.remaining > 0) {
