@@ -4,8 +4,10 @@
 
 .gc-hud--thrones {
   pointer-events: none;
+  width: 100%;
   height: 100%;
   position: relative;
+  --roo-ui-elements: url('/assets/rise-of-olympus/uiElements2.png');
 }
 
 .gc-hud--thrones .gc-hud__top--thrones {
@@ -13,54 +15,154 @@
   top: max(env(safe-area-inset-top, 0px), 6px);
   left: 0;
   right: 0;
-  z-index: 5;
+  z-index: 10;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 10px;
+  justify-content: flex-end;
+  padding: 0 max(env(safe-area-inset-right, 0px), 8px);
   pointer-events: none;
 }
 
+.gc-hud--thrones .gc-hud__top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+
 .gc-hud--thrones .gc-hud__menu,
-.gc-hud--thrones .gc-hud__rules {
+.gc-hud--thrones .gc-hud__sound {
   pointer-events: auto;
   border: none;
   cursor: pointer;
-  font-family: 'Roboto Condensed', Arial, sans-serif;
+  padding: 0;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.35);
+  background-image: var(--roo-ui-elements);
+  background-repeat: no-repeat;
+  background-size: 623.66% 1098.92%;
+  border: 1px solid rgba(255, 215, 79, 0.35);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gc-hud--thrones .gc-hud__sound {
+  background-position: 84.8% 12.8%;
+}
+
+.gc-hud--thrones .gc-hud__sound--off {
+  background-position: 98% 0%;
 }
 
 .gc-hud--thrones .gc-hud__menu {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.35) var(--roo-ui-elements) no-repeat;
-  background-size: 402.78% 709.72%;
-  background-position: 33.72% 84.738%;
-  border: 1px solid rgba(255, 215, 79, 0.35);
+  background-position: 84.8% 33.48%;
 }
 
-.gc-hud--thrones .gc-hud__rules {
-  padding: 8px 14px;
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(255, 215, 79, 0.35);
+.roo-settings-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: max(env(safe-area-inset-top, 0px), 56px) 16px 16px;
+}
+
+.roo-settings-overlay[hidden] {
+  display: none !important;
+}
+
+.roo-settings-overlay__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.roo-settings-overlay__panel {
+  position: relative;
+  z-index: 1;
+  width: min(92vw, 340px);
+  padding: 1rem 1.1rem;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 204, 51, 0.35);
+  background: linear-gradient(180deg, #1a2040 0%, #0d1228 100%);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+}
+
+.roo-settings-overlay__title {
+  margin: 0 0 0.75rem;
+  text-align: center;
   color: #ffe082;
-  font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+}
+
+.roo-settings-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 0 0 0.5rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 204, 51, 0.25);
+  background: rgba(255, 255, 255, 0.06);
+  color: #eee;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.roo-settings-row__icon {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  background-image: var(--roo-ui-elements);
+  background-repeat: no-repeat;
+  background-size: 1054.55% 1892.59%;
+}
+
+.roo-settings-row__icon--sound {
+  background-position: 96.95% 45.25%;
+}
+
+.roo-settings-row--off .roo-settings-row__icon--sound {
+  background-position: 98% 0%;
+}
+
+.roo-settings-row__icon--rules {
+  background-position: 84.8% 33.48%;
+  background-size: 623.66% 1098.92%;
+}
+
+.roo-settings-overlay__close {
+  display: block;
+  margin: 0.85rem auto 0;
+  padding: 0.35rem 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
 }
 
 .roo-status {
   position: absolute;
   left: 50%;
-  bottom: calc(var(--roo-hud-height, 26dvh) + 4px);
+  bottom: calc(var(--roo-hud-height, 24cqh) + 4px);
   transform: translateX(-50%);
   margin: 0;
   z-index: 4;
   pointer-events: none;
   color: #ffe082;
   font-family: 'Roboto Condensed', Arial, sans-serif;
-  font-size: clamp(1rem, 4.2vw, 1.35rem);
+  font-size: clamp(1rem, 4.2cqw, 1.35rem);
   font-weight: 700;
   letter-spacing: 0.12em;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
@@ -73,9 +175,13 @@
   left: 0;
   right: 0;
   bottom: 0;
-  height: var(--roo-hud-height, 26dvh);
+  width: 100%;
+  max-width: none;
+  height: var(--roo-hud-height, 22cqh);
   min-height: 148px;
-  max-height: 220px;
+  max-height: 188px;
+  margin: 0;
+  padding: 0;
   padding-bottom: env(safe-area-inset-bottom, 0px);
   pointer-events: none;
   z-index: 4;
@@ -83,20 +189,16 @@
 
 .roo-gamepanel #backgroundImg {
   position: absolute;
-  inset: 0;
-  background-image: var(--roo-bottom-bg);
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-}
-
-.roo-gamepanel #backgroundImg::before {
-  content: '';
-  position: absolute;
-  top: 0;
   left: 0;
   right: 0;
-  height: 1px;
-  background: radial-gradient(#ffffff, #808080, #000000);
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background-image: var(--roo-bottom-bg);
+  background-size: 100% auto;
+  background-repeat: no-repeat;
+  background-position: center bottom;
+  background-color: transparent;
 }
 
 .roo-gamepanel #bottomPanelWrapper {
@@ -106,14 +208,19 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  gap: 8px;
-  padding: 10px 8px 8px;
+  gap: clamp(4px, 1.2cqh, 8px);
+  width: 100%;
+  max-width: 100%;
+  padding: 6px env(safe-area-inset-right, 0px) calc(6px + env(safe-area-inset-bottom, 0px))
+    env(safe-area-inset-left, 0px);
 }
 
 .roo-stats-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
+  gap: clamp(4px, 1.2cqw, 8px);
+  width: 100%;
+  padding: 0 clamp(2px, 1cqw, 6px);
   pointer-events: none;
 }
 
@@ -166,9 +273,11 @@
   --btn-face-hover: linear-gradient(165deg, #354575 0%, #1a2448 55%, #0f1630 100%);
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: clamp(8px, 2.4vw, 14px);
-  padding: 2px 6px 0;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 100%;
+  gap: clamp(2px, 1cqw, 8px);
+  padding: 0 clamp(2px, 1cqw, 6px);
   pointer-events: auto;
 }
 

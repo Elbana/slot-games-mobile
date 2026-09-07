@@ -4,6 +4,8 @@
 
 :root {
   --gm-max-width: 430px;
+  --gm-phone-width: 390px;
+  --gm-phone-height: 844px;
   --gm-bg: #050510;
 }
 
@@ -74,11 +76,28 @@ body {
 }
 
 .gm-shell--olympus {
-  background: #0a1028;
+  background: transparent;
+  width: 100%;
+  max-width: 100%;
+  min-height: 100dvh;
+  height: 100dvh;
 }
 
-@media (min-width: 431px) {
-  body {
+/* Desktop preview: iPhone 13 Pro portrait frame (390×844) */
+@media (min-width: 391px) {
+  html:has(.gm-shell--olympus) {
     background: #0a0a14;
+  }
+
+  body:has(.gm-shell--olympus) {
+    justify-content: center;
+  }
+
+  .gm-shell--olympus {
+    width: var(--gm-phone-width);
+    max-width: var(--gm-phone-width);
+    height: min(100dvh, var(--gm-phone-height));
+    max-height: var(--gm-phone-height);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
   }
 }

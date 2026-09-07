@@ -13,6 +13,10 @@ const clips = new Map();
 let ready = false;
 /** @type {boolean} */
 let unlocked = false;
+/** @type {boolean} */
+let muted = false;
+/** @type {number} */
+let masterVolume = 1;
 
 /** @type {Map<string, { source: AudioBufferSourceNode, gain: GainNode }>} */
 const loops = new Map();
@@ -42,6 +46,25 @@ export async function unlockAudio() {
 
 export function isSoundReady() {
   return ready;
+}
+
+export function isMuted() {
+  return muted;
+}
+
+/** @param {boolean} on */
+export function setMuted(on) {
+  muted = !!on;
+  if (muted) {
+    for (const key of [...loops.keys()]) stopLoop(key);
+    return;
+  }
+  if (ready && unlocked) startBaseMusic();
+}
+
+/** @param {number} v 0..1 */
+export function setMasterVolume(v) {
+  masterVolume = Math.max(0, Math.min(1, v));
 }
 
 /**
@@ -89,7 +112,7 @@ export function playSound(name, opts = {}) {
 
   const { volume = 1, loop = false, key } = opts;
   const duration = clip.end - clip.start;
-  if (duration <= 0) return null;
+  if (duration <= 0 || muted) return null;
 
   if (key && loops.has(key)) {
     stopLoop(key);
@@ -103,7 +126,7 @@ export function playSound(name, opts = {}) {
     source.loopStart = clip.start;
     source.loopEnd = clip.end;
   }
-  gain.gain.value = volume;
+  gain.gain.value = volume * masterVolume;
   source.connect(gain);
   gain.connect(ac.destination);
   source.start(0, clip.start, loop ? undefined : duration);

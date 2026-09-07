@@ -7,7 +7,6 @@ import {
   createSymbolSprite,
   createWinGlow,
   loadThronesAssets,
-  createStaticBackgroundSprite,
   getBackgroundTexture,
 } from './AssetLoader.js';
 import {
@@ -92,6 +91,7 @@ import {
   gridPixelSize,
   cellPosition,
   MULTIPLIER_GOD_ID,
+  MOBILE_PLAYFIELD,
 } from './config.js';
 
 /**
@@ -115,16 +115,17 @@ export async function createThronesScene(opts) {
 
   const root = new Container();
 
-  /** Full-canvas bleed behind letterboxed stage (avoids atlas junk at edges). */
+  /** Fallback fill when JPG bg is unavailable. */
   const viewportBg = new Graphics();
   root.addChild(viewportBg);
-  /** @type {import('pixi.js').Sprite | null} */
-  let viewportBleedSprite = null;
-  const bleedTex = getBackgroundTexture();
-  if (bleedTex) {
-    viewportBleedSprite = new Sprite(bleedTex);
-    viewportBleedSprite.anchor.set(0.5);
-    root.addChild(viewportBleedSprite);
+
+  /** Full-canvas backdrop — independent of letterboxed game scale. */
+  let screenBgSprite = null;
+  const bgTex = getBackgroundTexture();
+  if (bgTex) {
+    screenBgSprite = new Sprite(bgTex);
+    screenBgSprite.anchor.set(0.5);
+    root.addChild(screenBgSprite);
   }
 
   const stageContent = new Container();
@@ -146,14 +147,7 @@ export async function createThronesScene(opts) {
   stageContent.sortableChildren = true;
   stageContent.addChild(bgLayer, platformLayer, frameLayer, gridLayer, fxLayer, uiLayer, overlayLayer, coinLayer);
 
-  /** @type {import('pixi.js').Sprite | null} */
-  let staticBgSprite = null;
-  try {
-    staticBgSprite = createStaticBackgroundSprite();
-    bgLayer.addChild(staticBgSprite);
-  } catch (err) {
-    console.warn('[Thrones] static bg failed', err);
-  }
+  /** bgLayer holds animated spine backdrop only (full-bleed JPG is screenBgSprite on root). */
 
   /** @type {import('@esotericsoftware/spine-pixi-v8').Spine | null} */
   let reelFrameSpine = null;
@@ -629,8 +623,8 @@ export async function createThronesScene(opts) {
   }
 
   function setFreeSpinMode(inFs) {
-    if (staticBgSprite) {
-      staticBgSprite.tint = inFs ? 0xd8c8ff : 0xffffff;
+    if (screenBgSprite) {
+      screenBgSprite.tint = inFs ? 0xd8c8ff : 0xffffff;
     }
     if (!inFs && runningMultSpine) void hideRunningMultiplier(runningMultSpine);
   }
@@ -783,41 +777,47 @@ export async function createThronesScene(opts) {
     return godPortraitSpine;
   }
 
-  function readHudReserve(screenH) {
-    // Stage canvas is clipped above #roo-gamepanel — only reserve space for status text.
-    return Math.min(screenH * 0.055, 32);
-  }
+  function layoutScene(screenW, screenH, hudHeightPx = 0) {
+    const hudH = Math.max(0, Math.min(hudHeightPx, screenH * 0.45));
+    const playH = Math.max(1, screenH - hudH);
+    const { frameBottomPad, gapAboveHud, sideInsetPx } = MOBILE_PLAYFIELD;
 
-  function layoutScene(screenW, screenH) {
-    const hudReserve = readHudReserve(screenH);
-    const playH = Math.max(0, screenH - hudReserve);
-    root.x = screenW / 2;
-    root.y = playH / 2;
-    const scale = Math.min(screenW / STAGE.width, playH / STAGE.height);
+    // Playfield width with a small side inset so the frame border stays visible.
+    const playfieldW = Math.max(1, screenW - sideInsetPx * 2);
+    const scale = playfieldW / gridW;
+
     stageContent.scale.set(scale);
 
-    // Snap grid origin to whole screen pixels — reduces subpixel shimmer at mask edges.
     const pivotX = STAGE.width / 2;
     const pivotY = STAGE.height / 2;
-    const gridScreenX = root.x + (ORIGIN.x - pivotX) * scale;
-    const gridScreenY = root.y + (ORIGIN.y - pivotY) * scale;
-    root.x += Math.round(gridScreenX) - gridScreenX;
-    root.y += Math.round(gridScreenY) - gridScreenY;
 
+    // Bottom-align reel grid + frame just above wallet / bet / win HUD.
+    const playfieldBottomStage = ORIGIN.y + gridH + frameBottomPad;
+    const bottomFromPivot = playfieldBottomStage - pivotY;
+
+    root.x = screenW / 2;
+    root.y = playH - gapAboveHud - bottomFromPivot * scale;
+
+    const bottomScreen = root.y + bottomFromPivot * scale;
+    const targetBottom = playH - gapAboveHud;
+    root.y += Math.round(targetBottom) - bottomScreen;
+
+    const playfieldCenterStage = ORIGIN.x + gridW / 2;
+    const centerFromPivot = playfieldCenterStage - pivotX;
+    const centerScreen = root.x + centerFromPivot * scale;
+    root.x += Math.round(screenW / 2) - centerScreen;
+
+    const bgTopLocal = -root.y;
     viewportBg.clear();
-    viewportBg.rect(-screenW / 2, -playH / 2, screenW, playH).fill({ color: STAGE_BG_COLOR });
-
-    if (viewportBleedSprite?.texture) {
-      const tex = viewportBleedSprite.texture;
-      viewportBleedSprite.position.set(0, 0);
-      const cover = Math.max(screenW / tex.width, playH / tex.height) * 1.02;
-      viewportBleedSprite.scale.set(cover);
+    if (!screenBgSprite?.texture) {
+      viewportBg.rect(-screenW / 2, bgTopLocal, screenW, screenH).fill({ color: STAGE_BG_COLOR });
     }
 
-    if (staticBgSprite?.texture) {
-      const tex = staticBgSprite.texture;
-      const cover = Math.max(STAGE.width / tex.width, STAGE.height / tex.height) * 1.08;
-      staticBgSprite.scale.set(cover);
+    if (screenBgSprite?.texture) {
+      const tex = screenBgSprite.texture;
+      screenBgSprite.position.set(0, screenH / 2 - root.y);
+      const cover = Math.max(screenW / tex.width, screenH / tex.height) * 1.04;
+      screenBgSprite.scale.set(cover);
     }
 
     layoutTumbleWinPanel();

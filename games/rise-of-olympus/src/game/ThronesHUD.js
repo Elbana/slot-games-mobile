@@ -4,6 +4,7 @@
 
 import './thrones-roo-hud.css';
 import { playThronesSound } from './ThronesSound.js';
+import { isMuted, setMuted } from './SoundEngine.js';
 
 const ASSET_BASE = '/assets/rise-of-olympus';
 
@@ -27,6 +28,7 @@ export function formatMoney(v) {
  *   onRules?: () => void,
  *   onTurboToggle?: (enabled: boolean) => void,
  *   onAutoToggle?: (enabled: boolean) => void,
+ *   onSoundToggle?: (enabled: boolean) => void,
  * }} opts
  */
 export function createThronesHUD(root, opts) {
@@ -35,9 +37,26 @@ export function createThronesHUD(root, opts) {
   root.innerHTML = `
     <div class="gc-hud gc-hud--thrones">
       <header class="gc-hud__top gc-hud__top--thrones">
-        <button type="button" id="gc-menu" class="gc-hud__menu" aria-label="Menu"></button>
-        <button type="button" id="gc-rules" class="gc-hud__rules">Rules</button>
+        <div class="gc-hud__top-actions">
+          <button type="button" id="gc-sound" class="gc-hud__sound" aria-label="Toggle sound"></button>
+          <button type="button" id="gc-menu" class="gc-hud__menu" aria-label="Settings"></button>
+        </div>
       </header>
+      <div id="gc-settings" class="roo-settings-overlay" hidden>
+        <div class="roo-settings-overlay__backdrop"></div>
+        <div class="roo-settings-overlay__panel">
+          <p class="roo-settings-overlay__title">Settings</p>
+          <button type="button" id="settingsSound" class="roo-settings-row">
+            <span class="roo-settings-row__icon roo-settings-row__icon--sound" aria-hidden="true"></span>
+            <span class="roo-settings-row__label" id="settingsSoundLabel">Sound on</span>
+          </button>
+          <button type="button" id="settingsRules" class="roo-settings-row">
+            <span class="roo-settings-row__icon roo-settings-row__icon--rules" aria-hidden="true"></span>
+            <span class="roo-settings-row__label">Game rules</span>
+          </button>
+          <button type="button" class="roo-settings-overlay__close" id="settingsClose">Close</button>
+        </div>
+      </div>
       <p class="roo-status" id="roo-status">GOOD LUCK</p>
       <footer id="roo-gamepanel" class="roo-gamepanel pt" style="--roo-bottom-bg: url('${ASSET_BASE}/bottomBg.png'); --roo-ui-elements: url('${ASSET_BASE}/uiElements2.png'); --roo-ui: url('${ASSET_BASE}/ui.png');">
         <div id="backgroundImg"></div>
@@ -114,11 +133,43 @@ export function createThronesHUD(root, opts) {
   const msgEl = root.querySelector('#gc-msg');
   const featureEl = root.querySelector('#gc-feature');
   const gamepanel = root.querySelector('#roo-gamepanel');
+  const soundBtn = root.querySelector('#gc-sound');
+  const settingsOverlay = root.querySelector('#gc-settings');
+  const settingsSoundBtn = root.querySelector('#settingsSound');
+  const settingsSoundLabel = root.querySelector('#settingsSoundLabel');
 
   let betIndex = 0;
   let betEnabled = true;
   let turboOn = false;
   let autoOn = false;
+  let soundOn = !isMuted();
+
+  function syncSoundUi() {
+    soundOn = !isMuted();
+    soundBtn.classList.toggle('gc-hud__sound--off', !soundOn);
+    soundBtn.setAttribute('aria-label', soundOn ? 'Mute sound' : 'Unmute sound');
+    if (settingsSoundLabel) {
+      settingsSoundLabel.textContent = soundOn ? 'Sound on' : 'Sound off';
+    }
+    settingsSoundBtn?.classList.toggle('roo-settings-row--off', !soundOn);
+  }
+
+  function toggleSound() {
+    soundOn = !soundOn;
+    setMuted(!soundOn);
+    syncSoundUi();
+    opts.onSoundToggle?.(soundOn);
+    if (soundOn) playThronesSound('ui_interact');
+  }
+
+  function openSettings() {
+    settingsOverlay.hidden = false;
+    syncSoundUi();
+  }
+
+  function closeSettings() {
+    settingsOverlay.hidden = true;
+  }
 
   function renderChipGrid() {
     chipGrid.innerHTML = levels
@@ -163,12 +214,26 @@ export function createThronesHUD(root, opts) {
     opts.onAutoToggle?.(autoOn);
   }
 
-  root.querySelector('#gc-menu').addEventListener('click', () => opts.onRules?.());
+  root.querySelector('#gc-menu').addEventListener('click', () => {
+    playThronesSound('ui_interact');
+    openSettings();
+  });
+  soundBtn.addEventListener('click', () => {
+    toggleSound();
+  });
+  settingsSoundBtn.addEventListener('click', () => {
+    toggleSound();
+  });
+  root.querySelector('#settingsRules').addEventListener('click', () => {
+    closeSettings();
+    opts.onRules?.();
+  });
+  root.querySelector('#settingsClose').addEventListener('click', closeSettings);
+  settingsOverlay.querySelector('.roo-settings-overlay__backdrop').addEventListener('click', closeSettings);
   spinBtn.addEventListener('click', () => {
     playThronesSound('ui_interact');
     opts.onSpin();
   });
-  root.querySelector('#gc-rules').addEventListener('click', () => opts.onRules?.());
   betDec.addEventListener('click', () => {
     if (!betEnabled || betIndex <= 0) return;
     playThronesSound('ui_interact');
@@ -202,6 +267,7 @@ export function createThronesHUD(root, opts) {
   setBetIndex(0, false);
   syncTurbo();
   syncAuto();
+  syncSoundUi();
 
   return {
     setBalance(v) {

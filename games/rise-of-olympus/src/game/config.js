@@ -112,6 +112,16 @@ export const SCATTER_SYMBOL = 11;
 /** Bleed past grid clip rect to hide mask/platform fringe (px). */
 export const GRID_BACKING_BLEED = 4;
 
+/** Mobile portrait — grid sits just above wallet/bet/win HUD with small side inset. */
+export const MOBILE_PLAYFIELD = {
+  /** Frame lip below grid clip (stage px). */
+  frameBottomPad: 18,
+  /** Space for “GOOD LUCK” + gap above wallet row (screen px). */
+  gapAboveHud: 12,
+  /** Left/right inset so the golden frame is visible (screen px). */
+  sideInsetPx: 14,
+};
+
 /** @param {number} cols @param {number} rows */
 export function gridPixelSize(cols, rows) {
   return {

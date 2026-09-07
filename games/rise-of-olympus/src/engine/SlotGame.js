@@ -39,9 +39,9 @@ export async function mountRiseOfOlympus(mount) {
 
   const app = new Application();
   await app.init({
-    background: 0x0a1028,
+    backgroundAlpha: 0,
     antialias: true,
-    resizeTo: stageWrap,
+    resizeTo: mount,
     autoDensity: true,
     resolution: Math.min(window.devicePixelRatio || 1, 2),
   });
@@ -50,8 +50,16 @@ export async function mountRiseOfOlympus(mount) {
   const grid = await createThronesScene({ cols: GAME.cols, rows: GAME.rows, app });
   app.stage.addChild(grid.view);
 
+  function readHudHeightPx() {
+    const panel = hudMount.querySelector('#roo-gamepanel');
+    if (panel instanceof HTMLElement && panel.offsetHeight > 0) return panel.offsetHeight;
+    const raw = getComputedStyle(mount).getPropertyValue('--roo-hud-height').trim();
+    const px = Number.parseFloat(raw);
+    return Number.isFinite(px) && px > 0 ? px : 160;
+  }
+
   function onResize() {
-    grid.layout?.(app.screen.width, app.screen.height);
+    grid.layout?.(app.screen.width, app.screen.height, readHudHeightPx());
   }
   onResize();
   app.renderer.on('resize', onResize);
