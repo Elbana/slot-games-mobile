@@ -62,10 +62,10 @@ export function applyCascadeMultiplierUpgrades(grid, multValues, upgradeFlags, {
       let next = cur;
       let isSuper = false;
 
-      if (nextFlags[row][col] && Math.random() < 0.15) {
+      if (nextFlags[row][col] && Math.random() < 0.11) {
         next = superUpgradeValue(cur);
         isSuper = next !== cur;
-      } else if (goUltra || Math.random() < 0.35) {
+      } else if (goUltra || Math.random() < 0.44) {
         next = nextStageValue(cur);
       }
 

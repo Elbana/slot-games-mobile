@@ -32,7 +32,7 @@ export function formatMoney(v) {
  * }} opts
  */
 export function createThronesHUD(root, opts) {
-  const levels = opts.betLevels ?? [20, 40, 60, 100, 200, 500, 1000];
+  let levels = [...(opts.betLevels ?? [200, 1000, 5000, 10000, 50000, 100000])];
 
   root.innerHTML = `
     <div class="gc-hud gc-hud--thrones">
@@ -285,6 +285,15 @@ export function createThronesHUD(root, opts) {
       }
       if (idx < 0) idx = 0;
       setBetIndex(idx, false);
+    },
+    setBetLevels(next) {
+      if (!Array.isArray(next) || !next.length) return;
+      levels = [...next];
+      const current = levels[betIndex] ?? levels[0];
+      let idx = levels.indexOf(current);
+      if (idx < 0) idx = 0;
+      setBetIndex(idx, false);
+      renderChipGrid();
     },
     getBet() {
       return levels[betIndex] ?? parseInt(String(betEl.textContent).replace(/[^\d]/g, ''), 10);

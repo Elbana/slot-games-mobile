@@ -4,7 +4,7 @@
 
 import { spinThronesOfOlympus } from './games/rise-of-olympus/spin.mjs';
 import { effectiveBet, ensureFreeSpinState } from './games/rise-of-olympus/freespin.mjs';
-import { BET_LEVELS, RATE_LIMIT_SPIN_MS, REQUIRE_AUTH, API_KEY } from './config.mjs';
+import { BET_LEVELS, RATE_LIMIT_SPIN_MS, REQUIRE_AUTH, API_KEY, DEFAULT_BET } from './config.mjs';
 import { loadSession, saveSession, cacheSpinResult, getCachedSpin } from './session-store.mjs';
 import { auditSpin } from './audit.mjs';
 
@@ -49,7 +49,7 @@ export function handleGetSession(req, res) {
   res.json({
     game: GAME,
     balance: session.balance,
-    bet: session.bet ?? 20,
+    bet: BET_LEVELS.includes(session.bet) ? session.bet : DEFAULT_BET,
     betLevels: BET_LEVELS,
     state: sessionState(session),
     playerId: player.playerId,
@@ -66,7 +66,7 @@ export function handleV2Spin(req, res) {
   const balanceHint = q.balance != null ? parseInt(q.balance, 10) : undefined;
   const session = loadSession(player.playerId, balanceHint);
 
-  const bet = parseInt(q.bet, 10) || session.bet || 20;
+  const bet = parseInt(q.bet, 10) || session.bet || DEFAULT_BET;
   if (!BET_LEVELS.includes(bet)) {
     return res.status(400).json({ error: `Invalid bet. Allowed: ${BET_LEVELS.join(', ')}` });
   }
@@ -75,9 +75,7 @@ export function handleV2Spin(req, res) {
   const spinId = q.spinId != null ? String(q.spinId) : null;
   if (spinId) {
     const cached = getCachedSpin(player.playerId, spinId);
-    if (cached) {
-      return res.json({ ...cached, replay: true });
-    }
+    if (cached) return res.json({ ...cached, replay: true, betLevels: BET_LEVELS });
   }
 
   const now = Date.now();

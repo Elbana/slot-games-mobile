@@ -45,17 +45,17 @@ export const DROP_PHYSICS = {
 /** Faster drops for cascade refills — survivors fall + new symbols from top. */
 export const TUMBLE_PHYSICS = {
   ...DROP_PHYSICS,
-  acceleration: 7e-5,
-  bounceDuration: 130,
-  maxBounceAmplitude: 0.08,
-  blockDelay: 3,
-  reelDelay: 16,
+  acceleration: 9e-5,
+  bounceDuration: 90,
+  maxBounceAmplitude: 0.06,
+  blockDelay: 2,
+  reelDelay: 10,
 };
 
 /** Default animation speed multipliers (1 = reference timings). */
 export const ANIM_SPEED = {
-  normal: 1.35,
-  fast: 2.75,
+  normal: 1.5,
+  fast: 3,
 };
 
 /** Ref timing — synced to PG sound clips (~30fps spine), tuned faster for mobile. */
@@ -64,25 +64,31 @@ export const TIMING = {
   clearExitStagger: DROP_PHYSICS.reelDelay,
   dealStagger: DROP_PHYSICS.reelDelay,
   dealDrop: 0,
-  winHighlight: 0,
-  remove: 160,
+  /** Brief flash on matched stones before remove. */
+  winHighlight: 85,
+  /** Max wait for symbol win spine clips during cascades. */
+  winClipCap: 120,
+  remove: 110,
   tumbleStagger: TUMBLE_PHYSICS.reelDelay,
   tumbleDrop: 0,
-  tumbleDisperseOut: 260,
-  multiplierPulse: 320,
-  tumblePanelPulse: 120,
-  signpostPulse: 320,
-  bigWinIn: 400,
-  bigWinHold: 900,
-  bigWinOut: 320,
+  tumbleDisperseOut: 140,
+  multiplierPulse: 120,
+  tumblePanelPulse: 50,
+  tumbleTextReveal: 160,
+  signpostPulse: 180,
+  bigWinIn: 520,
+  bigWinHold: 2800,
+  bigWinOut: 480,
   fsBannerIn: 400,
   fsBannerHold: 1400,
   fsBannerOut: 280,
   scatterFlash: 0,
-  godLand: 320,
-  orbLand: 280,
-  winCountUp: 620,
-  trailCollect: 340,
+  godLand: 140,
+  orbLand: 120,
+  orbRevealCap: 160,
+  upgradeFxCap: 180,
+  winCountUp: 480,
+  trailCollect: 220,
 };
 
 /** Absolute stage-space chrome — config_mobile iPhone_p layout_mobile.json */
@@ -120,6 +126,8 @@ export const MOBILE_PLAYFIELD = {
   gapAboveHud: 12,
   /** Left/right inset so the golden frame is visible (screen px). */
   sideInsetPx: 14,
+  /** Big-win spine scale in stage units — fits inside reel frame on portrait. */
+  bigWinScale: 0.82,
 };
 
 /** @param {number} cols @param {number} rows */

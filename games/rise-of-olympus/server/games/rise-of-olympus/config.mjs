@@ -156,7 +156,7 @@ export const PAYTABLE = {
 };
 
 export const DEFAULT_BALANCE = 2_500_000;
-export const DEFAULT_BET = 20;
+export const DEFAULT_BET = 200;
 export const DEFAULT_LINES = 20;
 export const DEFAULT_DENOM = 1;
 

@@ -65,6 +65,9 @@ export async function handleGetSession(req, res) {
 
   const q = { ...req.query, ...req.body };
   const session = loadSession(ctx.sessionKey);
+  if (!ctx.betting.chipUnits.includes(session.bet)) {
+    session.bet = ctx.betting.defaultChip;
+  }
   session.bet = resolveSessionBet(q, session, ctx.betting);
 
   try {
@@ -92,8 +95,11 @@ export async function handleV2Spin(req, res) {
   const ctx = buildContext(req, res, slug);
   if (!ctx) return;
 
-  const q = { ...req.query, ...req.body };
   const session = loadSession(ctx.sessionKey);
+  if (!ctx.betting.chipUnits.includes(session.bet)) {
+    session.bet = ctx.betting.defaultChip;
+  }
+  const q = { ...req.query, ...req.body };
   const betRaw = parseInt(q.bet, 10) || session.bet || ctx.betting.defaultChip;
   const betCheck = validateBetAmount(betRaw, ctx.betting);
   if (!betCheck.ok) {
@@ -105,7 +111,14 @@ export async function handleV2Spin(req, res) {
   const spinId = q.spinId != null ? String(q.spinId) : null;
   if (spinId) {
     const cached = getCachedSpin(ctx.sessionKey, spinId);
-    if (cached) return res.json({ ...cached, replay: true });
+    if (cached) {
+      return res.json({
+        ...cached,
+        replay: true,
+        betLevels: ctx.betting.chipUnits,
+        betting: bettingPayload(ctx.betting),
+      });
+    }
   }
 
   const rateKey = ctx.sessionKey;

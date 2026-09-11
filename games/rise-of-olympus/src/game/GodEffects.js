@@ -2,7 +2,7 @@
  * God multiplier land FX — Spine symbol clips + portrait pulse.
  */
 
-import { animate } from './GridAnimator.js';
+import { animate, capPromise } from './GridAnimator.js';
 import { GRID, TIMING, cellStageCenter } from './config.js';
 import {
   createUpgradeFxSpine,
@@ -20,10 +20,11 @@ import { playGodPpsSound } from './ThronesSound.js';
  * @param {number} godId
  */
 export async function animateGodLand(ticker, godPortrait, godId) {
-  if (godPortrait) await playGodAction(godPortrait, godId);
-  else {
-    await animate(ticker, TIMING.godLand ?? 420, () => {});
+  if (godPortrait) {
+    await capPromise(playGodAction(godPortrait, godId), TIMING.godLand);
+    return;
   }
+  await animate(ticker, TIMING.godLand, () => {});
 }
 
 /**
@@ -37,11 +38,11 @@ export async function animateOrbLand(ticker, cell, fxLayer, godId = 2, onOrbReve
   const sym = cell.__sym ?? 0;
 
   if (cell.__spine && sym >= 12 && sym <= 14) {
-    await playMultiplierReveal(cell.__spine);
+    await capPromise(playMultiplierReveal(cell.__spine), TIMING.orbRevealCap);
     onOrbRevealComplete?.();
     void playMultiplierLandIdle(cell.__spine, sym);
   } else {
-    await animate(ticker, TIMING.orbLand ?? 380, (t) => {
+    await animate(ticker, TIMING.orbLand, (t) => {
       const pulse = 1 + Math.sin(t * Math.PI) * 0.28;
       cell.scale.set(pulse);
       if (cell.__sprite) cell.__sprite.tint = 0xffffcc;
@@ -90,8 +91,10 @@ export async function animateMultiplierUpgrade(ticker, cell, fxLayer, godId = 2,
         : sym === 13
           ? ['upgrade_silver_end', 'silver']
           : ['upgrade_bronze_end', 'bronze'];
-    await playSpineAnim(cell.__spine, start, false);
-    await playSpineAnim(cell.__spine, end, false);
+    await capPromise(
+      playSpineAnim(cell.__spine, start, false).then(() => playSpineAnim(cell.__spine, end, false)),
+      TIMING.upgradeFxCap
+    );
     onUpgradeComplete?.();
     void playSpineAnim(
       cell.__spine,

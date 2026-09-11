@@ -4,7 +4,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import { DEFAULT_BALANCE, IDEMPOTENCY_CACHE_SIZE } from './config.mjs';
+import { DEFAULT_BALANCE, DEFAULT_BET, BET_LEVELS, IDEMPOTENCY_CACHE_SIZE } from './config.mjs';
 
 /** @type {Map<string, object>} */
 const cache = new Map();
@@ -43,6 +43,9 @@ export function loadSession(playerId, balanceHint) {
       if (balanceHint != null && Number.isFinite(balanceHint)) {
         session.balance = balanceHint;
       }
+      if (!BET_LEVELS.includes(session.bet)) {
+        session.bet = DEFAULT_BET;
+      }
       cache.set(playerId, session);
       return session;
     } catch {
@@ -52,7 +55,7 @@ export function loadSession(playerId, balanceHint) {
 
   const session = {
     balance: balanceHint ?? DEFAULT_BALANCE,
-    bet: 20,
+    bet: DEFAULT_BET,
     thronesFs: null,
     thronesLastWin: null,
     spinCache: {},

@@ -29,6 +29,7 @@ import {
   syncMultValuesFromGrid,
   sumMultipliers,
   extractNewMultiplierLands,
+  tryPlantSecondaryCluster,
 } from './grid.mjs';
 import { countScatters, FS_TRIGGER_MIN } from './freespin.mjs';
 import {
@@ -88,7 +89,10 @@ export function findClusters(grid) {
 }
 
 /** Tumble refills never drop scatters (matches commercial cascade slots). */
-function randomRefillSymbol() {
+function randomRefillSymbol(biasSymbols = null) {
+  if (biasSymbols?.length && Math.random() < 0.44) {
+    return biasSymbols[Math.floor(Math.random() * biasSymbols.length)];
+  }
   return randomPaySymbolOrMultiplier();
 }
 
@@ -97,7 +101,7 @@ function randomRefillSymbol() {
  * Multiplier symbols and values tumble with the column.
  * @returns {{ grid: number[][], multValues: number[][], refills: number[][] }}
  */
-export function tumbleGrid(grid, removeIndices, multValues) {
+export function tumbleGrid(grid, removeIndices, multValues, biasSymbols = null) {
   const next = cloneGrid(grid);
   const nextMult = cloneMultValueGrid(multValues);
   const remove = new Set(removeIndices);
@@ -115,7 +119,7 @@ export function tumbleGrid(grid, removeIndices, multValues) {
     const newCount = ROWS - remaining.length;
     const incoming = [];
     for (let i = 0; i < newCount; i++) {
-      const sym = randomRefillSymbol();
+      const sym = randomRefillSymbol(biasSymbols);
       incoming.push(sym);
     }
     for (let row = 0; row < ROWS; row++) {
@@ -177,13 +181,17 @@ export function runCascadeRound(
     const sym = randomWinSymbol(lastWinSymbol);
     plantedWinSymbol = sym;
     plantedCells = new Set(
-      plantWinCluster(grid, multValues, sym, MIN_CLUSTER + Math.floor(Math.random() * 4))
+      plantWinCluster(grid, multValues, sym, MIN_CLUSTER + Math.floor(Math.random() * 6))
     );
+    const secondary = tryPlantSecondaryCluster(grid, multValues, plantedCells, sym);
+    if (secondary) {
+      for (const k of secondary) plantedCells.add(k);
+    }
   } else if (Math.random() < naturalWinRate()) {
     const sym = randomWinSymbol(lastWinSymbol);
     plantedWinSymbol = sym;
     plantedCells = new Set(
-      plantWinCluster(grid, multValues, sym, MIN_CLUSTER + Math.floor(Math.random() * 3))
+      plantWinCluster(grid, multValues, sym, MIN_CLUSTER + Math.floor(Math.random() * 4))
     );
   }
 
@@ -205,7 +213,7 @@ export function runCascadeRound(
   let roundId = 0;
   let safety = 0;
 
-  while (safety++ < 12) {
+  while (safety++ < 14) {
     const clusters = findClusters(grid);
     if (!clusters.length) break;
 
@@ -221,7 +229,8 @@ export function runCascadeRound(
 
     const removeIndices = clusters.flatMap((c) => c.cells);
     const gridBeforeTumble = cloneGrid(grid);
-    const tumbled = tumbleGrid(grid, removeIndices, multValues);
+    const biasSymbols = [...new Set(clusters.map((c) => c.symbol))];
+    const tumbled = tumbleGrid(grid, removeIndices, multValues, biasSymbols);
     grid = tumbled.grid;
     multValues = syncMultValuesFromGrid(grid, tumbled.multValues);
     upgradeFlags = markFreshMultiplierLands(grid, gridBeforeTumble, upgradeFlags);

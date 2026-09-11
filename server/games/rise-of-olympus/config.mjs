@@ -84,7 +84,7 @@ export function randomWinSymbol(lastSymbol = null) {
 }
 
 /** Per-cell land rate for god multiplier symbols (12–14) in random grids. */
-export const MULTIPLIER_LAND_WEIGHT = 0.02;
+export const MULTIPLIER_LAND_WEIGHT = 0.042;
 
 /**
  * Per-cell scatter rate on the initial deal only (~0.12 scatters per 30-cell board).

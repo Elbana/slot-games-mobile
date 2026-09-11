@@ -19,7 +19,13 @@ const GAME = {
   symbolCount: 15,
 };
 
-const DEFAULT_BET_LEVELS = [20, 40, 60, 100, 200, 500, 1000];
+const DEFAULT_BET_LEVELS = [200, 1000, 5000, 10000, 50000, 100000];
+
+function pickValidBet(amount, levels = DEFAULT_BET_LEVELS) {
+  const n = Number(amount);
+  if (Number.isFinite(n) && levels.includes(n)) return n;
+  return levels[0] ?? DEFAULT_BET_LEVELS[0];
+}
 
 /** @typedef {'idle' | 'spinning' | 'showingWin' | 'feature'} GamePhase */
 
@@ -37,6 +43,44 @@ export async function mountRiseOfOlympus(mount) {
   const paytableMount = document.createElement('div');
   mount.append(stageWrap, hudMount, paytableMount);
 
+  const shell = mount.closest('.gm-shell') ?? mount;
+  const coinFxWrap = document.createElement('div');
+  coinFxWrap.className = 'gc-game__coin-fx gc-game__coin-fx--viewport';
+  coinFxWrap.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(coinFxWrap);
+
+  function syncViewportOverlays() {
+    const r = shell.getBoundingClientRect();
+    coinFxWrap.style.left = `${r.left}px`;
+    coinFxWrap.style.top = `${r.top}px`;
+    coinFxWrap.style.width = `${r.width}px`;
+    coinFxWrap.style.height = `${r.height}px`;
+  }
+
+  /** Screen-space coin shower — viewport-fixed overlay above all UI. */
+  function getCoinBounds() {
+    syncViewportOverlays();
+    const hostRect = coinFxWrap.getBoundingClientRect();
+    const w = hostRect.width || mount.clientWidth;
+    const h = hostRect.height || mount.clientHeight;
+    const panel = hudMount.querySelector('#roo-gamepanel');
+    let floorY = h * 0.62;
+    if (panel instanceof HTMLElement && panel.offsetHeight > 0) {
+      const panelRect = panel.getBoundingClientRect();
+      floorY = panelRect.top - hostRect.top - 52;
+    } else {
+      floorY = h - readHudHeightPx() - 52;
+    }
+    return {
+      width: w,
+      height: h,
+      floorY: Math.max(h * 0.32, Math.min(floorY, h - 56)),
+      minX: 12,
+      maxX: Math.max(48, w - 12),
+      coinPx: Math.max(38, Math.min(46, w * 0.105)),
+    };
+  }
+
   const app = new Application();
   await app.init({
     backgroundAlpha: 0,
@@ -47,7 +91,26 @@ export async function mountRiseOfOlympus(mount) {
   });
   stageWrap.appendChild(app.canvas);
 
-  const grid = await createThronesScene({ cols: GAME.cols, rows: GAME.rows, app });
+  const coinApp = new Application();
+  await coinApp.init({
+    backgroundAlpha: 0,
+    antialias: true,
+    resizeTo: coinFxWrap,
+    autoDensity: true,
+    resolution: Math.min(window.devicePixelRatio || 1, 2),
+  });
+  coinFxWrap.appendChild(coinApp.canvas);
+
+  const grid = await createThronesScene({
+    cols: GAME.cols,
+    rows: GAME.rows,
+    app,
+    coinApp,
+    getCoinBounds,
+    setCoinOverlayVisible: (visible) => {
+      coinFxWrap.style.visibility = visible ? 'visible' : 'hidden';
+    },
+  });
   app.stage.addChild(grid.view);
 
   function readHudHeightPx() {
@@ -59,10 +122,13 @@ export async function mountRiseOfOlympus(mount) {
   }
 
   function onResize() {
+    syncViewportOverlays();
     grid.layout?.(app.screen.width, app.screen.height, readHudHeightPx());
   }
+  syncViewportOverlays();
   onResize();
   app.renderer.on('resize', onResize);
+  window.addEventListener('resize', syncViewportOverlays);
 
   let balance = 0;
   let bet = DEFAULT_BET_LEVELS[0];
@@ -118,12 +184,14 @@ export async function mountRiseOfOlympus(mount) {
     balance = session.balance;
     betLevels = session.betLevels ?? betLevels;
     gameState = session.state ?? {};
-    bet = betLevels[0] ?? DEFAULT_BET_LEVELS[0];
+    bet = pickValidBet(session.bet, betLevels);
+    hud.setBetLevels?.(betLevels);
     hud.setBet?.(bet);
   } catch (err) {
     console.warn('[RiseOfOlympus] session init failed', err);
     balance = 2_500_000;
-    bet = betLevels[0] ?? DEFAULT_BET_LEVELS[0];
+    bet = pickValidBet(betLevels[0], betLevels);
+    hud.setBetLevels?.(betLevels);
     hud.setBet?.(bet);
     hud.setMessage?.(err instanceof Error ? err.message : 'Could not load session');
   }
@@ -184,7 +252,9 @@ export async function mountRiseOfOlympus(mount) {
 
   async function doSpin() {
     if (phase !== 'idle') return;
-    if (hud.getBet) bet = hud.getBet();
+    if (hud.getBet) bet = pickValidBet(hud.getBet(), betLevels);
+    else bet = pickValidBet(bet, betLevels);
+    hud.setBet?.(bet);
     const charge = gameState.fsRemaining > 0 ? 0 : bet;
     if (balance < charge) {
       if (autoSpin) {
@@ -230,7 +300,12 @@ export async function mountRiseOfOlympus(mount) {
 
       balance = result.balance;
       gameState = result.state ?? {};
-      if (result.betLevels) betLevels = result.betLevels;
+      if (result.betLevels?.length) {
+        betLevels = result.betLevels;
+        hud.setBetLevels?.(betLevels);
+      }
+      bet = pickValidBet(bet, betLevels);
+      hud.setBet?.(bet);
       await tickWin(result.win);
       syncHud();
     } catch (err) {
@@ -260,7 +335,10 @@ export async function mountRiseOfOlympus(mount) {
   return {
     destroy() {
       autoSpin = false;
+      window.removeEventListener('resize', syncViewportOverlays);
       app.renderer.off('resize', onResize);
+      coinFxWrap.remove();
+      coinApp.destroy(true, { children: true });
       app.destroy(true, { children: true });
       mount.innerHTML = '';
     },

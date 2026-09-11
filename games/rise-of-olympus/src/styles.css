@@ -77,10 +77,28 @@ body {
   background: transparent;
 }
 
+/* Coin overlay — fixed on viewport, above all game HTML + Pixi layers */
+.gc-game__coin-fx--viewport {
+  position: fixed;
+  margin: 0;
+  padding: 0;
+  z-index: 2147483646;
+  pointer-events: none !important;
+  overflow: visible;
+}
+
+.gc-game__coin-fx--viewport canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: none !important;
+}
+
+/* Full big-win spine stack — above coin shower + HUD */
 .gc-game--thrones .gc-game__hud {
   position: absolute;
   inset: 0;
-  z-index: 3;
+  z-index: 2;
   background: transparent;
   pointer-events: none;
 }

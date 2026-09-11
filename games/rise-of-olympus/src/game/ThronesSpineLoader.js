@@ -5,6 +5,7 @@ import '@esotericsoftware/spine-pixi-v8';
 import { Assets, Text } from 'pixi.js';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { GRID, STAGE, CHROME, gridPixelSize, SCATTER_SYMBOL } from './config.js';
+import { BIG_WIN_BET_MULTIPLE } from './WinCelebrationEffects.js';
 import { animate, easeOutBack } from './GridAnimator.js';
 
 const BASE = '/assets/rise-of-olympus/spine';
@@ -709,7 +710,7 @@ export function playReelAnticipation(spine, phase) {
  * @param {number} bet
  */
 export async function showBigWinCelebration(stack, amount, bet) {
-  if (!stack?.banner || amount < bet * 10) return;
+  if (!stack?.banner || amount < bet * BIG_WIN_BET_MULTIPLE) return;
 
   /** @type {[string, string, string]} */
   let tier = ['bigwin_show', 'bigwin_idle', 'bigwin_hide'];
@@ -718,7 +719,10 @@ export async function showBigWinCelebration(stack, amount, bet) {
   else if (amount >= bet * 25) tier = ['bigwin_to_super', 'super_idle', 'super_hide'];
 
   for (const s of [stack.bg, stack.shine, stack.stars, stack.banner]) {
-    if (s) s.visible = true;
+    if (s) {
+      s.visible = true;
+      s.alpha = 1;
+    }
   }
   if (stack.stars) void playSpineAnim(stack.stars, ['stars_show', 'stars_loop'], true);
   if (stack.shine) void playSpineAnim(stack.shine, ['bigwin_in', 'bigwin_loop'], true);
@@ -726,7 +730,7 @@ export async function showBigWinCelebration(stack, amount, bet) {
   if (stack.bg) showPromises.push(playSpineAnim(stack.bg, [tier[0], 'bigwin_show'], false));
   showPromises.push(playSpineAnim(stack.banner, [tier[0], 'bigwin_show'], false));
   await Promise.all(showPromises);
-  await playSpineAnim(stack.banner, [tier[1], 'loop', 'bigwin_idle'], true);
+  void playSpineAnim(stack.banner, [tier[1], 'loop', 'bigwin_idle'], true);
   if (stack.bg) void playSpineAnim(stack.bg, [tier[1], 'bigwin_idle', 'mega_idle', 'super_idle', 'ultra_idle'], true);
 }
 
@@ -967,7 +971,7 @@ export function setTumbleWinText(spine, text, amount = 0) {
  * @param {string} text
  * @param {number} [amount]
  */
-export async function animateTumbleWinTextReveal(spine, ticker, text, amount = 0) {
+export async function animateTumbleWinTextReveal(spine, ticker, text, amount = 0, durationMs = 160) {
   if (!spine || !text) return;
   const label = spine.__tumbleWinLabel;
   if (!label || !ticker) {
@@ -983,7 +987,7 @@ export async function animateTumbleWinTextReveal(spine, ticker, text, amount = 0
   label.alpha = 0;
   label.scale.set(0.35);
 
-  await animate(ticker, 360, (t) => {
+  await animate(ticker, durationMs, (t) => {
     layoutTumbleWinLabel(spine);
     const ease = easeOutBack(t);
     label.alpha = Math.min(1, t * 1.4);
@@ -1002,9 +1006,9 @@ export async function animateTumbleWinTextReveal(spine, ticker, text, amount = 0
  * @param {import('pixi.js').Ticker} ticker
  * @param {number} [value]
  */
-export async function animateTumbleWinValueReveal(spine, ticker, value = spine?.__tumbleWinAmount ?? 0) {
+export async function animateTumbleWinValueReveal(spine, ticker, value = spine?.__tumbleWinAmount ?? 0, durationMs = 160) {
   if (!spine || value <= 0) return;
-  await animateTumbleWinTextReveal(spine, ticker, value.toLocaleString(), value);
+  await animateTumbleWinTextReveal(spine, ticker, value.toLocaleString(), value, durationMs);
 }
 
 export function refreshTumbleWinValueDisplay(spine) {

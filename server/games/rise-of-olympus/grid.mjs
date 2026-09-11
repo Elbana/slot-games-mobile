@@ -80,8 +80,9 @@ function shufflePairs(arr) {
 /**
  * Place a connected paying-symbol cluster via random flood-fill.
  * Seed and growth order vary so wins don't always land in the same row band.
+ * @param {Set<number>} [exclude] — cell indices that must not be overwritten.
  */
-export function plantWinCluster(grid, multValues, sym, size = MIN_CLUSTER) {
+export function plantWinCluster(grid, multValues, sym, size = MIN_CLUSTER, exclude = null) {
   const target = Math.max(MIN_CLUSTER, Math.min(size, COLS * ROWS - 1));
   const startRow = Math.floor(Math.random() * ROWS);
   const startCol = Math.floor(Math.random() * COLS);
@@ -93,7 +94,7 @@ export function plantWinCluster(grid, multValues, sym, size = MIN_CLUSTER) {
     const idx = Math.floor(Math.random() * queue.length);
     const [row, col] = queue.splice(idx, 1)[0];
     const k = cellIndex(row, col);
-    if (clusterSet.has(k)) continue;
+    if (clusterSet.has(k) || exclude?.has(k)) continue;
 
     clusterSet.add(k);
     grid[row][col] = sym;
@@ -106,7 +107,7 @@ export function plantWinCluster(grid, multValues, sym, size = MIN_CLUSTER) {
       const nc = col + dc;
       if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) continue;
       const nk = cellIndex(nr, nc);
-      if (!clusterSet.has(nk)) neighbors.push([nr, nc]);
+      if (!clusterSet.has(nk) && !exclude?.has(nk)) neighbors.push([nr, nc]);
     }
     queue.push(...shufflePairs(neighbors));
   }
@@ -115,7 +116,7 @@ export function plantWinCluster(grid, multValues, sym, size = MIN_CLUSTER) {
     for (let row = 0; row < ROWS && placed.length < target; row++) {
       for (let col = 0; col < COLS && placed.length < target; col++) {
         const k = cellIndex(row, col);
-        if (clusterSet.has(k)) continue;
+        if (clusterSet.has(k) || exclude?.has(k)) continue;
         clusterSet.add(k);
         grid[row][col] = sym;
         multValues[row][col] = 0;
@@ -125,6 +126,20 @@ export function plantWinCluster(grid, multValues, sym, size = MIN_CLUSTER) {
   }
 
   return placed;
+}
+
+/**
+ * Optional second cluster on a different stone — more color variety per spin.
+ * @param {Set<number>} primaryCells
+ * @param {number} primarySymbol
+ * @returns {Set<number> | null}
+ */
+export function tryPlantSecondaryCluster(grid, multValues, primaryCells, primarySymbol) {
+  if (Math.random() > 0.32) return null;
+  const sym = randomWinSymbol(primarySymbol);
+  const size = MIN_CLUSTER + Math.floor(Math.random() * 4);
+  const placed = plantWinCluster(grid, multValues, sym, size, primaryCells);
+  return placed.length >= MIN_CLUSTER ? new Set(placed) : null;
 }
 
 /**
@@ -168,16 +183,16 @@ export function buildForceWinGrid({ withMultipliers = true, lastWinSymbol = null
     }
   }
   const sym = randomWinSymbol(lastWinSymbol);
-  plantWinCluster(grid, multValues, sym, MIN_CLUSTER + Math.floor(Math.random() * 4));
+  plantWinCluster(grid, multValues, sym, MIN_CLUSTER + Math.floor(Math.random() * 6));
 
   if (withMultipliers) {
     const gods = [SYMBOL.MULTIPLIER_HADES, SYMBOL.MULTIPLIER_ZEUS, SYMBOL.MULTIPLIER_POSEIDON];
     let placed = 0;
-    for (let row = 0; row < ROWS && placed < 2; row++) {
-      for (let col = 0; col < COLS && placed < 2; col++) {
+    for (let row = 0; row < ROWS && placed < 3; row++) {
+      for (let col = 0; col < COLS && placed < 3; col++) {
         if (isMultiplierSymbol(grid[row][col])) continue;
         if (grid[row][col] === sym) continue;
-        setCellMultiplier(grid, multValues, row, col, gods[placed], INITIAL_MULTIPLIER_VALUE);
+        setCellMultiplier(grid, multValues, row, col, gods[placed % gods.length], INITIAL_MULTIPLIER_VALUE);
         placed++;
       }
     }

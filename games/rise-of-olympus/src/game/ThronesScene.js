@@ -21,7 +21,6 @@ import {
   createBigWinStack,
   createFsCounterSpine,
   createWinboxSpine,
-  createWinlabelSpine,
   createTrailMultiSpine,
   createRunningMultiplierSpine,
   createIntroPanelSpine,
@@ -52,25 +51,27 @@ import {
   hideIntroPanel,
   playWinboxIn,
   playWinboxOut,
-  playWinlabelShow,
-  playWinlabelHide,
-  setWinlabelValue,
   playTrailCollect,
   showRunningMultiplier,
   updateRunningMultiplier,
   hideRunningMultiplier,
   swapGodPortraitSpine,
-  playGodAction,
 } from './ThronesSpineLoader.js';
-import { animate } from './GridAnimator.js';
+import { animate, capPromise } from './GridAnimator.js';
 import { createEventReplayer } from './EventReplayer.js';
 import { animateMultiplierCollectTrails, findMultiplierCells } from './MultiplierEffects.js';
-import { resolveWinCelebrationTier, startCoinShower, preloadCoinShowerAssets } from './WinCelebrationEffects.js';
+import {
+  resolveCoinShowerTier,
+  isBigWinRound,
+  startCoinShower,
+  preloadCoinShowerAssets,
+} from './WinCelebrationEffects.js';
 import {
   loadGameSounds,
   unlockAudio,
   startBaseMusic,
   playThronesSound,
+  playBigWinLevelup,
 } from './ThronesSound.js';
 import {
   SCATTER_SYMBOL,
@@ -89,10 +90,10 @@ import {
 } from './config.js';
 
 /**
- * @param {{ cols: number, rows: number, app: import('pixi.js').Application }} opts
+ * @param {{ cols: number, rows: number, app: import('pixi.js').Application, coinApp?: import('pixi.js').Application, getCoinBounds?: () => { width: number, height: number, floorY: number, minX: number, maxX: number, coinPx?: number }, setCoinOverlayVisible?: (visible: boolean) => void }} opts
  */
 export async function createThronesScene(opts) {
-  const { cols, rows, app } = opts;
+  const { cols, rows, app, coinApp, getCoinBounds, setCoinOverlayVisible } = opts;
   const layout = { cols, rows };
   const ticker = app.ticker;
   const { width: gridW, height: gridH } = gridPixelSize(cols, rows);
@@ -134,12 +135,9 @@ export async function createThronesScene(opts) {
   const uiLayer = new Container();
   const overlayLayer = new Container();
   overlayLayer.sortableChildren = true;
-  const coinLayer = new Container();
-  coinLayer.sortableChildren = true;
-  coinLayer.zIndex = 1000;
-  // bg → platform → frame → grid → fx → ui → overlay → coins (top)
+  // bg → platform → frame → grid → fx → ui → overlay
   stageContent.sortableChildren = true;
-  stageContent.addChild(bgLayer, platformLayer, frameLayer, gridLayer, fxLayer, uiLayer, overlayLayer, coinLayer);
+  stageContent.addChild(bgLayer, platformLayer, frameLayer, gridLayer, fxLayer, uiLayer, overlayLayer);
 
   /** bgLayer holds animated spine backdrop only (full-bleed JPG is screenBgSprite on root). */
 
@@ -224,18 +222,31 @@ export async function createThronesScene(opts) {
   let godPortraitSpine = null;
 
   const bigWinStack = createBigWinStack();
-  for (const s of [bigWinStack.bg, bigWinStack.shine, bigWinStack.stars, bigWinStack.banner]) {
-    if (s) overlayLayer.addChild(s);
+  if (!bigWinStack.banner) {
+    console.warn('[Thrones] big-win spine stack failed to load — check roo-bigwin assets');
+  }
+  const bigWinParts = [bigWinStack.bg, bigWinStack.shine, bigWinStack.stars, bigWinStack.banner];
+  const bigWinCenterX = STAGE.width / 2;
+  const bigWinCenterY = ORIGIN.y + gridH / 2;
+  let bigWinZ = 900;
+  for (const s of bigWinParts) {
+    if (!s) continue;
+    s.position.set(bigWinCenterX, bigWinCenterY);
+    s.zIndex = bigWinZ++;
+    overlayLayer.addChild(s);
+  }
+
+  function layoutBigWinLayer() {
+    const s = MOBILE_PLAYFIELD.bigWinScale ?? 0.82;
+    for (const part of bigWinParts) {
+      if (part) part.scale.set(s);
+    }
   }
 
   /** @type {import('@esotericsoftware/spine-pixi-v8').Spine[]} */
   const winboxPool = [];
   /** @type {import('@esotericsoftware/spine-pixi-v8').Spine[]} */
   let activeWinboxes = [];
-  /** @type {import('@esotericsoftware/spine-pixi-v8').Spine | null} */
-  let winlabelSpine = null;
-  /** @type {{ x: number, y: number } | null} */
-  let winlabelHome = null;
   /** @type {import('@esotericsoftware/spine-pixi-v8').Spine | null} */
   let runningMultSpine = null;
   /** @type {import('@esotericsoftware/spine-pixi-v8').Spine | null} */
@@ -248,14 +259,6 @@ export async function createThronesScene(opts) {
     }
   } catch (err) {
     console.warn('[Thrones] winbox failed', err);
-  }
-  try {
-    winlabelSpine = createWinlabelSpine();
-    winlabelSpine.position.set(STAGE.width / 2, CHROME.tumbleWin.y + 40);
-    winlabelHome = { x: winlabelSpine.x, y: winlabelSpine.y };
-    fxLayer.addChild(winlabelSpine);
-  } catch (err) {
-    console.warn('[Thrones] winlabel failed', err);
   }
   try {
     runningMultSpine = createRunningMultiplierSpine();
@@ -296,17 +299,6 @@ export async function createThronesScene(opts) {
   const glowLayer = new Container();
   fxRoot.addChild(glowLayer);
   glowLayer.__makeGlow = createWinGlow;
-
-  const bigWinBanner = new Container();
-  bigWinBanner.position.set(STAGE.width / 2, STAGE.height / 2);
-  bigWinBanner.visible = false;
-  overlayLayer.addChild(bigWinBanner);
-  const bigWinText = new Text({
-    text: 'BIG WIN',
-    style: { fill: 0xffe082, fontSize: 42, fontWeight: '900', stroke: { color: 0x6a1b00, width: 6 } },
-  });
-  bigWinText.anchor.set(0.5);
-  bigWinBanner.addChild(bigWinText);
 
   const fsBanner = new Container();
   fsBanner.position.set(CHROME.logo.x, CHROME.logo.y + 52);
@@ -424,11 +416,7 @@ export async function createThronesScene(opts) {
   async function onCascadeWin(value) {
     if (!tumbleWinSpine) return;
     tumbleWinValue = value;
-    setTumbleWinValue(tumbleWinSpine, 0);
-    await tumbleWinCharge(tumbleWinSpine);
-    await tumbleWinChargeStop(tumbleWinSpine);
-    await animateTumbleWinValueReveal(tumbleWinSpine, ticker, value);
-    tumbleWinValue = value;
+    await animateTumbleWinValueReveal(tumbleWinSpine, ticker, value, TIMING.tumbleTextReveal);
   }
 
   async function onMultiplierApply(totalWin, sum, baseWin) {
@@ -450,19 +438,23 @@ export async function createThronesScene(opts) {
     if (tumbleWinSpine) {
       const base = baseWin ?? tumbleWinValue;
       if (sum > 0 && base > 0) {
+        void tumbleWinCharge(tumbleWinSpine);
         await animateTumbleWinTextReveal(
           tumbleWinSpine,
           ticker,
           `${base.toLocaleString()} × ${sum}`,
-          base
+          base,
+          TIMING.tumbleTextReveal
         );
-        await new Promise((r) => setTimeout(r, TIMING.multiplierPulse));
+        await animate(ticker, TIMING.multiplierPulse, pulseTumblePanel);
+        resetPanelScale();
+        void tumbleWinChargeStop(tumbleWinSpine);
       }
       tumbleWinValue = totalWin;
-      await tumbleWinPay(tumbleWinSpine);
-      await animateTumbleWinValueReveal(tumbleWinSpine, ticker, totalWin);
-      await new Promise((r) => setTimeout(r, TIMING.tumbleDisperseOut));
-      await tumbleWinDisperse(tumbleWinSpine);
+      await capPromise(tumbleWinPay(tumbleWinSpine), 200);
+      await animateTumbleWinValueReveal(tumbleWinSpine, ticker, totalWin, TIMING.tumbleTextReveal);
+      await animate(ticker, TIMING.tumbleDisperseOut, () => {});
+      await capPromise(tumbleWinDisperse(tumbleWinSpine), TIMING.tumbleDisperseOut);
       await tumbleWinResetIdle(tumbleWinSpine);
     } else {
       updateTumbleText(totalWin);
@@ -471,23 +463,26 @@ export async function createThronesScene(opts) {
 
   function hideSignpostFn() {}
 
-  function clusterCenter(positions) {
-    let cx = 0;
-    let cy = 0;
-    for (const [c, r] of positions) {
-      cx += cells[c][r].x + GRID.cell / 2;
-      cy += cells[c][r].y + GRID.cell / 2;
-    }
-    return {
-      x: ORIGIN.x + cx / positions.length,
-      y: ORIGIN.y + cy / positions.length,
-    };
+  /** Screen-space bounds for end-of-round coin shower. */
+  let coinBounds = {
+    width: app.screen.width,
+    height: app.screen.height,
+    floorY: app.screen.height - 8,
+    minX: MOBILE_PLAYFIELD.sideInsetPx,
+    maxX: app.screen.width - MOBILE_PLAYFIELD.sideInsetPx,
+    visualScale: app.screen.width / gridW,
+  };
+
+  /** @type {{ stop: () => void } | null} */
+  let activeCoinShower = null;
+
+  function stopCoinShower() {
+    activeCoinShower?.stop?.();
+    activeCoinShower = null;
   }
 
-  function spawnWinFx(positions, clusterPay = 0, bet = 20) {
+  function spawnWinFx(positions) {
     if (!positions.length) return Promise.resolve();
-    const tier = resolveWinCelebrationTier(clusterPay, bet);
-    if (tier < 0) return Promise.resolve();
 
     activeWinboxes = [];
     for (let i = 0; i < positions.length; i++) {
@@ -506,35 +501,64 @@ export async function createThronesScene(opts) {
       activeWinboxes.push(wb);
     }
 
-    if (winlabelSpine && tier >= 1) {
-      const { x: cx, y: cy } = clusterCenter(positions);
-      winlabelSpine.position.set(cx, cy - 10);
-      setWinlabelValue(winlabelSpine, clusterPay);
+    return Promise.all(activeWinboxes.map((wb) => playWinboxIn(wb)));
+  }
+
+  /**
+   * End-of-round payout — win banner + coin shower once the spin total is known.
+   * @param {number} totalWin
+   * @param {number} [bet]
+   */
+  async function celebrateRoundWin(totalWin, bet = 200) {
+    if (!totalWin || totalWin <= 0) return;
+
+    const coinTier = resolveCoinShowerTier(totalWin, bet);
+    const isBigWin = isBigWinRound(totalWin, bet);
+
+    if (isBigWin && bigWinStack.banner) {
+      const soundTier = totalWin >= bet * 100 ? 3 : totalWin >= bet * 50 ? 2 : 1;
+      playThronesSound('big_win');
+      playBigWinLevelup(soundTier);
+      if (logoSpine) void playSpineAnim(logoSpine, ['win', 'idle'], false);
+
+      setCoinOverlayVisible?.(false);
+      await showBigWinCelebration(bigWinStack, totalWin, bet);
+
+      const holdMs =
+        totalWin >= bet * 100
+          ? TIMING.bigWinHold * 1.6
+          : totalWin >= bet * 50
+            ? TIMING.bigWinHold * 1.35
+            : totalWin >= bet * 25
+              ? TIMING.bigWinHold * 1.15
+              : TIMING.bigWinHold;
+      await new Promise((r) => setTimeout(r, holdMs));
+
+      await hideBigWinCelebration(bigWinStack);
+      playThronesSound('big_win_end');
+      setCoinOverlayVisible?.(true);
     }
 
-    const tasks = [
-      ...activeWinboxes.map((wb) => playWinboxIn(wb)),
-    ];
-    if (coinLayer) {
-      tasks.push(startCoinShower(coinLayer, app.ticker, tier));
+    if (coinApp) {
+      stopCoinShower();
+      const bounds = getCoinBounds?.() ?? coinBounds;
+      activeCoinShower = await startCoinShower(coinApp, isBigWin ? Math.max(coinTier, 1) : coinTier, bounds);
     }
-    if (winlabelSpine && tier >= 1) {
-      tasks.push(playWinlabelShow(winlabelSpine, tier));
-    }
-    return Promise.all(tasks);
+
+    await new Promise((r) =>
+      setTimeout(r, isBigWin ? TIMING.bigWinHold * 0.45 : tierHoldMs(totalWin, bet))
+    );
+  }
+
+  function tierHoldMs(totalWin, bet) {
+    if (totalWin >= bet * 7) return TIMING.bigWinHold * 0.55;
+    if (totalWin >= bet * 3) return 1600;
+    return 1200;
   }
 
   async function endWinFx() {
-    await Promise.all([
-      ...activeWinboxes.map((wb) => playWinboxOut(wb)),
-      winlabelSpine?.visible ? playWinlabelHide(winlabelSpine) : Promise.resolve(),
-    ]);
+    await Promise.all(activeWinboxes.map((wb) => playWinboxOut(wb)));
     activeWinboxes = [];
-    if (winlabelSpine && winlabelHome) {
-      winlabelSpine.position.set(winlabelHome.x, winlabelHome.y);
-      winlabelSpine.scale.set(1);
-      setWinlabelValue(winlabelSpine, 0);
-    }
   }
 
   function spawnTrailFx(positions) {
@@ -589,7 +613,10 @@ export async function createThronesScene(opts) {
     await hideFsSummaryPanel(summaryPanelSpine);
   }
 
+  let inFreeSpinMode = false;
+
   function setFreeSpinMode(inFs) {
+    inFreeSpinMode = inFs;
     if (screenBgSprite) {
       screenBgSprite.tint = inFs ? 0xd8c8ff : 0xffffff;
     }
@@ -639,6 +666,12 @@ export async function createThronesScene(opts) {
 
   function setMultiplierSum(sum) {
     setGodMeterLevels(sum);
+    if (runningMultSpine && !inFreeSpinMode && sum >= 2) {
+      void showRunningMultiplier(runningMultSpine, sum);
+      void updateRunningMultiplier(runningMultSpine, sum);
+    } else if (runningMultSpine && !inFreeSpinMode && sum < 2) {
+      void hideRunningMultiplier(runningMultSpine);
+    }
   }
 
   let panelBaseScale = 1;
@@ -652,29 +685,6 @@ export async function createThronesScene(opts) {
 
   function resetPanelScale() {
     if (tumbleWinSpine) tumbleWinSpine.scale.set(panelBaseScale);
-  }
-
-  async function showBigWin(amount, bet = 20) {
-    if (amount < bet * 10) return;
-    if (logoSpine) void playSpineAnim(logoSpine, ['win', 'idle'], false);
-    if (godPortraitSpine) void playGodAction(godPortraitSpine, godPortraitSpine.__godId ?? 0);
-    if (bigWinStack.banner) {
-      await showBigWinCelebration(bigWinStack, amount, bet);
-      await new Promise((r) => setTimeout(r, TIMING.bigWinHold));
-      await hideBigWinCelebration(bigWinStack);
-      return;
-    }
-    bigWinText.text = amount >= bet * 50 ? 'MEGA WIN' : 'BIG WIN';
-    bigWinBanner.visible = true;
-    bigWinBanner.alpha = 0;
-    await animate(ticker, TIMING.bigWinIn, (t) => {
-      bigWinBanner.alpha = t;
-    });
-    await new Promise((r) => setTimeout(r, TIMING.bigWinHold));
-    await animate(ticker, TIMING.bigWinOut, (t) => {
-      bigWinBanner.alpha = 1 - t;
-    });
-    bigWinBanner.visible = false;
   }
 
   async function showFsBanner(count) {
@@ -776,9 +786,16 @@ export async function createThronesScene(opts) {
 
     layoutTumbleWinPanel();
     if (tumbleWinSpine) layoutTumbleWinLabel(tumbleWinSpine);
-    if (tumbleWinSpine && winlabelSpine) {
-      winlabelSpine.position.set(STAGE.width / 2, tumbleWinSpine.y + 40);
-    }
+    layoutBigWinLayer();
+
+    coinBounds = {
+      width: screenW,
+      height: screenH,
+      floorY: playH - 6,
+      minX: sideInsetPx,
+      maxX: screenW - sideInsetPx,
+      visualScale: scale,
+    };
   }
 
   layoutScene(app.screen.width, app.screen.height);
@@ -800,7 +817,7 @@ export async function createThronesScene(opts) {
     setCellMultiplier,
     showFsBanner,
     showScatterFlash,
-    showBigWin,
+    celebrateRoundWin,
     godWraps,
     godPortrait: godPortraitSpine,
     fxLayer,
@@ -829,6 +846,11 @@ export async function createThronesScene(opts) {
   });
 
   async function runSpinTransition(spinPromise) {
+    stopCoinShower();
+    setCoinOverlayVisible?.(true);
+    if (bigWinStack.banner?.visible) {
+      void hideBigWinCelebration(bigWinStack);
+    }
     await replayer.runSpinTransition(spinPromise);
   }
 

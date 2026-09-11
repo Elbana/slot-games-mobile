@@ -30,6 +30,12 @@ export function easeOutCubic(t) {
   return 1 - (1 - t) ** 3;
 }
 
+/** Resolve when the animation finishes or maxMs elapses — keeps cascades moving. */
+export function capPromise(promise, maxMs) {
+  if (!maxMs || maxMs <= 0) return promise;
+  return Promise.race([promise, new Promise((r) => setTimeout(r, maxMs))]);
+}
+
 export function easeOutBack(t) {
   const c1 = 1.70158;
   const c3 = c1 + 1;
@@ -506,9 +512,17 @@ export async function animateShuffle(opts) {
   }
 }
 
-/** Win highlight — pulse matched symbols only; board stays fully visible. */
+/** Win highlight — quick pulse, then remove; win clips capped so stones destroy promptly. */
 export async function animateWinHighlight(opts) {
-  const { ticker, cells, layout, positions, glowLayer, cellSize, durationMs = 680, playWinClip } = opts;
+  const {
+    ticker,
+    cells,
+    positions,
+    glowLayer,
+    durationMs = 85,
+    winClipCapMs = 120,
+    playWinClip,
+  } = opts;
 
   glowLayer.removeChildren();
   /** @type {Promise<void>[]} */
@@ -516,31 +530,21 @@ export async function animateWinHighlight(opts) {
   for (const [c, r] of positions) {
     const cell = cells[c][r];
     if (cell.__sprite) cell.__sprite.tint = 0xffffaa;
-    if (playWinClip) winPlays.push(playWinClip(cell));
+    if (playWinClip) {
+      winPlays.push(capPromise(playWinClip(cell), winClipCapMs));
+    }
   }
 
-  const highlightMs = durationMs > 0 ? durationMs : 0;
-
-  if (highlightMs <= 0 && winPlays.length > 0) {
-    await Promise.all(winPlays);
-    await animate(ticker, 60, (t) => {
-      glowLayer.alpha = 0.5 * (1 - t);
-    });
-  } else if (highlightMs > 0) {
-    await Promise.all([
-      animate(ticker, highlightMs, (t) => {
-        const pulse = 1 + Math.sin(t * Math.PI * 4) * 0.12;
-        const wobble = Math.sin(t * Math.PI * 6) * 0.04;
-        for (const [c, r] of positions) {
-          cells[c][r].scale.set(pulse);
-          cells[c][r].rotation = wobble;
-        }
-      }),
-      ...winPlays,
-    ]);
-  } else if (winPlays.length > 0) {
-    await Promise.all(winPlays);
-  }
+  const flashMs = Math.max(40, durationMs);
+  await Promise.all([
+    animate(ticker, flashMs, (t) => {
+      const pulse = 1 + Math.sin(t * Math.PI * 3) * 0.1;
+      for (const [c, r] of positions) {
+        cells[c][r].scale.set(pulse);
+      }
+    }),
+    ...winPlays,
+  ]);
 
   for (const [c, r] of positions) {
     const cell = cells[c][r];
@@ -553,15 +557,15 @@ export async function animateWinHighlight(opts) {
 
 /** Fade + shrink disperse (ref cluster remove) */
 export async function animateRemove(opts) {
-  const { ticker, cells, positions, durationMs = 280, cellPos } = opts;
+  const { ticker, cells, positions, durationMs = 110, cellPos } = opts;
   await animate(ticker, durationMs, (t) => {
     const ease = easeOutCubic(t);
     for (const [c, r] of positions) {
       const cell = cells[c][r];
       cell.alpha = 1 - ease;
-      cell.scale.set(1 - ease * 0.72);
-      cell.y = cell.y - ease * 6;
-      cell.rotation = ease * 0.25;
+      cell.scale.set(1 - ease * 0.78);
+      cell.y = cell.y - ease * 10;
+      cell.rotation = ease * 0.3;
     }
   });
   for (const [c, r] of positions) {

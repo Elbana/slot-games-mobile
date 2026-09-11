@@ -17,7 +17,6 @@ import {
   playEventSound,
   playThronesSound,
   playGodPpsSound,
-  playBigWinLevelup,
   playWinCounterSweetener,
   startFsMusic,
   startBaseMusic,
@@ -135,18 +134,16 @@ export function createEventReplayer(ctx) {
     }
 
     const lead = batch[0];
-    await Promise.all([
-      ...batch.map((ev) => {
+    godPortrait = ctx.onMultiplierLand?.(lead) ?? ctx.godPortrait;
+    await Promise.all(
+      batch.map((ev) => {
         const cell = cells[ev.col]?.[ev.row];
         return animateOrbLand(ticker, cell, ctx.fxLayer, MULTIPLIER_GOD_ID, () => {
           ctx.setCellMultiplier?.(cell, ev.value);
         });
-      }),
-      (async () => {
-        godPortrait = ctx.onMultiplierLand?.(lead) ?? ctx.godPortrait;
-        await animateGodLand(ticker, godPortrait, MULTIPLIER_GOD_ID);
-      })(),
-    ]);
+      })
+    );
+    void animateGodLand(ticker, godPortrait, MULTIPLIER_GOD_ID);
   }
 
   /**
@@ -173,6 +170,7 @@ export function createEventReplayer(ctx) {
    */
   async function replay(events, onWinTick, bet = 20) {
     let runningWin = 0;
+    let finalWin = 0;
     /** @type {number[][] | null} */
     let lastGrid = null;
     /** @type {number[][] | null} */
@@ -202,10 +200,12 @@ export function createEventReplayer(ctx) {
         const clusterPay = ev.wins.reduce((a, w) => a + w.pay, 0);
         const prevGrid = lastGrid ?? ev.grid;
         runningWin += clusterPay;
+        finalWin = runningWin;
         sweetenerStep += 1;
         playWinCounterSweetener(sweetenerStep);
 
-        const winFx = ctx.spawnWinFx?.(positions, clusterPay, bet);
+        void ctx.spawnWinFx?.(positions);
+
         await animateWinHighlight({
           ticker,
           cells,
@@ -214,20 +214,14 @@ export function createEventReplayer(ctx) {
           glowLayer,
           cellSize: GRID.cell,
           durationMs: TIMING.winHighlight / speedMult,
+          winClipCapMs: TIMING.winClipCap / speedMult,
           playWinClip,
         });
-        await winFx;
-        await ctx.endWinFx?.();
 
-        await ctx.onCascadeWin?.(runningWin);
-        if (ctx.pulseTumblePanel) {
-          await animate(ticker, TIMING.tumblePanelPulse / speedMult, (t) => ctx.pulseTumblePanel(t));
-          ctx.resetPanelScale?.();
-        }
+        void ctx.endWinFx?.();
         onWinTick?.(runningWin);
+        void ctx.onCascadeWin?.(runningWin);
 
-        playThronesSound('trail');
-        ctx.spawnTrailFx?.(positions);
         await animateRemove({
           ticker,
           cells,
@@ -253,6 +247,7 @@ export function createEventReplayer(ctx) {
 
       if (ev.type === 'multiplier_apply') {
         ctx.setMultiplierSum(ev.sum);
+        finalWin = ev.totalWin;
         onWinTick?.(ev.totalWin);
         await ctx.onMultiplierApply?.(ev.totalWin, ev.sum, ev.baseWin);
         if (ctx.pulseSignpost) {
@@ -308,12 +303,8 @@ export function createEventReplayer(ctx) {
     }
 
     if (lastGrid) ctx.setSymbolsImmediate(lastGrid, lastMult);
-    if (runningWin > 0) {
-      const tier = runningWin >= bet * 100 ? 3 : runningWin >= bet * 50 ? 2 : 1;
-      playThronesSound('big_win');
-      playBigWinLevelup(tier);
-      await ctx.showBigWin(runningWin, bet);
-      playThronesSound('big_win_end');
+    if (finalWin > 0) {
+      await ctx.celebrateRoundWin?.(finalWin, bet);
     }
     sweetenerStep = 0;
   }
