@@ -749,7 +749,9 @@ export async function animateColumnTumble(opts) {
       const cell = cells[c][r];
       const sym = targetGrid[c][r];
       const mult = getMult?.(multGrid, c, r) ?? 0;
-      if (cell.__sym !== sym) paintCell(cell, sym, mult);
+      if (cell.__sym !== sym || cell.__mult !== mult) {
+        paintCell(cell, sym, mult, cell.__multRevealed === true);
+      }
       cell.y = cellPos(c, r).y;
       cell.visible = true;
       cell.alpha = 1;

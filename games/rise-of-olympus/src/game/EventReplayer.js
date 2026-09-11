@@ -130,7 +130,8 @@ export function createEventReplayer(ctx) {
     if (!batch.length) return;
 
     for (const ev of batch) {
-      ctx.setCellMultiplier?.(cells[ev.col]?.[ev.row], 0);
+      const cell = cells[ev.col]?.[ev.row];
+      ctx.setCellMultiplier?.(cell, ev.value);
     }
 
     const lead = batch[0];
@@ -138,9 +139,7 @@ export function createEventReplayer(ctx) {
     await Promise.all(
       batch.map((ev) => {
         const cell = cells[ev.col]?.[ev.row];
-        return animateOrbLand(ticker, cell, ctx.fxLayer, MULTIPLIER_GOD_ID, () => {
-          ctx.setCellMultiplier?.(cell, ev.value);
-        });
+        return animateOrbLand(ticker, cell, ctx.fxLayer, MULTIPLIER_GOD_ID);
       })
     );
     void animateGodLand(ticker, godPortrait, MULTIPLIER_GOD_ID);
@@ -155,7 +154,6 @@ export function createEventReplayer(ctx) {
       batch.map(async (ev) => {
         const cell = cells[ev.col]?.[ev.row];
         if (!cell) return;
-        ctx.setCellMultiplier?.(cell, 0);
         await animateMultiplierUpgrade(ticker, cell, ctx.fxLayer, MULTIPLIER_GOD_ID, () => {
           ctx.setCellMultiplier?.(cell, ev.value);
         });
@@ -171,6 +169,8 @@ export function createEventReplayer(ctx) {
   async function replay(events, onWinTick, bet = 20) {
     let runningWin = 0;
     let finalWin = 0;
+    /** @type {Promise<void>} */
+    let cascadeWinTask = Promise.resolve();
     /** @type {number[][] | null} */
     let lastGrid = null;
     /** @type {number[][] | null} */
@@ -220,7 +220,7 @@ export function createEventReplayer(ctx) {
 
         void ctx.endWinFx?.();
         onWinTick?.(runningWin);
-        void ctx.onCascadeWin?.(runningWin);
+        cascadeWinTask = Promise.resolve(ctx.onCascadeWin?.(runningWin));
 
         await animateRemove({
           ticker,
@@ -249,6 +249,7 @@ export function createEventReplayer(ctx) {
         ctx.setMultiplierSum(ev.sum);
         finalWin = ev.totalWin;
         onWinTick?.(ev.totalWin);
+        await cascadeWinTask;
         await ctx.onMultiplierApply?.(ev.totalWin, ev.sum, ev.baseWin);
         if (ctx.pulseSignpost) {
           await animate(ticker, TIMING.signpostPulse / speedMult, (t) => ctx.pulseSignpost(t));

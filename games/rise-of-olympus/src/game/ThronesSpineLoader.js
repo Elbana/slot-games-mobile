@@ -953,6 +953,8 @@ export function setTumbleWinValue(spine, value) {
 export function setTumbleWinText(spine, text, amount = 0) {
   if (!spine) return;
   spine.__tumbleWinAmount = amount;
+  ensureTumbleWinFramesVisible(spine);
+  ensureTumbleWinValueSlotVisible(spine, true);
   layoutTumbleWinLabel(spine);
   const label = spine.__tumbleWinLabel;
   if (label) {
@@ -989,6 +991,7 @@ export async function animateTumbleWinTextReveal(spine, ticker, text, amount = 0
 
   await animate(ticker, durationMs, (t) => {
     layoutTumbleWinLabel(spine);
+    ensureTumbleWinValueSlotVisible(spine, true);
     const ease = easeOutBack(t);
     label.alpha = Math.min(1, t * 1.4);
     label.scale.set(0.35 + 0.65 * ease);

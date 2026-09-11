@@ -32,14 +32,12 @@ export async function animateGodLand(ticker, godPortrait, godId) {
  * @param {import('pixi.js').Container} cell
  * @param {import('pixi.js').Container} [fxLayer]
  * @param {number} [godId]
- * @param {() => void} [onOrbRevealComplete] — ref: set multiplier text when reveal finishes
  */
-export async function animateOrbLand(ticker, cell, fxLayer, godId = 2, onOrbRevealComplete) {
+export async function animateOrbLand(ticker, cell, fxLayer, godId = 2) {
   const sym = cell.__sym ?? 0;
 
   if (cell.__spine && sym >= 12 && sym <= 14) {
     await capPromise(playMultiplierReveal(cell.__spine), TIMING.orbRevealCap);
-    onOrbRevealComplete?.();
     void playMultiplierLandIdle(cell.__spine, sym);
   } else {
     await animate(ticker, TIMING.orbLand, (t) => {
@@ -51,7 +49,6 @@ export async function animateOrbLand(ticker, cell, fxLayer, godId = 2, onOrbReve
     cell.scale.set(1);
     if (cell.__sprite) cell.__sprite.tint = 0xffffff;
     if (cell.__spine) cell.__spine.alpha = 1;
-    onOrbRevealComplete?.();
   }
 
   if (fxLayer) {

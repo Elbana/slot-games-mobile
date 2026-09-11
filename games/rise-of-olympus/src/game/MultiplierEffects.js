@@ -6,6 +6,7 @@ import { GRID, ORIGIN, TIMING } from './config.js';
 import {
   createMultiplierTrailSpine,
   playMultiplierValueTrail,
+  setSymbolMultiplierValue,
 } from './ThronesSpineLoader.js';
 
 /**
@@ -31,6 +32,16 @@ export function findMultiplierCells(cells, layout) {
 }
 
 /**
+ * @param {import('pixi.js').Container} cell
+ */
+function hideOrbMultiplierLabel(cell) {
+  if (!cell) return;
+  setSymbolMultiplierValue(cell.__spine, 0);
+  cell.__mult = 0;
+  cell.__multRevealed = false;
+}
+
+/**
  * @param {object} opts
  * @param {{ col: number, row: number, value: number }[]} opts.sources
  * @param {import('pixi.js').Container[][]} opts.cells
@@ -51,12 +62,13 @@ export async function animateMultiplierCollectTrails(opts) {
 
   if (!sources.length || !fxLayer) return;
 
+  const orbHideDelayMs = Math.min(80, Math.floor(durationMs * 0.25));
+  const flyMs = Math.max(120, durationMs - orbHideDelayMs);
+
   await Promise.all(
     sources.map(async ({ col, row, value }) => {
       const cell = cells[col]?.[row];
       if (!cell) return;
-
-      clearCellMultiplier?.(cell, 0);
 
       const trail = createMultiplierTrailSpine(value);
       trail.x = ORIGIN.x + cell.x + GRID.cell / 2;
@@ -64,9 +76,12 @@ export async function animateMultiplierCollectTrails(opts) {
       fxLayer.addChild(trail);
 
       try {
-        await playMultiplierValueTrail(trail, target, durationMs);
+        await new Promise((r) => setTimeout(r, orbHideDelayMs));
+        hideOrbMultiplierLabel(cell);
+        await playMultiplierValueTrail(trail, target, flyMs);
       } finally {
         trail.destroy({ children: true });
+        clearCellMultiplier?.(cell, 0);
       }
     })
   );

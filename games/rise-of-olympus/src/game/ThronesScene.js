@@ -33,15 +33,14 @@ import {
   playScatterActivation,
   setGodMeterLevel,
   setTumbleWinValue,
-  tumbleWinCharge,
-  tumbleWinChargeStop,
-  tumbleWinPay,
+  ensureTumbleWinFramesVisible,
+  ensureTumbleWinValueSlotVisible,
+  refreshTumbleWinValueDisplay,
   tumbleWinDisperse,
   tumbleWinResetIdle,
   animateTumbleWinValueReveal,
   animateTumbleWinTextReveal,
   setTumbleWinText,
-  refreshTumbleWinValueDisplay,
   layoutTumbleWinLabel,
   showBigWinCelebration,
   hideBigWinCelebration,
@@ -325,9 +324,11 @@ export async function createThronesScene(opts) {
   }
 
   function paintCell(cell, sym, mult = 0, revealMult = false) {
+    const wasRevealed = cell.__multRevealed === true;
     clearCell(cell);
     cell.__sym = sym;
     cell.__mult = mult;
+    cell.__multRevealed = (revealMult && mult > 0) || (wasRevealed && mult > 0);
 
     try {
       const spine = createSymbolSpine(sym, symbolSize);
@@ -344,7 +345,7 @@ export async function createThronesScene(opts) {
     }
 
     if (sym >= 12 && sym <= 14 && cell.__spine) {
-      setSymbolMultiplierValue(cell.__spine, revealMult ? mult : 0);
+      setSymbolMultiplierValue(cell.__spine, cell.__multRevealed ? mult : 0);
     }
     cell.__badge.visible = false;
   }
@@ -352,6 +353,7 @@ export async function createThronesScene(opts) {
   function setCellMultiplier(cell, value) {
     if (!cell) return;
     cell.__mult = value;
+    cell.__multRevealed = value > 0;
     setSymbolMultiplierValue(cell.__spine, value);
     cell.__badge.visible = false;
   }
@@ -422,6 +424,16 @@ export async function createThronesScene(opts) {
   async function onMultiplierApply(totalWin, sum, baseWin) {
     const sources = findMultiplierCells(cells, layout);
     const target = tumbleWinCollectTarget();
+    const base = baseWin ?? tumbleWinValue;
+
+    if (tumbleWinSpine) {
+      ensureTumbleWinFramesVisible(tumbleWinSpine);
+      ensureTumbleWinValueSlotVisible(tumbleWinSpine, true);
+      if (base > 0) {
+        setTumbleWinValue(tumbleWinSpine, base);
+        refreshTumbleWinValueDisplay(tumbleWinSpine);
+      }
+    }
 
     if (sources.length > 0) {
       playThronesSound('trail');
@@ -436,9 +448,7 @@ export async function createThronesScene(opts) {
     }
 
     if (tumbleWinSpine) {
-      const base = baseWin ?? tumbleWinValue;
       if (sum > 0 && base > 0) {
-        void tumbleWinCharge(tumbleWinSpine);
         await animateTumbleWinTextReveal(
           tumbleWinSpine,
           ticker,
@@ -448,13 +458,13 @@ export async function createThronesScene(opts) {
         );
         await animate(ticker, TIMING.multiplierPulse, pulseTumblePanel);
         resetPanelScale();
-        void tumbleWinChargeStop(tumbleWinSpine);
       }
       tumbleWinValue = totalWin;
-      await capPromise(tumbleWinPay(tumbleWinSpine), 200);
-      await animateTumbleWinValueReveal(tumbleWinSpine, ticker, totalWin, TIMING.tumbleTextReveal);
-      await animate(ticker, TIMING.tumbleDisperseOut, () => {});
-      await capPromise(tumbleWinDisperse(tumbleWinSpine), TIMING.tumbleDisperseOut);
+      if (totalWin > 0) {
+        await animateTumbleWinValueReveal(tumbleWinSpine, ticker, totalWin, TIMING.tumbleTextReveal);
+        await animate(ticker, TIMING.tumbleDisperseOut, () => {});
+        await capPromise(tumbleWinDisperse(tumbleWinSpine), TIMING.tumbleDisperseOut);
+      }
       await tumbleWinResetIdle(tumbleWinSpine);
     } else {
       updateTumbleText(totalWin);
