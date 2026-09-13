@@ -33,6 +33,8 @@ export function createLotteryEngine(config) {
   let resultDrawnForCurrentPeriod = false;
   /** @type {string[]} */
   let lastNum = [];
+  /** Wheel stop index (0-based) when config.wheelStops is set. */
+  let lastWheelIndex = -1;
   /** @type {{ periodNo: string, result: string[], openAt: string }[]} */
   let history = [];
 
@@ -63,10 +65,10 @@ export function createLotteryEngine(config) {
     if (elapsed < bettingSeconds) {
       return { stage: 1, countdown: Math.ceil(bettingSeconds - elapsed), closeDuration: spinSeconds };
     }
+    ensureResultDrawn();
     if (elapsed < bettingSeconds + spinSeconds) {
       return { stage: 2, countdown: Math.ceil(bettingSeconds + spinSeconds - elapsed), closeDuration: spinSeconds };
     }
-    ensureResultDrawn();
     return {
       stage: 4,
       countdown: Math.ceil(totalSeconds - elapsed),
@@ -81,12 +83,20 @@ export function createLotteryEngine(config) {
       periodStartMs = Date.now();
       currentPeriod = nextPeriodId();
       resultDrawnForCurrentPeriod = false;
+      lastWheelIndex = -1;
     }
   }
 
   function drawResult(periodNo) {
-    const code = weightedPick(weights);
-    lastNum = [code];
+    const stops = config.wheelStops;
+    if (Array.isArray(stops) && stops.length > 0) {
+      lastWheelIndex = Math.floor(Math.random() * stops.length);
+      lastNum = [stops[lastWheelIndex]];
+    } else {
+      lastWheelIndex = -1;
+      const code = weightedPick(weights);
+      lastNum = [code];
+    }
     history.unshift({
       periodNo,
       result: [...lastNum],
@@ -113,6 +123,7 @@ export function createLotteryEngine(config) {
       CloseDuration: phase.closeDuration,
       LastPeriod: lastPeriod,
       LastNum: lastNum.length ? [...lastNum] : [],
+      ShowArea: lastWheelIndex >= 0 ? lastWheelIndex : undefined,
     };
   }
 

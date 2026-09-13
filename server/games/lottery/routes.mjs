@@ -6,11 +6,12 @@ import { createLotteryEngine } from './engine.mjs';
 import { getLotterySession, lotteryBalance, setLotteryBalance } from './session.mjs';
 import { GREEDY_GAME } from '../greedy/config.mjs';
 import { PETS_BEASTS_GAME } from '../pets-beasts/config.mjs';
+import { LUCK77_GAME } from '../lucky77/config.mjs';
 
 /** @type {Map<string, ReturnType<typeof createLotteryEngine>>} */
 const engines = new Map();
 
-const GAME_DEFS = [GREEDY_GAME, PETS_BEASTS_GAME];
+const GAME_DEFS = [GREEDY_GAME, PETS_BEASTS_GAME, LUCK77_GAME];
 
 function engineKey(typCode, lotteryCode) {
   return `${typCode}:${lotteryCode}`;

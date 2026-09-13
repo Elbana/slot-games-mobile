@@ -26,6 +26,12 @@ const DISPLAY = {
     theme: 'pets',
     icon: '🦁',
   },
+  lucky77: {
+    tagline: 'Bet Lemon, Watermelon or Lucky 77 — live wheel',
+    badge: 'Wheel',
+    theme: 'lucky77',
+    icon: '🎡',
+  },
 };
 
 function escapeHtml(s) {

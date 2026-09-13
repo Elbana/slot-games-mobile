@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "description": "Replace any file here with the same filename to update game art without code changes.",
+  "baseUrl": "/lottery/lucky77/assets",
+  "symbols": {
+    "lemon": "lemon.png",
+    "watermelon": "watermelon.png",
+    "seven": "seven.png"
+  },
+  "ui": {
+    "coin": "coin.png",
+    "pointer": "pointer.png",
+    "wheelRing": "wheel-ring.png",
+    "stageBg": "stage-bg.jpg",
+    "statue": "statue.png",
+    "chip100": "chip-100.png",
+    "chip1k": "chip-1k.png",
+    "chip10k": "chip-10k.png",
+    "chip100k": "chip-100k.png"
+  }
+}

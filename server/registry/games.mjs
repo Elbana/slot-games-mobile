@@ -4,6 +4,7 @@
 
 import { GREEDY_GAME } from '../games/greedy/config.mjs';
 import { PETS_BEASTS_GAME } from '../games/pets-beasts/config.mjs';
+import { LUCK77_GAME } from '../games/lucky77/config.mjs';
 
 /** @typedef {'slot' | 'lottery'} GameType */
 
@@ -39,6 +40,14 @@ export const GAMES = [
     playPath: `/play/${PETS_BEASTS_GAME.id}`,
     typCode: PETS_BEASTS_GAME.typCode,
     lotteryCode: PETS_BEASTS_GAME.lotteryCode,
+  },
+  {
+    slug: LUCK77_GAME.id,
+    name: LUCK77_GAME.name,
+    type: 'lottery',
+    playPath: `/play/${LUCK77_GAME.id}`,
+    typCode: LUCK77_GAME.typCode,
+    lotteryCode: LUCK77_GAME.lotteryCode,
   },
 ];
 

@@ -63,6 +63,7 @@ app.use('/shared', express.static(path.join(GAMES_ROOT, 'shared')));
 app.use('/lottery/greedy', express.static(path.join(GAMES_ROOT, 'greedy')));
 app.use('/lottery/pets-beasts', express.static(path.join(GAMES_ROOT, 'pets-beasts')));
 app.use('/lottery/petsbeasts', express.static(path.join(GAMES_ROOT, 'pets-beasts', 'assets')));
+app.use('/lottery/lucky77', express.static(path.join(GAMES_ROOT, 'lucky77')));
 app.use('/bet-advisor', express.static(path.join(GAMES_ROOT, 'bet-advisor')));
 
 function sendPlayPage(res, htmlPath, token, player) {
@@ -84,6 +85,10 @@ app.get('/play/greedy', (req, res) => {
 
 app.get('/play/pets-beasts', (req, res) => {
   sendPlayPage(res, path.join(GAMES_ROOT, 'pets-beasts', 'play.html'), req.query.token, req.query.player);
+});
+
+app.get('/play/lucky77', (req, res) => {
+  sendPlayPage(res, path.join(GAMES_ROOT, 'lucky77', 'play.html'), req.query.token, req.query.player);
 });
 
 app.get('/play/bet-advisor', (req, res) => {
@@ -155,6 +160,6 @@ await mountRiseOfOlympus();
 server.listen(PORT, () => {
   console.log(`games-mobile platform — http://localhost:${PORT}/`);
   console.log(describeMathProfile());
-  console.log('Games: rise-of-olympus, greedy, pets-beasts');
+  console.log(`Games: ${listGames().map((g) => g.slug).join(', ')}`);
   if (isDev) console.log('Dev mode: Vite (RoO) + static lottery clients');
 });

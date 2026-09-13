@@ -13,6 +13,7 @@ import {
 } from '../games/lottery/routes.mjs';
 import { GREEDY_GAME } from '../games/greedy/config.mjs';
 import { PETS_BEASTS_GAME } from '../games/pets-beasts/config.mjs';
+import { LUCK77_GAME } from '../games/lucky77/config.mjs';
 import { requireGameAccess } from '../auth/operator-auth.mjs';
 import { extractPlayerId, sessionKey } from '../auth/player-context.mjs';
 import { createWalletForOperator } from '../wallet/wallet-adapter.mjs';
@@ -30,7 +31,7 @@ import { getOperatorEconomy } from '../economy/operator-economy.mjs';
 import { recordRound, tryPoolWin } from '../economy/prize-pool.mjs';
 import { bettingPayload, getBetConfig, validateBetAmount } from '../betting/bet-config.mjs';
 
-const GAME_DEFS = [GREEDY_GAME, PETS_BEASTS_GAME];
+const GAME_DEFS = [GREEDY_GAME, PETS_BEASTS_GAME, LUCK77_GAME];
 
 function slugForTypCode(typCode) {
   const def = GAME_DEFS.find((g) => g.typCode === typCode);
