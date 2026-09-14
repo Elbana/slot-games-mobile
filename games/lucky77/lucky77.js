@@ -313,25 +313,120 @@ function drawWheelLayer(rotation, alpha = 1) {
   return { cx, cy, outer, inner, w };
 }
 
-function drawWheelFrame(cx, cy, outer, inner, w) {
-  ctx.save();
-  const rimOuter = outer + w * 0.028;
+function drawWheelSelector(cx, cy, outer, inner, w) {
+  const half = SEG_ANGLE / 2;
+  const top = -Math.PI / 2;
+  const left = top - half;
+  const right = top + half;
+  const rimOuter = outer + w * 0.038;
   const rimInner = outer + w * 0.008;
+  const hubEdge = inner + w * 0.006;
+  const highlight = showSegmentGlow && winningSegmentIndex >= 0;
+
+  ctx.save();
+
+  // Golden outer rim (matches indicator)
   const rimGrad = ctx.createRadialGradient(cx, cy, rimInner, cx, cy, rimOuter);
-  rimGrad.addColorStop(0, '#9ca3af');
-  rimGrad.addColorStop(0.35, '#f5cc4d');
-  rimGrad.addColorStop(0.65, '#d97706');
-  rimGrad.addColorStop(1, '#451a03');
+  rimGrad.addColorStop(0, '#b45309');
+  rimGrad.addColorStop(0.4, '#f59e0b');
+  rimGrad.addColorStop(0.72, highlight ? '#ffe082' : '#fde68a');
+  rimGrad.addColorStop(1, '#92400e');
   ctx.beginPath();
   ctx.arc(cx, cy, rimOuter, 0, Math.PI * 2);
   ctx.arc(cx, cy, rimInner, 0, Math.PI * 2, true);
+  ctx.closePath();
   ctx.fillStyle = rimGrad;
   ctx.fill();
+  ctx.strokeStyle = '#78350f';
+  ctx.lineWidth = w * 0.0018;
+  ctx.stroke();
 
+  // Golden cap band on outer rim over the top segment
   ctx.beginPath();
-  ctx.arc(cx, cy, outer + w * 0.004, 0, Math.PI * 2);
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+  ctx.arc(cx, cy, rimOuter + w * 0.001, left, right);
+  ctx.arc(cx, cy, rimInner - w * 0.001, right, left, true);
+  ctx.closePath();
+  const capGrad = ctx.createLinearGradient(cx, cy - rimOuter, cx, cy - outer);
+  capGrad.addColorStop(0, highlight ? '#fff6bf' : '#ffeaa0');
+  capGrad.addColorStop(0.45, highlight ? '#ffd54a' : '#f5cc4d');
+  capGrad.addColorStop(1, '#b45309');
+  ctx.fillStyle = capGrad;
+  ctx.fill();
+  ctx.strokeStyle = '#78350f';
   ctx.lineWidth = w * 0.002;
+  ctx.stroke();
+
+  // Downward golden rails along segment edges (reference bracket style)
+  const drawRail = (angle) => {
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    const perpX = -sin;
+    const perpY = cos;
+    const halfW = w * 0.011;
+    const xOut = cx + cos * rimOuter;
+    const yOut = cy + sin * rimOuter;
+    const xIn = cx + cos * hubEdge;
+    const yIn = cy + sin * hubEdge;
+
+    ctx.beginPath();
+    ctx.moveTo(xOut + perpX * halfW, yOut + perpY * halfW);
+    ctx.lineTo(xIn + perpX * halfW, yIn + perpY * halfW);
+    ctx.lineTo(xIn - perpX * halfW, yIn - perpY * halfW);
+    ctx.lineTo(xOut - perpX * halfW, yOut - perpY * halfW);
+    ctx.closePath();
+    const railGrad = ctx.createLinearGradient(xOut, yOut, xIn, yIn);
+    railGrad.addColorStop(0, highlight ? '#fff3b0' : '#fde68a');
+    railGrad.addColorStop(0.5, '#f59e0b');
+    railGrad.addColorStop(1, '#92400e');
+    ctx.fillStyle = railGrad;
+    ctx.fill();
+    ctx.strokeStyle = '#78350f';
+    ctx.lineWidth = w * 0.0015;
+    ctx.stroke();
+  };
+
+  drawRail(left);
+  drawRail(right);
+
+  // Inner cap on hub — closes the frame at the center circle
+  ctx.beginPath();
+  ctx.arc(cx, cy, hubEdge + w * 0.001, left, right);
+  ctx.arc(cx, cy, hubEdge - w * 0.003, right, left, true);
+  ctx.closePath();
+  const hubCapGrad = ctx.createLinearGradient(cx, cy - hubEdge, cx, cy);
+  hubCapGrad.addColorStop(0, highlight ? '#ffd54a' : '#f5cc4d');
+  hubCapGrad.addColorStop(1, '#b45309');
+  ctx.fillStyle = hubCapGrad;
+  ctx.fill();
+  ctx.strokeStyle = '#78350f';
+  ctx.lineWidth = w * 0.0015;
+  ctx.stroke();
+
+  // Apex notch on top of rim
+  const apexX = cx;
+  const apexY = cy - rimOuter;
+  ctx.beginPath();
+  ctx.moveTo(apexX - w * 0.024, apexY + w * 0.014);
+  ctx.lineTo(apexX, apexY - w * 0.012);
+  ctx.lineTo(apexX + w * 0.024, apexY + w * 0.014);
+  ctx.closePath();
+  ctx.fillStyle = highlight ? '#fff8c8' : '#f5cc4d';
+  ctx.fill();
+  ctx.strokeStyle = '#92400e';
+  ctx.lineWidth = w * 0.0015;
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawWheelFrame(cx, cy, outer, inner, w) {
+  drawWheelSelector(cx, cy, outer, inner, w);
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, outer + w * 0.003, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+  ctx.lineWidth = w * 0.0018;
   ctx.stroke();
   ctx.restore();
 

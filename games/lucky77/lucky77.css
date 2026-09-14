@@ -138,21 +138,6 @@
   filter: drop-shadow(0 12px 32px rgba(0, 0, 0, 0.55));
 }
 
-.l77-pointer {
-  position: absolute;
-  top: -1.5%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: clamp(10px, 3.5cqw, 14px) solid transparent;
-  border-right: clamp(10px, 3.5cqw, 14px) solid transparent;
-  border-top: clamp(18px, 6cqw, 26px) solid var(--l77-gold);
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.55));
-  z-index: 5;
-  pointer-events: none;
-}
-
 .l77-wheel-hub {
   position: absolute;
   top: 50%;
