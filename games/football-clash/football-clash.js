@@ -27,9 +27,11 @@ let cheerBits = [];
 
 let audioUnlocked = false;
 /** @type {HTMLAudioElement | null} */
-let ambientAudio = null;
+let whistleAudio = null;
 /** @type {HTMLAudioElement | null} */
 let kickAudio = null;
+/** @type {HTMLAudioElement | null} */
+let shotAudio = null;
 /** @type {HTMLAudioElement | null} */
 let goalAudio = null;
 let kickTimer = null;
@@ -126,28 +128,31 @@ function toast(msg) {
 }
 
 function initAudio() {
-  ambientAudio = new Audio(`${ASSET}/audio/ambient.mp3`);
-  ambientAudio.loop = true;
-  ambientAudio.volume = 0.32;
-  ambientAudio.preload = 'auto';
+  whistleAudio = new Audio(`${ASSET}/audio/whistle.mp3`);
+  whistleAudio.volume = 0.75;
+  whistleAudio.preload = 'auto';
 
   kickAudio = new Audio(`${ASSET}/audio/kick.mp3`);
-  kickAudio.volume = 0.55;
+  kickAudio.volume = 0.5;
   kickAudio.preload = 'auto';
 
+  shotAudio = new Audio(`${ASSET}/audio/shot.mp3`);
+  shotAudio.volume = 0.48;
+  shotAudio.preload = 'auto';
+
   goalAudio = new Audio(`${ASSET}/audio/goal-cheer.mp3`);
-  goalAudio.volume = 0.88;
+  goalAudio.volume = 0.82;
   goalAudio.preload = 'auto';
 }
 
 function unlockAudio() {
   if (audioUnlocked) return;
   audioUnlocked = true;
-  [ambientAudio, kickAudio, goalAudio].forEach((a) => {
+  [whistleAudio, kickAudio, shotAudio, goalAudio].forEach((a) => {
     if (!a) return;
     a.load();
   });
-  syncMatchAudio(vis.phase);
+  syncMatchAudio(vis.phase, prevPhase);
 }
 
 function clearKickTimer() {
@@ -160,7 +165,7 @@ function clearKickTimer() {
 function scheduleKickSounds() {
   clearKickTimer();
   if (!audioUnlocked || vis.phase !== 'playing') return;
-  const delay = 1600 + Math.random() * 2400;
+  const delay = 1400 + Math.random() * 2200;
   kickTimer = setTimeout(() => {
     playKickSound();
     scheduleKickSounds();
@@ -168,39 +173,35 @@ function scheduleKickSounds() {
 }
 
 function playKickSound() {
-  if (!audioUnlocked || !kickAudio || vis.phase !== 'playing') return;
-  const clip = kickAudio.cloneNode();
-  clip.volume = 0.4 + Math.random() * 0.25;
+  if (!audioUnlocked || vis.phase !== 'playing') return;
+  const useShot = Math.random() < 0.4;
+  const base = useShot ? shotAudio : kickAudio;
+  if (!base) return;
+  const clip = base.cloneNode();
+  clip.volume = (useShot ? 0.38 : 0.42) + Math.random() * 0.18;
   clip.play().catch(() => {});
 }
 
-function syncMatchAudio(phase) {
+function playWhistle() {
+  if (!audioUnlocked || !whistleAudio) return;
+  whistleAudio.currentTime = 0;
+  whistleAudio.play().catch(() => {});
+}
+
+function syncMatchAudio(phase, fromPhase = null) {
   if (!audioUnlocked) return;
   if (phase === 'playing') {
-    if (ambientAudio?.paused) {
-      ambientAudio.currentTime = 0;
-      ambientAudio.play().catch(() => {});
-    }
+    if (fromPhase === 'betting') playWhistle();
     scheduleKickSounds();
   } else {
     clearKickTimer();
-    if (ambientAudio) {
-      ambientAudio.pause();
-      ambientAudio.currentTime = 0;
-    }
   }
 }
 
 function playGoalSound() {
   if (!audioUnlocked || !goalAudio) return;
-  ambientAudio?.pause();
   goalAudio.currentTime = 0;
   goalAudio.play().catch(() => {});
-  setTimeout(() => {
-    if (vis.phase === 'playing' && ambientAudio?.paused) {
-      ambientAudio.play().catch(() => {});
-    }
-  }, 3200);
 }
 
 function showGoalOverlay() {
@@ -778,7 +779,7 @@ function applyState(next) {
       closeResultPopup();
       cheerBits.length = 0;
     }
-    syncMatchAudio(next.phase);
+    syncMatchAudio(next.phase, prevPhase);
   }
   prevPhase = next.phase;
   state = next;
