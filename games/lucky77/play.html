@@ -34,10 +34,11 @@
       </main>
 
       <div class="l77-controls">
-        <section class="l77-history">
+        <button type="button" class="l77-history" id="btn-history" aria-label="View recent results">
           <span class="l77-history__new">NEW</span>
           <div class="l77-history__dots" id="history"></div>
-        </section>
+          <span class="l77-history__chev" aria-hidden="true">›</span>
+        </button>
 
         <section class="l77-bets" id="bet-zones">
           <button type="button" class="l77-bet l77-bet--lemon" data-code="LUCK77_LEMON">
@@ -79,6 +80,28 @@
           <div class="l77-win__title" id="win-title">You won!</div>
           <div class="l77-win__amount" id="win-amount">+0</div>
           <button type="button" class="l77-win__close" id="win-close">OK</button>
+        </div>
+      </div>
+
+      <div class="l77-history-modal" id="history-modal" hidden>
+        <button type="button" class="l77-history-modal__backdrop" id="history-backdrop" aria-label="Close history"></button>
+        <div class="l77-history-modal__sheet" role="dialog" aria-labelledby="history-title">
+          <div class="l77-history-modal__head">
+            <h2 class="l77-history-modal__title" id="history-title">Recent results</h2>
+            <button type="button" class="l77-history-modal__close" id="history-close" aria-label="Close">✕</button>
+          </div>
+          <div class="l77-history-modal__body">
+            <table class="l77-history-table">
+              <thead>
+                <tr>
+                  <th scope="col">Round</th>
+                  <th scope="col">Result</th>
+                  <th scope="col">×</th>
+                </tr>
+              </thead>
+              <tbody id="history-table-body"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 

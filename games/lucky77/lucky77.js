@@ -48,6 +48,10 @@ let lastShownResultKey = '';
 const pending = {};
 /** @type {Record<string, number>} */
 let lastBets = {};
+/** @type {Array<{ period: string, code: string }>} */
+let cachedHistory = [];
+const HISTORY_BAR_COUNT = 10;
+const HISTORY_MODAL_COUNT = 30;
 
 const canvas = document.getElementById('wheel-canvas');
 const ctx = canvas.getContext('2d');
@@ -147,7 +151,7 @@ function setupSettings() {
   $('settings-backdrop').addEventListener('click', close);
   $('setting-help').addEventListener('click', () => {
     close();
-    toast('Pick Lemon, Watermelon, or 77 — wheel lands on 8 wedges. 77 pays ×8!');
+    toast('Pick Lemon, Watermelon, or 77 — wheel has 9 wedges. 77 pays ×8!');
   });
 }
 
@@ -157,10 +161,27 @@ function normalizeAngle(angle) {
   return a;
 }
 
-function segmentFillColor(kind) {
-  if (kind === 'seven') return '#2e1065';
-  if (kind === 'melon') return '#14532d';
-  return '#5c3d0a';
+function segmentFillGradient(kind, cx, cy, outer, start, end) {
+  const mid = (start + end) / 2;
+  const gx = cx + Math.cos(mid) * outer * 0.35;
+  const gy = cy + Math.sin(mid) * outer * 0.35;
+  const grad = ctx.createRadialGradient(gx, gy, outer * 0.08, cx, cy, outer);
+  if (kind === 'seven') {
+    grad.addColorStop(0, '#6d28d9');
+    grad.addColorStop(0.55, '#4c1d95');
+    grad.addColorStop(1, '#1e1b4b');
+    return grad;
+  }
+  if (kind === 'melon') {
+    grad.addColorStop(0, '#34d399');
+    grad.addColorStop(0.5, '#15803d');
+    grad.addColorStop(1, '#052e16');
+    return grad;
+  }
+  grad.addColorStop(0, '#fbbf24');
+  grad.addColorStop(0.45, '#b45309');
+  grad.addColorStop(1, '#451a03');
+  return grad;
 }
 
 function drawSegmentIcon(code, x, y, r) {
@@ -234,7 +255,7 @@ function drawPointerSpotlight(cx, cy, outer, pulse) {
   ctx.restore();
 }
 
-function drawWheel(rotation) {
+function drawWheelLayer(rotation, alpha = 1) {
   const w = canvas.width;
   const h = canvas.height;
   const cx = w / 2;
@@ -243,17 +264,9 @@ function drawWheel(rotation) {
   const inner = w * 0.12;
   const iconR = w * 0.055;
   const iconDist = outer * 0.62;
-  const oddDist = outer * 0.38;
-  const oddFont = `800 ${w * 0.028}px sans-serif`;
-
-  ctx.clearRect(0, 0, w, h);
-
-  ctx.beginPath();
-  ctx.arc(cx, cy, outer + w * 0.02, 0, Math.PI * 2);
-  ctx.fillStyle = '#374151';
-  ctx.fill();
 
   ctx.save();
+  ctx.globalAlpha = alpha;
   ctx.translate(cx, cy);
   ctx.rotate(rotation);
 
@@ -262,25 +275,25 @@ function drawWheel(rotation) {
     const end = start + SEG_ANGLE;
     const code = LUCK77_WHEEL_STOPS[i];
     const kind = zoneKind(code);
-    const mid = start + SEG_ANGLE / 2;
 
     ctx.beginPath();
     ctx.moveTo(0, 0);
     ctx.arc(0, 0, outer, start, end);
     ctx.closePath();
-    ctx.fillStyle = segmentFillColor(kind);
+    ctx.fillStyle = segmentFillGradient(kind, 0, 0, outer, start, end);
     ctx.fill();
 
     const isWinner = showSegmentGlow && i === winningSegmentIndex;
-    if (!isWinner) {
-      ctx.strokeStyle = 'rgba(232, 197, 71, 0.35)';
-      ctx.lineWidth = w * 0.004;
-      ctx.stroke();
-    }
-
     if (isWinner) {
       drawWinGlow(0, 0, outer, inner, start, end, glowPhase);
     }
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
+    ctx.lineWidth = w * 0.003;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(start) * inner, Math.sin(start) * inner);
+    ctx.lineTo(Math.cos(start) * outer, Math.sin(start) * outer);
+    ctx.stroke();
   }
 
   for (let i = 0; i < SEGMENTS; i++) {
@@ -290,19 +303,36 @@ function drawWheel(rotation) {
     const ix = Math.cos(mid) * iconDist;
     const iy = Math.sin(mid) * iconDist;
     drawSegmentIcon(code, ix, iy, iconR);
-
-    const odd = ZONE_META[code]?.odd || 2;
-    ctx.fillStyle = '#e8c547';
-    ctx.font = oddFont;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(`×${odd}`, Math.cos(mid) * oddDist, Math.sin(mid) * oddDist);
   }
 
   ctx.beginPath();
   ctx.arc(0, 0, inner, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(10, 16, 32, 0.35)';
+  ctx.fillStyle = 'rgba(8, 12, 24, 0.5)';
   ctx.fill();
+  ctx.restore();
+  return { cx, cy, outer, inner, w };
+}
+
+function drawWheelFrame(cx, cy, outer, inner, w) {
+  ctx.save();
+  const rimOuter = outer + w * 0.028;
+  const rimInner = outer + w * 0.008;
+  const rimGrad = ctx.createRadialGradient(cx, cy, rimInner, cx, cy, rimOuter);
+  rimGrad.addColorStop(0, '#9ca3af');
+  rimGrad.addColorStop(0.35, '#f5cc4d');
+  rimGrad.addColorStop(0.65, '#d97706');
+  rimGrad.addColorStop(1, '#451a03');
+  ctx.beginPath();
+  ctx.arc(cx, cy, rimOuter, 0, Math.PI * 2);
+  ctx.arc(cx, cy, rimInner, 0, Math.PI * 2, true);
+  ctx.fillStyle = rimGrad;
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, outer + w * 0.004, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+  ctx.lineWidth = w * 0.002;
+  ctx.stroke();
   ctx.restore();
 
   if (showSegmentGlow && winningSegmentIndex >= 0) {
@@ -310,9 +340,35 @@ function drawWheel(rotation) {
   }
 }
 
+function drawWheel(rotation, blurStrength = 0) {
+  const w = canvas.width;
+  const h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  if (blurStrength > 0.02) {
+    const trail = blurStrength * 0.018;
+    drawWheelLayer(rotation - trail * 3, 0.12);
+    drawWheelLayer(rotation - trail * 1.6, 0.22);
+    drawWheelLayer(rotation - trail * 0.7, 0.38);
+  }
+
+  const layer = drawWheelLayer(rotation, 1);
+  drawWheelFrame(layer.cx, layer.cy, layer.outer, layer.inner, layer.w);
+}
+
+function spinEase(t) {
+  if (t >= 1) return 1;
+  if (t < 0.72) {
+    const u = t / 0.72;
+    return u * u * 0.88;
+  }
+  const u = (t - 0.72) / 0.28;
+  return 0.88 + (1 - Math.pow(1 - u, 4)) * 0.12;
+}
+
 function rotationForStop(index, fromRotation) {
   const segCenter = index * SEG_ANGLE + SEG_ANGLE / 2;
-  const minSpins = 5;
+  const minSpins = 6;
   const endMod = normalizeAngle(-segCenter);
   const fromMod = normalizeAngle(fromRotation);
   let extra = endMod - fromMod;
@@ -368,20 +424,24 @@ function animateWheelToStop(index, durationMs = 4200) {
   const endRot = rotationForStop(index, startRot);
   const delta = endRot - startRot;
   const start = performance.now();
+  let prevRot = startRot;
 
   return new Promise((resolve) => {
     function frame(now) {
       const t = Math.min(1, (now - start) / durationMs);
-      const ease = 1 - Math.pow(1 - t, 3);
+      const ease = spinEase(t);
       wheelRotation = startRot + delta * ease;
-      drawWheel(wheelRotation);
+      const velocity = Math.abs(wheelRotation - prevRot);
+      prevRot = wheelRotation;
+      const blur = t < 0.85 ? Math.min(1, velocity * 28) : 0;
+      drawWheel(wheelRotation, blur);
       if (t < 1) {
         spinAnim = requestAnimationFrame(frame);
       } else {
         wheelRotation = endRot;
         winningSegmentIndex = index;
         showSegmentGlow = true;
-        drawWheel(wheelRotation);
+        drawWheel(wheelRotation, 0);
         startGlowLoop();
         scheduleGlowEnd();
         spinAnim = null;
@@ -455,16 +515,62 @@ function clearPending() {
   updatePendingUI();
 }
 
-function renderHistory(periods) {
-  $('history').innerHTML = periods.slice(0, 12).map((row) => {
-    const code = row.Result?.[0] || row.result?.[0];
-    if (!code) return '';
-    const meta = ZONE_META[code];
-    const kind = zoneKind(code);
+function historyRowMeta(row) {
+  const code = row.Result?.[0] || row.result?.[0];
+  if (!code) return null;
+  const period = row.PeriodNo || row.periodNo || '';
+  return { period, code };
+}
+
+function renderHistoryBar() {
+  $('history').innerHTML = cachedHistory.slice(0, HISTORY_BAR_COUNT).map((row) => {
+    const meta = ZONE_META[row.code];
+    const kind = zoneKind(row.code);
     const src = symbolAssetUrl(kind);
     const emoji = meta?.label === 'Lucky 77' ? '77' : kind === 'melon' ? '🍉' : '🍋';
-    return `<span class="l77-dot l77-dot--${kind}" title="${meta?.label || code}"><img src="${src}" alt="${emoji}" loading="lazy" /></span>`;
+    return `<span class="l77-dot l77-dot--${kind}" title="${meta?.label || row.code}"><img src="${src}" alt="${emoji}" loading="lazy" /></span>`;
   }).join('');
+}
+
+function renderHistoryTable(rows) {
+  const body = $('history-table-body');
+  if (!rows.length) {
+    body.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:rgba(255,255,255,0.45)">No results yet</td></tr>';
+    return;
+  }
+  body.innerHTML = rows.map((row) => {
+    const meta = ZONE_META[row.code];
+    const kind = zoneKind(row.code);
+    const src = symbolAssetUrl(kind);
+    const odd = meta?.odd || 2;
+    const label = meta?.label || row.code;
+    return `<tr>
+      <td>${periodShort(row.period)}</td>
+      <td><span class="l77-history-table__choice"><span class="l77-history-table__icon"><img src="${src}" alt="" /></span>${label}</span></td>
+      <td class="l77-history-table__mult">×${odd}</td>
+    </tr>`;
+  }).join('');
+}
+
+function setupHistoryModal() {
+  const modal = $('history-modal');
+  const close = () => { modal.hidden = true; };
+  $('btn-history').addEventListener('click', async () => {
+    modal.hidden = false;
+    renderHistoryTable(cachedHistory.slice(0, HISTORY_MODAL_COUNT));
+    try {
+      const { periods } = await periodList(config, { Idx: 1, Size: HISTORY_MODAL_COUNT });
+      cachedHistory = periods.map(historyRowMeta).filter(Boolean);
+      renderHistoryBar();
+      renderHistoryTable(cachedHistory);
+    } catch (err) {
+      if (!(err instanceof LotteryApiError && err.offline)) {
+        console.warn('[lucky77] history modal', err);
+      }
+    }
+  });
+  $('history-close').addEventListener('click', close);
+  $('history-backdrop').addEventListener('click', close);
 }
 
 function updateCenterCountdown(state) {
@@ -568,8 +674,9 @@ async function tick() {
 
 async function loadHistory() {
   try {
-    const { periods } = await periodList(config, { Idx: 1, Size: 12 });
-    renderHistory(periods);
+    const { periods } = await periodList(config, { Idx: 1, Size: HISTORY_MODAL_COUNT });
+    cachedHistory = periods.map(historyRowMeta).filter(Boolean);
+    renderHistoryBar();
   } catch (err) {
     if (!(err instanceof LotteryApiError && err.offline)) {
       console.warn('[lucky77] history', err);
@@ -646,6 +753,7 @@ async function init() {
   $('btn-topup').addEventListener('click', () => toast('Demo wallet — use launcher token'));
   $('win-close').addEventListener('click', () => { $('win-overlay').hidden = true; });
   setupSettings();
+  setupHistoryModal();
 
   await tick();
   await loadHistory();

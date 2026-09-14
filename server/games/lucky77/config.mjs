@@ -1,6 +1,6 @@
 /**
  * Lucky 77 — three-zone wheel (BooAn luck77_2_half style).
- * 8 physical stops: Lemon ×4, Watermelon ×3, Seven ×1 (no adjacent duplicates).
+ * 9 physical stops: Lemon ×4, Watermelon ×4, Seven ×1 (no adjacent lemons).
  */
 
 export const LUCK77_TYP = 'LUCK77_HALF';
@@ -23,6 +23,7 @@ export const LUCK77_WHEEL_STOPS = [
   'LUCK77_LEMON',
   'LUCK77_WATERMELON',
   'LUCK77_LEMON',
+  'LUCK77_WATERMELON',
 ];
 
 export const LUCK77_GAME = {
