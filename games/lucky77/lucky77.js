@@ -214,6 +214,13 @@ function drawSegmentIcon(code, x, y, r) {
 }
 
 function drawWinGlow(cx, cy, outer, inner, start, end, pulse, pulsing) {
+  const flash = pulsing
+    ? 0.78 + Math.sin(pulse * 18) * 0.16 + Math.sin(pulse * 27) * 0.1
+    : 1;
+  const bolt = pulsing
+    ? 0.55 + Math.max(0, Math.sin(pulse * 32)) * 0.45
+    : 1;
+
   ctx.save();
   ctx.beginPath();
   ctx.moveTo(cx, cy);
@@ -221,26 +228,6 @@ function drawWinGlow(cx, cy, outer, inner, start, end, pulse, pulsing) {
   ctx.closePath();
   ctx.clip();
 
-  const mid = start + (end - start) / 2;
-  const gx = cx + Math.cos(mid) * outer * 0.48;
-  const gy = cy + Math.sin(mid) * outer * 0.48;
-
-  if (!pulsing) {
-    const fill = ctx.createRadialGradient(gx, gy, inner * 0.35, gx, gy, outer * 1.08);
-    fill.addColorStop(0, 'rgba(255, 248, 210, 0.72)');
-    fill.addColorStop(0.45, 'rgba(255, 225, 95, 0.62)');
-    fill.addColorStop(0.78, 'rgba(255, 200, 60, 0.52)');
-    fill.addColorStop(1, 'rgba(255, 175, 40, 0.44)');
-    ctx.fillStyle = fill;
-    ctx.fillRect(cx - outer, cy - outer, outer * 2, outer * 2);
-    ctx.restore();
-    return;
-  }
-
-  const flash = 0.78
-    + Math.sin(pulse * 18) * 0.16
-    + Math.sin(pulse * 27) * 0.1;
-  const bolt = 0.55 + Math.max(0, Math.sin(pulse * 32)) * 0.45;
   const grad = ctx.createRadialGradient(cx, cy - outer * 0.42, inner * 0.4, cx, cy, outer * 1.02);
   grad.addColorStop(0, `rgba(255, 252, 220, ${0.92 * flash})`);
   grad.addColorStop(0.2, `rgba(255, 228, 90, ${0.78 * flash})`);
