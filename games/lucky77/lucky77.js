@@ -406,9 +406,9 @@ function drawWheelSelector(cx, cy, outer, inner, w) {
   const apexX = cx;
   const apexY = cy - rimOuter;
   ctx.beginPath();
-  ctx.moveTo(apexX - w * 0.024, apexY + w * 0.014);
-  ctx.lineTo(apexX, apexY - w * 0.012);
-  ctx.lineTo(apexX + w * 0.024, apexY + w * 0.014);
+  ctx.moveTo(apexX - w * 0.024, apexY - w * 0.004);
+  ctx.lineTo(apexX, apexY + w * 0.016);
+  ctx.lineTo(apexX + w * 0.024, apexY - w * 0.004);
   ctx.closePath();
   ctx.fillStyle = highlight ? '#fff8c8' : '#f5cc4d';
   ctx.fill();
