@@ -37,9 +37,9 @@ const SFX_VOL = { whistle: 0.9, kick: 0.52, shot: 0.5, goal: 0.85 };
 let audioUnlocked = false;
 /** @type {Record<string, HTMLAudioElement>} */
 const sfxPool = {};
-let kickTimer = null;
 let goalOverlayTimer = null;
 let pendingKickoffWhistle = false;
+const BALL_PASS_MS = 1500;
 /** @type {Map<string, HTMLImageElement>} */
 const flagImgs = new Map();
 /** @type {Map<string, string>} */
@@ -57,7 +57,7 @@ const vis = {
   awayScore: 0,
   displayHome: 0,
   displayAway: 0,
-  ball: { x: 0.5, y: 0.55, vx: 0, vy: 0 },
+  ball: { x: 0.14, y: 0.52, dir: 1, passStart: 0, passMs: BALL_PASS_MS, passCount: 0, pendingFirstKick: false },
   crowd: 0,
   pitch: null,
 };
@@ -144,7 +144,6 @@ function flushPendingAudio() {
     pendingKickoffWhistle = false;
     playSfxKey('whistle', SFX_VOL.whistle);
   }
-  if (vis.phase === 'playing') scheduleKickSounds('playing');
 }
 
 function unlockAudio() {
@@ -175,28 +174,11 @@ function playSfxKey(key, volume) {
   return true;
 }
 
-function clearKickTimer() {
-  if (kickTimer) {
-    clearTimeout(kickTimer);
-    kickTimer = null;
-  }
-}
-
-function scheduleKickSounds(phase = vis.phase) {
-  clearKickTimer();
-  if (!audioUnlocked || phase !== 'playing') return;
-  const delay = 1400 + Math.random() * 2200;
-  kickTimer = setTimeout(() => {
-    playKickSound();
-    scheduleKickSounds(phase);
-  }, delay);
-}
-
-function playKickSound() {
+function playPassSound() {
   if (!audioUnlocked || vis.phase !== 'playing') return;
-  const useShot = Math.random() < 0.4;
+  const useShot = vis.ball.passCount > 0 && vis.ball.passCount % 3 === 0;
   const key = useShot ? 'shot' : 'kick';
-  playSfxKey(key, (SFX_VOL[key] ?? 0.5) + Math.random() * 0.12);
+  playSfxKey(key, (SFX_VOL[key] ?? 0.5) + Math.random() * 0.1);
 }
 
 function playWhistle() {
@@ -212,15 +194,6 @@ function syncMatchAudio(phase, fromPhase = null) {
   if (phase === 'playing' && fromPhase !== 'playing') {
     pendingKickoffWhistle = true;
     playWhistle();
-    if (audioUnlocked) scheduleKickSounds('playing');
-    return;
-  }
-  if (phase === 'playing' && audioUnlocked) {
-    scheduleKickSounds('playing');
-    return;
-  }
-  if (phase !== 'playing') {
-    clearKickTimer();
   }
 }
 
@@ -437,23 +410,86 @@ function drawScoreHud(w, h) {
   stadiumCtx.fillText(String(vis.displayAway), cx + scoreSize * 0.9, midY);
 }
 
-function drawBall(w, h, t) {
+function drawSoccerBall(ctx, x, y, radius) {
+  ctx.save();
+  ctx.translate(x, y);
+
+  ctx.fillStyle = 'rgba(0,0,0,0.28)';
+  ctx.beginPath();
+  ctx.ellipse(0, radius * 0.9, radius * 0.55, radius * 0.16, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  const grad = ctx.createRadialGradient(-radius * 0.35, -radius * 0.35, radius * 0.05, 0, 0, radius);
+  grad.addColorStop(0, '#ffffff');
+  grad.addColorStop(0.55, '#f8fafc');
+  grad.addColorStop(1, '#cbd5e1');
+  ctx.fillStyle = grad;
+  ctx.strokeStyle = '#64748b';
+  ctx.lineWidth = 1.1;
+  ctx.beginPath();
+  ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = '#0f172a';
+  const patches = [
+    [0, -radius * 0.38, radius * 0.19],
+    [radius * 0.34, -radius * 0.08, radius * 0.15],
+    [radius * 0.22, radius * 0.3, radius * 0.15],
+    [-radius * 0.26, radius * 0.26, radius * 0.15],
+    [-radius * 0.36, -radius * 0.06, radius * 0.15],
+  ];
+  for (const [px, py, pr] of patches) {
+    ctx.beginPath();
+    ctx.arc(px, py, pr, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+function drawBall(w, h) {
   if (vis.phase !== 'playing' || !vis.pitch) return;
   const { fx, fy, fw, fh } = vis.pitch;
   const bx = fx + vis.ball.x * fw;
   const by = fy + vis.ball.y * fh;
-  const ballSize = Math.max(12, Math.min(18, h * 0.1));
-  const bounce = Math.sin(t * 0.008) * 2;
+  const radius = Math.max(9, Math.min(14, h * 0.065));
+  drawSoccerBall(stadiumCtx, bx, by, radius);
+}
 
-  stadiumCtx.fillStyle = 'rgba(0,0,0,0.22)';
-  stadiumCtx.beginPath();
-  stadiumCtx.ellipse(bx, by + ballSize * 0.65, ballSize * 0.4, ballSize * 0.14, 0, 0, Math.PI * 2);
-  stadiumCtx.fill();
+function resetBallPass(t) {
+  vis.ball.x = 0.14;
+  vis.ball.y = 0.52;
+  vis.ball.dir = 1;
+  vis.ball.passStart = t;
+  vis.ball.passMs = BALL_PASS_MS;
+  vis.ball.passCount = 0;
+  vis.ball.pendingFirstKick = true;
+}
 
-  stadiumCtx.font = `${ballSize}px system-ui`;
-  stadiumCtx.textAlign = 'center';
-  stadiumCtx.textBaseline = 'middle';
-  stadiumCtx.fillText('⚽', bx, by + bounce);
+function updateBallPass(t) {
+  if (vis.phase !== 'playing') return;
+  if (!vis.ball.passStart) resetBallPass(t);
+
+  let elapsed = t - vis.ball.passStart;
+  if (vis.ball.pendingFirstKick && elapsed > 700) {
+    vis.ball.pendingFirstKick = false;
+    playPassSound();
+  }
+  while (elapsed >= vis.ball.passMs) {
+    elapsed -= vis.ball.passMs;
+    vis.ball.passStart += vis.ball.passMs;
+    vis.ball.dir *= -1;
+    vis.ball.passCount += 1;
+    playPassSound();
+  }
+
+  const p = elapsed / vis.ball.passMs;
+  const ease = p * p * (3 - 2 * p);
+  const fromX = vis.ball.dir === 1 ? 0.14 : 0.86;
+  const toX = vis.ball.dir === 1 ? 0.86 : 0.14;
+  vis.ball.x = fromX + (toX - fromX) * ease;
+  vis.ball.y = 0.52 - Math.sin(p * Math.PI) * 0.13;
 }
 
 function drawGoalFlash(w, h) {
@@ -513,7 +549,7 @@ function drawStadium(t) {
     stadiumCtx.fillText('Loading match…', w / 2, h * 0.12);
   }
 
-  drawBall(w, h, t);
+  drawBall(w, h);
   drawGoalBanner(w, h);
   drawGoalFlash(w, h);
   drawCheerBits(w, h);
@@ -522,16 +558,7 @@ function drawStadium(t) {
 
 function animLoop(t) {
   animTime = t;
-  if (vis.phase === 'playing') {
-    vis.ball.x += vis.ball.vx;
-    vis.ball.y += vis.ball.vy;
-    vis.ball.vx += (0.5 - vis.ball.x) * 0.0012;
-    vis.ball.vy += (0.5 - vis.ball.y) * 0.0012;
-    vis.ball.vx += (Math.random() - 0.5) * 0.0006;
-    vis.ball.vy += (Math.random() - 0.5) * 0.0006;
-    vis.ball.x = Math.max(0.08, Math.min(0.92, vis.ball.x));
-    vis.ball.y = Math.max(0.1, Math.min(0.9, vis.ball.y));
-  }
+  updateBallPass(t);
   drawStadium(t);
   requestAnimationFrame(animLoop);
 }
@@ -803,6 +830,9 @@ function applyState(next) {
       lastOverlayKey = '';
       closeResultPopup();
       cheerBits.length = 0;
+    }
+    if (next.phase === 'playing') {
+      resetBallPass(animTime);
     }
     syncMatchAudio(next.phase, prevPhase);
   }
