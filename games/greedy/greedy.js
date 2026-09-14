@@ -34,12 +34,38 @@ function syncGreedyEmbedScale() {
   if (!sheet || !inner) return;
 
   const designH = inner.scrollHeight || 1353;
-  const fit = Math.min(
-    sheet.clientWidth / GREEDY_DESIGN_W,
-    sheet.clientHeight / designH,
-  );
+  const fitW = sheet.clientWidth / GREEDY_DESIGN_W;
+  const fitH = sheet.clientHeight / designH;
+  const fit = fitW * designH <= sheet.clientHeight + 2 ? fitW : Math.min(fitW, fitH);
+  const offsetX = Math.max(0, (sheet.clientWidth - GREEDY_DESIGN_W * fit) / 2);
   inner.style.setProperty('--greedy-fit', String(fit));
   inner.style.setProperty('--greedy-design-h', String(designH));
+  inner.style.width = `${GREEDY_DESIGN_W}px`;
+  inner.style.transformOrigin = '0 0';
+  inner.style.transform = `translate(${offsetX}px, 0) scale(${fit})`;
+  inner.style.marginBottom = `${designH * (fit - 1)}px`;
+}
+
+function setupGreedyEmbedScale() {
+  if (!document.querySelector('.gm-shell--greedy.gm-shell--embed')) return;
+
+  syncGreedyEmbedScale();
+  window.addEventListener('resize', syncGreedyEmbedScale);
+
+  if (typeof ResizeObserver !== 'undefined') {
+    const sheet = document.querySelector('.gm-shell--greedy.gm-shell--embed .gm-sheet');
+    const inner = sheet?.querySelector('.greedy-scale-inner');
+    if (sheet && inner) {
+      const ro = new ResizeObserver(() => syncGreedyEmbedScale());
+      ro.observe(sheet);
+      ro.observe(inner);
+    }
+  }
+
+  requestAnimationFrame(() => {
+    syncGreedyEmbedScale();
+    requestAnimationFrame(syncGreedyEmbedScale);
+  });
 }
 
 /** History icon ring color by food group (matches original) */
@@ -430,17 +456,6 @@ async function init() {
   buildChips();
   updateOdds();
   syncGreedyEmbedScale();
-  window.addEventListener('resize', syncGreedyEmbedScale);
-  if (typeof ResizeObserver !== 'undefined') {
-    const sheet = document.querySelector('.gm-shell--greedy.gm-shell--embed .gm-sheet');
-    const inner = sheet?.querySelector('.greedy-scale-inner');
-    if (sheet && inner) {
-      const ro = new ResizeObserver(() => syncGreedyEmbedScale());
-      ro.observe(sheet);
-      ro.observe(inner);
-    }
-  }
-
   $('bet-veg').addEventListener('click', () => betGroup('VEG').catch(() => {}));
   $('bet-meat').addEventListener('click', () => betGroup('MEAT').catch(() => {}));
   $('result-overlay').addEventListener('click', (e) => {
@@ -467,4 +482,5 @@ async function init() {
   setInterval(loadHistory, 3000);
 }
 
+setupGreedyEmbedScale();
 init();

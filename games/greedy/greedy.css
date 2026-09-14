@@ -793,10 +793,11 @@ html, body {
 
 .toast.show { opacity: 1; }
 
-/* ── Half-screen embed — scale fixed 750px layout to fit sheet ── */
+/* ── Half-screen embed — full-width scale + compact chrome ── */
 .gm-shell--greedy.gm-shell--embed .greedy-game {
   min-height: 0;
   overflow: hidden;
+  background: #2a1648;
 }
 
 .gm-shell--greedy.gm-shell--embed .greedy-scale-host {
@@ -804,23 +805,99 @@ html, body {
   min-height: 0;
   width: 100%;
   overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  position: relative;
 }
 
 .gm-shell--greedy.gm-shell--embed .greedy-scale-inner {
   container-type: inline-size;
   width: 750px;
   flex-shrink: 0;
-  margin-inline: auto;
-  transform: scale(var(--greedy-fit, 1));
-  transform-origin: top center;
-  margin-bottom: calc(var(--greedy-design-h, 1353) * 1px * (var(--greedy-fit, 1) - 1));
+  position: relative;
+  left: 0;
   --r: calc(100cqw / 750 * 0.93);
   --result-r: calc(100cqw / 750 * 1.28);
 }
 
+.gm-shell--greedy.gm-shell--embed .popup-content {
+  padding-top: 0;
+  background: linear-gradient(180deg, #3d2060 0%, #2a1648 100%);
+}
+
+.gm-shell--greedy.gm-shell--embed .header {
+  position: relative;
+  z-index: 12;
+  padding: 4px 8px;
+  background: linear-gradient(180deg, rgba(61, 32, 96, 0.95), rgba(61, 32, 96, 0));
+}
+
+.gm-shell--greedy.gm-shell--embed .left-icons img.icon-btn {
+  width: 22px;
+  height: 22px;
+  margin-right: 6px;
+}
+
+.gm-shell--greedy.gm-shell--embed .period-text {
+  font-size: calc(16 * var(--r));
+  opacity: 0.85;
+}
+
+.gm-shell--greedy.gm-shell--embed .main {
+  margin-top: calc(-8 * var(--r));
+  max-height: calc(710 * var(--r));
+  overflow: hidden;
+}
+
+.gm-shell--greedy.gm-shell--embed .main > .bg {
+  width: 100%;
+  display: block;
+}
+
+.gm-shell--greedy.gm-shell--embed .footer {
+  height: calc(210 * var(--r));
+  padding-top: calc(22 * var(--r));
+  margin-top: calc(-6 * var(--r));
+}
+
+.gm-shell--greedy.gm-shell--embed .footerbg {
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.gm-shell--greedy.gm-shell--embed .footMain {
+  top: calc(22 * var(--r));
+}
+
+.gm-shell--greedy.gm-shell--embed .footMain .one {
+  height: calc(68 * var(--r));
+  padding-top: 0;
+  gap: calc(6 * var(--r));
+}
+
+.gm-shell--greedy.gm-shell--embed .footMain .two {
+  height: calc(56 * var(--r));
+  margin: calc(4 * var(--r)) calc(2 * var(--r)) 0;
+  padding: 0 calc(10 * var(--r));
+}
+
+.gm-shell--greedy.gm-shell--embed .balance-btn,
+.gm-shell--greedy.gm-shell--embed .reward-btn {
+  height: calc(62 * var(--r));
+}
+
+.gm-shell--greedy.gm-shell--embed .switch-img {
+  width: calc(64 * var(--r));
+}
+
 .gm-shell--greedy.gm-shell--embed .footMain .three {
   display: none;
+}
+
+.gm-shell--greedy.gm-shell--embed .bottom-three {
+  margin-bottom: calc(-8 * var(--r));
+}
+
+.gm-shell--greedy.gm-shell--embed .toast {
+  top: calc(6px + env(safe-area-inset-top, 0px));
+  font-size: calc(16 * var(--r));
 }
