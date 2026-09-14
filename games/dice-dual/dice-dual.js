@@ -3,6 +3,7 @@ import { diceDualInit, diceDualState, diceDualBet } from './api.js';
 const ASSET = '/dice-dual/assets';
 const NUM_DICE = 5;
 const RING_C = 238.76;
+const BATTLE_REVEAL_MS = 1750;
 
 const DICE_PIPS = {
   1: [[0, 0]],
@@ -34,8 +35,15 @@ let betLock = false;
 
 /** @type {{ x:number,y:number,vx:number,vy:number,life:number,color:string,size:number }[]} */
 let confetti = [];
+/** @type {{ x:number,y:number,vx:number,vy:number,life:number,len:number }[]} */
+let sparks = [];
 
-const flagImgs = { red: null, blue: null, draw: null };
+const imgs = {
+  flag: { red: null, blue: null, draw: null },
+  shield: { red: null, blue: null },
+  arenaBg: null,
+  vsBadge: null,
+};
 
 const vis = {
   phase: 'betting',
@@ -47,6 +55,7 @@ const vis = {
   blueRoll: Array(NUM_DICE).fill(0),
   redScore: 0,
   blueScore: 0,
+  outcome: null,
   winner: null,
   battleStart: 0,
 };
@@ -90,12 +99,37 @@ function outcomeKind(outcome) {
   return outcome === 'redWins' ? 'red' : 'blue';
 }
 
-function loadFlags() {
+function loadImg(src) {
+  const img = new Image();
+  img.src = src;
+  return img;
+}
+
+function loadAssets() {
   for (const key of ['red', 'blue', 'draw']) {
-    const img = new Image();
-    img.src = FLAG_SRC[key];
-    flagImgs[key] = img;
+    imgs.flag[key] = loadImg(FLAG_SRC[key]);
   }
+  imgs.shield.red = loadImg(`${ASSET}/shield-red.svg`);
+  imgs.shield.blue = loadImg(`${ASSET}/shield-blue.svg`);
+  imgs.arenaBg = loadImg(`${ASSET}/arena-bg.svg`);
+  imgs.vsBadge = loadImg(`${ASSET}/vs-badge.svg`);
+}
+
+function isBattleRevealed() {
+  if (vis.phase === 'betting') return false;
+  if (vis.phase === 'results') return true;
+  if (vis.battleStart <= 0) return false;
+  return animTime - vis.battleStart >= BATTLE_REVEAL_MS;
+}
+
+function winnerHighlight() {
+  if (!isBattleRevealed()) return { red: false, blue: false, draw: false };
+  if (vis.outcome === 'draw') return { red: false, blue: false, draw: true };
+  return {
+    red: vis.winner === 'red',
+    blue: vis.winner === 'blue',
+    draw: false,
+  };
 }
 
 function resize() {
@@ -130,7 +164,7 @@ function roundRect(ctx, x, y, w, h, rad) {
   ctx.closePath();
 }
 
-function drawNormalDie(ctx, x, y, size, value, accent, rot) {
+function drawNormalDie(ctx, x, y, size, value, rot) {
   const s = size;
   const r = s * 0.18;
 
@@ -138,7 +172,7 @@ function drawNormalDie(ctx, x, y, size, value, accent, rot) {
   ctx.translate(x, y);
   if (rot) ctx.rotate(rot);
 
-  ctx.fillStyle = 'rgba(0,0,0,0.12)';
+  ctx.fillStyle = 'rgba(0,0,0,0.14)';
   roundRect(ctx, -s / 2 + 1, -s / 2 + 2, s, s, r);
   ctx.fill();
 
@@ -146,8 +180,8 @@ function drawNormalDie(ctx, x, y, size, value, accent, rot) {
   face.addColorStop(0, '#ffffff');
   face.addColorStop(1, '#e2e8f0');
   ctx.fillStyle = face;
-  ctx.strokeStyle = accent;
-  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = '#94a3b8';
+  ctx.lineWidth = 1.2;
   roundRect(ctx, -s / 2, -s / 2, s, s, r);
   ctx.fill();
   ctx.stroke();
@@ -164,57 +198,162 @@ function drawNormalDie(ctx, x, y, size, value, accent, rot) {
   ctx.restore();
 }
 
-function drawDiceRow(ctx, cx, cy, displays, rolls, accent, panelW) {
+function drawDiceRow(ctx, cx, cy, displays, rolls, panelW) {
   const gap = 3;
   const dieSize = Math.min(20, (panelW - gap * (NUM_DICE - 1) - 8) / NUM_DICE);
   const totalW = NUM_DICE * dieSize + gap * (NUM_DICE - 1);
   const startX = cx - totalW / 2 + dieSize / 2;
   for (let i = 0; i < NUM_DICE; i++) {
-    drawNormalDie(ctx, startX + i * (dieSize + gap), cy, dieSize, displays[i], accent, rolls[i]);
+    drawNormalDie(ctx, startX + i * (dieSize + gap), cy, dieSize, displays[i], rolls[i]);
   }
 }
 
-function drawFlag(ctx, x, y, kind, size) {
-  const img = flagImgs[kind];
+function drawImage(ctx, img, x, y, size) {
   if (img?.complete && img.naturalWidth) {
     ctx.drawImage(img, x - size / 2, y - size / 2, size, size);
-  } else {
-    ctx.fillStyle = kind === 'red' ? '#ef4444' : kind === 'blue' ? '#3b82f6' : '#eab308';
-    ctx.fillRect(x - size / 2, y - size / 2, size, size * 0.65);
+    return true;
   }
+  return false;
 }
 
-function drawTeamPanel(ctx, cx, cy, pw, ph, kind, accent, displays, rolls, score, isWinner, shakeX) {
+function drawTeamPanel(ctx, cx, cy, pw, ph, kind, accent, displays, rolls, score, hi, shakeX, glowT) {
   ctx.save();
   ctx.translate(cx + shakeX, cy);
 
-  const bg = ctx.createLinearGradient(0, -ph / 2, 0, ph / 2);
-  bg.addColorStop(0, `${accent}33`);
-  bg.addColorStop(1, `${accent}10`);
-  ctx.fillStyle = bg;
-  ctx.strokeStyle = isWinner ? '#fbbf24' : `${accent}88`;
-  ctx.lineWidth = isWinner ? 2 : 1.5;
-  if (isWinner) {
-    ctx.shadowColor = 'rgba(251, 191, 36, 0.45)';
-    ctx.shadowBlur = 10;
+  const pulse = hi ? 0.55 + 0.45 * Math.sin(glowT * 8) : 0;
+
+  const frame = ctx.createLinearGradient(-pw / 2, -ph / 2, pw / 2, ph / 2);
+  frame.addColorStop(0, 'rgba(255,255,255,0.12)');
+  frame.addColorStop(0.5, 'rgba(255,255,255,0.04)');
+  frame.addColorStop(1, 'rgba(0,0,0,0.18)');
+  ctx.fillStyle = frame;
+  ctx.strokeStyle = hi ? `rgba(251, 191, 36, ${0.55 + pulse * 0.35})` : 'rgba(255,255,255,0.14)';
+  ctx.lineWidth = hi ? 2 + pulse : 1.5;
+  if (hi) {
+    ctx.shadowColor = `rgba(251, 191, 36, ${0.25 + pulse * 0.35})`;
+    ctx.shadowBlur = 6 + pulse * 14;
   }
-  roundRect(ctx, -pw / 2, -ph / 2, pw, ph, 10);
+  roundRect(ctx, -pw / 2, -ph / 2, pw, ph, 12);
   ctx.fill();
   ctx.stroke();
   ctx.shadowBlur = 0;
 
-  drawDiceRow(ctx, 0, -14, displays, rolls, accent, pw - 6);
+  ctx.fillStyle = accent;
+  roundRect(ctx, -pw / 2 + 4, -ph / 2 + 4, pw - 8, 18, 6);
+  ctx.globalAlpha = 0.85;
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  const shield = imgs.shield[kind];
+  if (!drawImage(ctx, shield, -pw / 2 + 16, -ph / 2 + 13, 16)) {
+    ctx.fillStyle = accent;
+    ctx.beginPath();
+    ctx.arc(-pw / 2 + 16, -ph / 2 + 13, 7, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.fillStyle = '#fff';
+  ctx.font = '800 9px system-ui,sans-serif';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(kind.toUpperCase(), -pw / 2 + 28, -ph / 2 + 13);
+
+  drawDiceRow(ctx, 0, -6, displays, rolls, pw - 10);
 
   const scoreText = typeof score === 'number' ? String(score) : score;
-  ctx.fillStyle = accent;
-  ctx.font = '900 18px system-ui,sans-serif';
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  roundRect(ctx, -18, ph / 2 - 34, 36, 18, 9);
+  ctx.fill();
+  ctx.fillStyle = hi ? '#fde68a' : '#fff';
+  ctx.font = '900 14px system-ui,sans-serif';
   ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(scoreText, 0, ph / 2 - 30);
+  ctx.fillText(scoreText, 0, ph / 2 - 25);
 
-  drawFlag(ctx, 0, ph / 2 - 12, kind, 22);
+  drawImage(ctx, imgs.flag[kind], 0, ph / 2 - 10, 20);
 
   ctx.restore();
+}
+
+function updateSparks(vsX, vsY) {
+  if (vis.phase !== 'battling') {
+    sparks.length = 0;
+    return;
+  }
+  if (Math.random() < 0.45) {
+    const fromLeft = Math.random() < 0.5;
+    sparks.push({
+      x: fromLeft ? vsX - 22 : vsX + 22,
+      y: vsY + (Math.random() - 0.5) * 24,
+      vx: fromLeft ? 2.2 + Math.random() : -2.2 - Math.random(),
+      vy: (Math.random() - 0.5) * 2.5,
+      life: 1,
+      len: 5 + Math.random() * 8,
+    });
+  }
+  for (let i = sparks.length - 1; i >= 0; i--) {
+    const s = sparks[i];
+    s.x += s.vx;
+    s.y += s.vy;
+    s.life -= 0.07;
+    if (s.life <= 0) sparks.splice(i, 1);
+  }
+}
+
+function drawSparks(ctx) {
+  ctx.save();
+  for (const s of sparks) {
+    ctx.globalAlpha = s.life * 0.95;
+    ctx.strokeStyle = '#fde68a';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(s.x, s.y);
+    ctx.lineTo(s.x - s.vx * s.len * 0.35, s.y - s.vy * s.len * 0.35);
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawVsZone(ctx, vsX, cy, hi, glowT) {
+  const battling = vis.phase === 'battling';
+  const pulse = battling ? 0.85 + 0.15 * Math.sin(glowT * 12) : 1;
+  const size = (hi.draw ? 34 : 30) * pulse;
+
+  if (battling) {
+    ctx.save();
+    ctx.globalAlpha = 0.35 + 0.25 * Math.sin(glowT * 10);
+    ctx.strokeStyle = '#fbbf24';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(vsX, cy, size * 0.72, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  if (hi.draw && isBattleRevealed()) {
+    drawImage(ctx, imgs.flag.draw, vsX, cy, size);
+    ctx.fillStyle = '#fde68a';
+    ctx.font = '800 8px system-ui,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('DRAW', vsX, cy + size * 0.38);
+    return;
+  }
+
+  if (!drawImage(ctx, imgs.vsBadge, vsX, cy, size)) {
+    ctx.fillStyle = '#d97706';
+    ctx.beginPath();
+    ctx.arc(vsX, cy, size / 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#451a03';
+    ctx.font = 'bold 9px system-ui,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('VS', vsX, cy);
+  }
 }
 
 function drawConfetti(w, h) {
@@ -238,41 +377,40 @@ function drawArena() {
   arenaCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
   arenaCtx.clearRect(0, 0, w, h);
 
-  const padX = 2;
-  const vsGap = 34;
+  if (imgs.arenaBg?.complete) {
+    arenaCtx.drawImage(imgs.arenaBg, 0, 0, w, h);
+  } else {
+    const bg = arenaCtx.createLinearGradient(0, 0, 0, h);
+    bg.addColorStop(0, '#1a1030');
+    bg.addColorStop(1, '#0a0614');
+    arenaCtx.fillStyle = bg;
+    arenaCtx.fillRect(0, 0, w, h);
+  }
+
+  const padX = 4;
+  const vsGap = 38;
   const innerW = w - padX * 2;
   const pw = (innerW - vsGap) / 2;
-  const ph = h - 6;
+  const ph = h - 8;
   const cy = h / 2;
   const leftCx = padX + pw / 2;
   const rightCx = w - padX - pw / 2;
+  const vsX = w / 2;
+  const glowT = animTime / 1000;
+  const hi = winnerHighlight();
 
-  const shakeR = vis.phase === 'battling' ? Math.sin(animTime * 0.04) * 2 : 0;
-  const shakeB = vis.phase === 'battling' ? Math.sin(animTime * 0.04 + 1.2) * 2 : 0;
+  const shakeR = vis.phase === 'battling' ? Math.sin(animTime * 0.04) * 2.5 : 0;
+  const shakeB = vis.phase === 'battling' ? Math.sin(animTime * 0.04 + 1.2) * 2.5 : 0;
+
+  updateSparks(vsX, cy);
+  drawSparks(arenaCtx);
 
   drawTeamPanel(arenaCtx, leftCx, cy, pw, ph, 'red', '#ef4444',
-    vis.redDisplay, vis.redRoll, vis.redScore, vis.winner === 'red', shakeR);
+    vis.redDisplay, vis.redRoll, vis.redScore, hi.red, shakeR, glowT);
   drawTeamPanel(arenaCtx, rightCx, cy, pw, ph, 'blue', '#3b82f6',
-    vis.blueDisplay, vis.blueRoll, vis.blueScore, vis.winner === 'blue', shakeB);
+    vis.blueDisplay, vis.blueRoll, vis.blueScore, hi.blue, shakeB, glowT);
 
-  const vsX = w / 2;
-  const vsR = 14;
-  arenaCtx.fillStyle = 'rgba(0,0,0,0.35)';
-  arenaCtx.beginPath();
-  arenaCtx.arc(vsX, cy, vsR + 3, 0, Math.PI * 2);
-  arenaCtx.fill();
-  const vg = arenaCtx.createRadialGradient(vsX, cy, 0, vsX, cy, vsR);
-  vg.addColorStop(0, '#fde68a');
-  vg.addColorStop(1, '#d97706');
-  arenaCtx.fillStyle = vg;
-  arenaCtx.beginPath();
-  arenaCtx.arc(vsX, cy, vsR, 0, Math.PI * 2);
-  arenaCtx.fill();
-  arenaCtx.fillStyle = '#451a03';
-  arenaCtx.font = 'bold 9px system-ui,sans-serif';
-  arenaCtx.textAlign = 'center';
-  arenaCtx.textBaseline = 'middle';
-  arenaCtx.fillText('VS', vsX, cy);
+  drawVsZone(arenaCtx, vsX, cy, hi, glowT);
 
   drawConfetti(w, h);
 }
@@ -308,6 +446,7 @@ function animLoop(ts) {
   animTime = ts;
   updateDiceAnim();
   drawArena();
+  showResultPopup();
   requestAnimationFrame(animLoop);
 }
 
@@ -427,27 +566,55 @@ function setTimerRing(countdown, phase) {
   $('timer-ring').style.strokeDashoffset = String(RING_C * (1 - Math.max(0, countdown / max)));
 }
 
-function showOverlay(myBet, battle) {
-  const overlay = $('overlay');
-  const card = $('overlay-card');
-  if (!myBet || !battle || state?.phase !== 'results') {
-    overlay.hidden = true;
-    lastOverlayKey = '';
+function closeResultPopup() {
+  $('result-popup').hidden = true;
+}
+
+function showResultPopup() {
+  const popup = $('result-popup');
+  const myBet = state?.myBet;
+  const battle = state?.battle;
+  if (!myBet || !battle || state?.phase !== 'results' || !isBattleRevealed()) {
+    if (state?.phase !== 'results') {
+      popup.hidden = true;
+      lastOverlayKey = '';
+    }
     return;
   }
   const key = `${state.roundId}-${myBet.status}`;
   if (key === lastOverlayKey) return;
   lastOverlayKey = key;
-  overlay.hidden = false;
-  if (myBet.status === 'won') {
-    card.className = 'dd-overlay__card dd-overlay__card--win';
-    card.innerHTML = `GREAT WIN!<span class="dd-overlay__sub">+${fmtNum(myBet.winAmount)} coins</span>`;
+
+  const card = $('result-card');
+  const won = myBet.status === 'won';
+  const isDraw = battle.outcome === 'draw';
+  const drawWin = isDraw && myBet.prediction === 'draw';
+
+  card.className = `dd-result__card dd-result__card--${won || drawWin ? 'win' : isDraw ? 'draw' : 'lose'}`;
+
+  const icon = $('result-icon');
+  icon.className = 'dd-result__icon';
+  icon.style.backgroundImage = `url(${FLAG_SRC[myBet.prediction]})`;
+  icon.style.filter = won || drawWin ? 'drop-shadow(0 0 8px rgba(74,222,128,0.5))' : 'grayscale(0.35)';
+
+  if (won) {
+    $('result-title').textContent = 'You won!';
+    $('result-amount').className = 'dd-result__amount';
+    $('result-amount').textContent = `+${fmtNum(myBet.winAmount)}`;
     burstConfetti('#4ade80');
+  } else if (isDraw && myBet.prediction === 'draw') {
+    $('result-title').textContent = 'Draw — you win!';
+    $('result-amount').className = 'dd-result__amount';
+    $('result-amount').textContent = `+${fmtNum(myBet.winAmount)}`;
+    burstConfetti('#fbbf24');
   } else {
-    card.className = 'dd-overlay__card dd-overlay__card--lose';
-    card.innerHTML = `DEFEAT<span class="dd-overlay__sub">Wrong pick this round</span>`;
+    $('result-title').textContent = isDraw ? 'Draw' : 'Better luck next time';
+    $('result-amount').className = 'dd-result__amount dd-result__amount--lose';
+    $('result-amount').textContent = isDraw ? 'Scores tied this round' : `−${fmtNum(myBet.amount)}`;
   }
-  setTimeout(() => { if (state?.phase !== 'results') overlay.hidden = true; }, 2800);
+
+  $('result-score').textContent = `Red ${battle.redScore} — Blue ${battle.blueScore}`;
+  popup.hidden = false;
 }
 
 function syncVis(next) {
@@ -460,15 +627,17 @@ function syncVis(next) {
   if (battle) {
     vis.redDice = [...battle.redDice];
     vis.blueDice = [...battle.blueDice];
+    vis.outcome = battle.outcome;
     vis.winner = battle.winningTeam;
   } else if (next.phase === 'betting') {
     vis.redDice = Array(NUM_DICE).fill(1);
     vis.blueDice = Array(NUM_DICE).fill(1);
     vis.redScore = 0;
     vis.blueScore = 0;
+    vis.outcome = null;
     vis.winner = null;
     lastOverlayKey = '';
-    $('overlay').hidden = true;
+    closeResultPopup();
   }
   vis.phase = next.phase;
 }
@@ -495,7 +664,7 @@ function applyState(next) {
 
   syncVis(next);
   updatePickButtons();
-  showOverlay(next.myBet, next.battle);
+  showResultPopup();
 }
 
 async function poll() {
@@ -503,13 +672,15 @@ async function poll() {
 }
 
 async function init() {
-  loadFlags();
+  loadAssets();
   resize();
   window.addEventListener('resize', resize);
   if (typeof ResizeObserver !== 'undefined') {
     new ResizeObserver(() => resize()).observe(arenaCanvas.parentElement);
   }
   setupHistoryModal();
+  $('result-ok').addEventListener('click', closeResultPopup);
+  $('result-backdrop').addEventListener('click', closeResultPopup);
   requestAnimationFrame(animLoop);
 
   buildChips();

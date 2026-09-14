@@ -82,8 +82,15 @@
 
         <div class="dd-fx" id="dd-fx" aria-hidden="true"></div>
 
-        <div class="dd-overlay" id="overlay" hidden>
-          <div class="dd-overlay__card" id="overlay-card"></div>
+        <div class="dd-result" id="result-popup" hidden>
+          <button type="button" class="dd-result__backdrop" id="result-backdrop" aria-label="Close"></button>
+          <div class="dd-result__card" id="result-card">
+            <div class="dd-result__icon" id="result-icon" aria-hidden="true"></div>
+            <h2 class="dd-result__title" id="result-title">You won!</h2>
+            <p class="dd-result__score" id="result-score"></p>
+            <p class="dd-result__amount" id="result-amount"></p>
+            <button type="button" class="dd-result__ok" id="result-ok">OK</button>
+          </div>
         </div>
 
         <div class="dd-history-modal" id="history-modal" hidden>
