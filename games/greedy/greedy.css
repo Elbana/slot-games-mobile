@@ -795,6 +795,7 @@ html, body {
 
 /* ── Half-screen embed — reference-style layout ── */
 .gm-shell--greedy.gm-shell--embed .gm-sheet {
+  container-type: size;
   background: #ffd44d;
 }
 
@@ -809,6 +810,8 @@ html, body {
   min-height: 0;
   width: 100%;
   overflow: hidden;
+  container-type: inline-size;
+  position: relative;
 }
 
 .gm-shell--greedy.gm-shell--embed .greedy-scale-inner {
@@ -911,6 +914,34 @@ html, body {
 
 .gm-shell--greedy.gm-shell--embed .gold-row {
   gap: calc(8 * var(--r));
+  flex-wrap: nowrap;
+}
+
+@container (max-width: 380px) {
+  .gm-shell--greedy.gm-shell--embed .goldItem {
+    width: calc(68 * var(--r));
+    height: calc(68 * var(--r));
+  }
+
+  .gm-shell--greedy.gm-shell--embed .goldItemIcon {
+    width: calc(54 * var(--r));
+    height: calc(54 * var(--r));
+    font-size: calc(16 * var(--r));
+  }
+
+  .gm-shell--greedy.gm-shell--embed .gold-row {
+    gap: calc(4 * var(--r));
+  }
+
+  .gm-shell--greedy.gm-shell--embed .header-balance {
+    font-size: calc(18 * var(--r));
+    padding: calc(3 * var(--r)) calc(8 * var(--r));
+  }
+
+  .gm-shell--greedy.gm-shell--embed .left-icons img.icon-btn {
+    width: calc(36 * var(--r));
+    height: calc(36 * var(--r));
+  }
 }
 
 .gm-shell--greedy.gm-shell--embed .footer {
@@ -946,4 +977,14 @@ html, body {
 .gm-shell--greedy.gm-shell--embed .toast {
   top: calc(6px + env(safe-area-inset-top, 0px));
   font-size: calc(16 * var(--r));
+}
+
+@container (max-height: 540px) {
+  .gm-shell--greedy.gm-shell--embed .main {
+    margin-top: calc(-40 * var(--r));
+  }
+
+  .gm-shell--greedy.gm-shell--embed .footMain .two {
+    height: calc(64 * var(--r));
+  }
 }

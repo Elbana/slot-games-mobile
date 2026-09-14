@@ -36,33 +36,53 @@ function syncGreedyBalanceDisplay() {
 
 function syncGreedyEmbedScale() {
   const sheet = document.querySelector('.gm-shell--greedy.gm-shell--embed .gm-sheet');
+  const host = sheet?.querySelector('.greedy-scale-host');
   const inner = sheet?.querySelector('.greedy-scale-inner');
-  if (!sheet || !inner) return;
+  if (!sheet || !host || !inner) return;
 
-  const designH = inner.scrollHeight || 900;
-  const fitW = sheet.clientWidth / GREEDY_DESIGN_W;
-  const fitH = sheet.clientHeight / designH;
-  const fit = fitW * designH <= sheet.clientHeight + 2 ? fitW : Math.min(fitW, fitH);
-  const offsetX = Math.max(0, (sheet.clientWidth - GREEDY_DESIGN_W * fit) / 2);
+  inner.style.transform = 'none';
+  inner.style.marginBottom = '0';
+  const designH = inner.offsetHeight || inner.scrollHeight || 900;
+
+  const availW = host.clientWidth || sheet.clientWidth;
+  const availH = host.clientHeight || sheet.clientHeight;
+  const fitW = availW / GREEDY_DESIGN_W;
+  const fitH = availH / designH;
+  const fit = fitW * designH <= availH + 1 ? fitW : Math.min(fitW, fitH);
+
+  const visualW = GREEDY_DESIGN_W * fit;
+  const visualH = designH * fit;
+  const offsetX = Math.max(0, (availW - visualW) / 2);
+  const offsetY = Math.max(0, (availH - visualH) / 2);
+
   inner.style.width = `${GREEDY_DESIGN_W}px`;
   inner.style.transformOrigin = '0 0';
-  inner.style.transform = `translate(${offsetX}px, 0) scale(${fit})`;
+  inner.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${fit})`;
   inner.style.marginBottom = `${designH * (fit - 1)}px`;
+  host.style.setProperty('--greedy-fit', String(fit));
+  host.style.setProperty('--greedy-design-h', String(designH));
 }
 
 function setupGreedyEmbedScale() {
   if (!document.querySelector('.gm-shell--greedy.gm-shell--embed')) return;
+
+  const remeasure = () => requestAnimationFrame(syncGreedyEmbedScale);
   syncGreedyEmbedScale();
-  window.addEventListener('resize', syncGreedyEmbedScale);
+  window.addEventListener('resize', remeasure);
+  window.visualViewport?.addEventListener('resize', remeasure);
+  window.visualViewport?.addEventListener('scroll', remeasure);
+
   if (typeof ResizeObserver !== 'undefined') {
     const sheet = document.querySelector('.gm-shell--greedy.gm-shell--embed .gm-sheet');
+    const host = sheet?.querySelector('.greedy-scale-host');
     const inner = sheet?.querySelector('.greedy-scale-inner');
-    if (sheet && inner) {
-      const ro = new ResizeObserver(() => syncGreedyEmbedScale());
-      ro.observe(sheet);
+    if (host && inner) {
+      const ro = new ResizeObserver(remeasure);
+      ro.observe(host);
       ro.observe(inner);
     }
   }
+
   requestAnimationFrame(() => {
     syncGreedyEmbedScale();
     requestAnimationFrame(syncGreedyEmbedScale);
@@ -393,6 +413,7 @@ async function loadHistory() {
   try {
     const { periods } = await periodList(config, { Idx: 1, Size: 12 });
     renderHistory(periods);
+    syncGreedyEmbedScale();
   } catch (err) {
     if (!(err instanceof LotteryApiError && err.offline)) {
       console.warn('[greedy] history failed', err);
