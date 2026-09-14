@@ -213,13 +213,11 @@ function drawSegmentIcon(code, x, y, r) {
   ctx.fillText('77', x, y + 1);
 }
 
-function drawWinGlow(cx, cy, outer, inner, start, end, pulse, pulsing) {
-  const flash = pulsing
-    ? 0.78 + Math.sin(pulse * 18) * 0.16 + Math.sin(pulse * 27) * 0.1
-    : 1;
-  const bolt = pulsing
-    ? 0.55 + Math.max(0, Math.sin(pulse * 32)) * 0.45
-    : 1;
+function drawWinGlow(cx, cy, outer, inner, start, end, pulse) {
+  const flash = 0.78
+    + Math.sin(pulse * 18) * 0.16
+    + Math.sin(pulse * 27) * 0.1;
+  const bolt = 0.55 + Math.max(0, Math.sin(pulse * 32)) * 0.45;
 
   ctx.save();
   ctx.beginPath();
@@ -239,8 +237,7 @@ function drawWinGlow(cx, cy, outer, inner, start, end, pulse, pulsing) {
   ctx.restore();
 }
 
-function drawPointerSpotlight(cx, cy, outer, pulse, pulsing) {
-  if (!pulsing) return;
+function drawPointerSpotlight(cx, cy, outer, pulse) {
   const flash = 0.72
     + Math.sin(pulse * 20) * 0.18
     + Math.sin(pulse * 31) * 0.12;
@@ -288,7 +285,7 @@ function drawWheelLayer(rotation, alpha = 1) {
 
     const isWinner = winningSegmentIndex === i;
     if (isWinner) {
-      drawWinGlow(0, 0, outer, inner, start, end, glowPhase, winnerPulseActive);
+      drawWinGlow(0, 0, outer, inner, start, end, glowPhase);
     }
 
     ctx.strokeStyle = isWinner
@@ -441,7 +438,7 @@ function drawWheelFrame(cx, cy, outer, inner, w) {
   ctx.restore();
 
   if (winningSegmentIndex >= 0) {
-    drawPointerSpotlight(cx, cy, outer, glowPhase, winnerPulseActive);
+    drawPointerSpotlight(cx, cy, outer, glowPhase);
   }
 }
 
