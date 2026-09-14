@@ -32,6 +32,18 @@ const DISPLAY = {
     theme: 'lucky77',
     icon: '🎡',
   },
+  'dice-dual': {
+    tagline: 'Red vs blue — roll 3 dice, pick the winning team',
+    badge: 'Dice',
+    theme: 'dice-dual',
+    icon: '🎲',
+  },
+  'football-clash': {
+    tagline: 'Bet home, draw, or away on live match rounds',
+    badge: 'Sports',
+    theme: 'football-clash',
+    icon: '⚽',
+  },
 };
 
 function escapeHtml(s) {

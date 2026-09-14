@@ -1,0 +1,179 @@
+/**
+ * Dice Dual game API.
+ */
+
+import { DICE_DUAL_GAME } from '../games/dice-dual/config.mjs';
+import { getDiceDualEngine } from '../games/dice-dual/engine.mjs';
+import { requireGameAccess } from '../auth/operator-auth.mjs';
+import { extractPlayerId, sessionKey } from '../auth/player-context.mjs';
+import { createWalletForOperator } from '../wallet/wallet-adapter.mjs';
+import { auditWallet } from '../audit.mjs';
+import { bettingPayload, getBetConfig, validateBetAmount } from '../betting/bet-config.mjs';
+
+const SLUG = DICE_DUAL_GAME.id;
+
+function ok(data) {
+  return { code: 0, msg: 'ok', data };
+}
+
+function fail(msg, code = 400) {
+  return { code, msg, data: null };
+}
+
+function buildContext(req, res) {
+  const operator = requireGameAccess(req, res, SLUG);
+  if (!operator) return null;
+  const playerId = extractPlayerId(req);
+  return {
+    operator,
+    playerId,
+    sessionKey: sessionKey(operator, playerId),
+    wallet: createWalletForOperator(operator),
+    betting: getBetConfig(operator),
+    slug: SLUG,
+  };
+}
+
+async function balanceFromWallet(ctx) {
+  return ctx.wallet.getBalance(ctx);
+}
+
+async function settlePlayer(engine, ctx) {
+  const pending = engine.pullSettlement(ctx.sessionKey);
+  if (!pending) return;
+  const txId = `dice-dual-win-${ctx.sessionKey}-${Date.now()}`;
+  await ctx.wallet.credit(ctx, {
+    amount: pending.winAmount,
+    game: SLUG,
+    roundId: String(engine.getPublicState().roundId),
+    transactionId: txId,
+    reason: 'dice_dual_win',
+  });
+  auditWallet({
+    operatorId: ctx.operator.id,
+    playerId: ctx.playerId,
+    type: 'credit',
+    amount: pending.winAmount,
+    txId,
+    game: SLUG,
+  });
+}
+
+export function mountDiceDualRoutes(app) {
+  const engine = getDiceDualEngine();
+
+  app.get('/api/dice-dual/init', async (req, res) => {
+    const ctx = buildContext(req, res);
+    if (!ctx) return;
+
+    try {
+      await settlePlayer(engine, ctx);
+    } catch {
+      /* wallet optional on init */
+    }
+
+    let balance;
+    try {
+      balance = await balanceFromWallet(ctx);
+    } catch (err) {
+      return res.status(502).json(fail(err.message || 'Wallet unavailable', 502));
+    }
+
+    res.json(
+      ok({
+        game: DICE_DUAL_GAME,
+        balance,
+        betting: bettingPayload(ctx.betting),
+        state: {
+          ...engine.getPublicState(),
+          myBet: engine.serializePlayer(ctx.sessionKey),
+        },
+      }),
+    );
+  });
+
+  app.get('/api/dice-dual/state', async (req, res) => {
+    const ctx = buildContext(req, res);
+    if (!ctx) return;
+
+    try {
+      await settlePlayer(engine, ctx);
+    } catch {
+      /* ignore */
+    }
+
+    let balance;
+    try {
+      balance = await balanceFromWallet(ctx);
+    } catch {
+      balance = null;
+    }
+
+    res.json(
+      ok({
+        ...engine.getPublicState(),
+        balance,
+        myBet: engine.serializePlayer(ctx.sessionKey),
+      }),
+    );
+  });
+
+  app.post('/api/dice-dual/bet', async (req, res) => {
+    const ctx = buildContext(req, res);
+    if (!ctx) return;
+
+    const prediction = String(req.body?.prediction || req.body?.team || '').toLowerCase();
+    const amount = req.body?.amount ?? req.body?.BetAmount;
+    const amt = Math.floor(Number(amount));
+    const betCheck = validateBetAmount(amount, ctx.betting);
+    if (!betCheck.ok) return res.json(fail(betCheck.error));
+
+    let balance;
+    try {
+      balance = await balanceFromWallet(ctx);
+    } catch (err) {
+      return res.json(fail(err.message || 'Wallet unavailable', 502));
+    }
+    if (balance < betCheck.amount) return res.json(fail('Insufficient balance'));
+
+    const result = engine.placeBet(ctx.sessionKey, prediction, betCheck.amount);
+    if (!result.ok) return res.json(fail(result.message));
+
+    const txId = `dice-dual-${ctx.sessionKey}-${Date.now()}`;
+    try {
+      await ctx.wallet.debit(ctx, {
+        amount: betCheck.amount,
+        game: SLUG,
+        roundId: String(result.data.roundId),
+        transactionId: txId,
+        reason: 'dice_dual_bet',
+      });
+      auditWallet({
+        operatorId: ctx.operator.id,
+        playerId: ctx.playerId,
+        type: 'debit',
+        amount: betCheck.amount,
+        txId,
+        game: SLUG,
+      });
+    } catch (err) {
+      return res.json(fail(err.message || 'Debit failed'));
+    }
+
+    let newBalance;
+    try {
+      newBalance = await balanceFromWallet(ctx);
+    } catch {
+      newBalance = balance - betCheck.amount;
+    }
+
+    res.json(
+      ok({
+        ...result.data,
+        balance: newBalance,
+        state: engine.getPublicState(),
+        myBet: engine.serializePlayer(ctx.sessionKey),
+      }),
+    );
+  });
+}

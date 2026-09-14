@@ -5,8 +5,10 @@
 import { GREEDY_GAME } from '../games/greedy/config.mjs';
 import { PETS_BEASTS_GAME } from '../games/pets-beasts/config.mjs';
 import { LUCK77_GAME } from '../games/lucky77/config.mjs';
+import { DICE_DUAL_GAME } from '../games/dice-dual/config.mjs';
+import { FOOTBALL_CLASH_GAME } from '../games/football-clash/config.mjs';
 
-/** @typedef {'slot' | 'lottery'} GameType */
+/** @typedef {'slot' | 'lottery' | 'pvp'} GameType */
 
 /** @typedef {object} GameDefinition
  * @property {string} slug
@@ -48,6 +50,18 @@ export const GAMES = [
     playPath: `/play/${LUCK77_GAME.id}`,
     typCode: LUCK77_GAME.typCode,
     lotteryCode: LUCK77_GAME.lotteryCode,
+  },
+  {
+    slug: DICE_DUAL_GAME.id,
+    name: DICE_DUAL_GAME.name,
+    type: 'pvp',
+    playPath: `/play/${DICE_DUAL_GAME.id}`,
+  },
+  {
+    slug: FOOTBALL_CLASH_GAME.id,
+    name: FOOTBALL_CLASH_GAME.name,
+    type: 'pvp',
+    playPath: `/play/${FOOTBALL_CLASH_GAME.id}`,
   },
 ];
 

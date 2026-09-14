@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0612" />
+  <title>Dice Dual</title>
+  <link rel="stylesheet" href="/shared/mobile-shell.css" />
+  <link rel="stylesheet" href="/dice-dual/dice-dual.css" />
+</head>
+<body>
+  <div class="gm-shell gm-shell--dice-dual">
+    <div class="dd-backdrop" id="dd-backdrop" aria-hidden="true"></div>
+
+    <div class="dd-sheet">
+      <div class="dd-handle" aria-hidden="true"></div>
+
+      <div class="dd" id="app">
+        <header class="dd-top">
+          <div class="dd-round">Round <span id="round-id">—</span></div>
+          <div class="dd-wallet">
+            <span class="dd-wallet__coin" aria-hidden="true"></span>
+            <span id="balance">0</span>
+          </div>
+        </header>
+
+        <main class="dd-stage">
+          <div class="dd-status" id="phase-chip">Place your bet</div>
+
+          <div class="dd-timer-wrap">
+            <svg class="dd-timer-ring" viewBox="0 0 88 88" aria-hidden="true">
+              <circle class="dd-timer-ring__track" cx="44" cy="44" r="38" />
+              <circle class="dd-timer-ring__fill" id="timer-ring" cx="44" cy="44" r="38" />
+            </svg>
+            <div class="dd-timer" id="countdown">15</div>
+          </div>
+
+          <div class="dd-arena-card">
+            <canvas id="dd-arena" class="dd-arena-canvas" aria-label="Dice battle"></canvas>
+          </div>
+        </main>
+
+        <footer class="dd-foot">
+          <button type="button" class="dd-history" id="btn-history" aria-label="View recent results">
+            <span class="dd-history__new">NEW</span>
+            <div class="dd-history__dots" id="history-bar"></div>
+            <span class="dd-history__chev" aria-hidden="true">›</span>
+          </button>
+          <div class="dd-pick">
+            <button type="button" class="dd-pick__btn dd-pick__btn--red" data-pred="red">
+              <div class="dd-pick__face">
+                <img src="/dice-dual/assets/flag-red.svg" alt="" class="dd-pick__flag" />
+                <span>Red</span><small>×1.95</small>
+              </div>
+              <span class="dd-pick__amt" data-amt>0</span>
+            </button>
+            <button type="button" class="dd-pick__btn dd-pick__btn--draw" data-pred="draw">
+              <div class="dd-pick__face">
+                <img src="/dice-dual/assets/flag-draw.svg" alt="" class="dd-pick__flag" />
+                <span>Draw</span><small>×3.5</small>
+              </div>
+              <span class="dd-pick__amt" data-amt>0</span>
+            </button>
+            <button type="button" class="dd-pick__btn dd-pick__btn--blue" data-pred="blue">
+              <div class="dd-pick__face">
+                <img src="/dice-dual/assets/flag-blue.svg" alt="" class="dd-pick__flag" />
+                <span>Blue</span><small>×1.95</small>
+              </div>
+              <span class="dd-pick__amt" data-amt>0</span>
+            </button>
+          </div>
+          <div class="dd-pools">
+            <span id="red-pool">Red 0</span>
+            <span id="draw-pool">Draw 0</span>
+            <span id="blue-pool">Blue 0</span>
+          </div>
+          <div class="dd-foot-row">
+            <div class="dd-chips" id="chips"></div>
+            <button type="button" class="dd-rebet" id="btn-repeat" title="Repeat last bet">Repeat</button>
+          </div>
+        </footer>
+
+        <div class="dd-fx" id="dd-fx" aria-hidden="true"></div>
+
+        <div class="dd-overlay" id="overlay" hidden>
+          <div class="dd-overlay__card" id="overlay-card"></div>
+        </div>
+
+        <div class="dd-history-modal" id="history-modal" hidden>
+          <button type="button" class="dd-history-modal__backdrop" id="history-backdrop" aria-label="Close"></button>
+          <div class="dd-history-modal__sheet" role="dialog" aria-labelledby="history-title">
+            <div class="dd-history-modal__head">
+              <h2 class="dd-history-modal__title" id="history-title">Recent results</h2>
+              <button type="button" class="dd-history-modal__close" id="history-close" aria-label="Close">✕</button>
+            </div>
+            <div class="dd-history-modal__body">
+              <div class="dd-history-grid" id="history-grid"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dd-toast" id="toast" hidden></div>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="/dice-dual/dice-dual.js"></script>
+</body>
+</html>
