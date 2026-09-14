@@ -5,8 +5,9 @@
 import { GREEDY_GAME } from '../games/greedy/config.mjs';
 import { PETS_BEASTS_GAME } from '../games/pets-beasts/config.mjs';
 import { LUCK77_GAME } from '../games/lucky77/config.mjs';
+import { ROCKET_GAME } from '../games/rocket/config.mjs';
 
-/** @typedef {'slot' | 'lottery'} GameType */
+/** @typedef {'slot' | 'lottery' | 'crash'} GameType */
 
 /** @typedef {object} GameDefinition
  * @property {string} slug
@@ -48,6 +49,12 @@ export const GAMES = [
     playPath: `/play/${LUCK77_GAME.id}`,
     typCode: LUCK77_GAME.typCode,
     lotteryCode: LUCK77_GAME.lotteryCode,
+  },
+  {
+    slug: ROCKET_GAME.id,
+    name: ROCKET_GAME.name,
+    type: 'crash',
+    playPath: `/play/${ROCKET_GAME.id}`,
   },
 ];
 

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <title>Rocket</title>
+  <link rel="stylesheet" href="/shared/mobile-shell.css" />
+  <link rel="stylesheet" href="/rocket/rocket.css" />
+</head>
+<body>
+  <div class="gm-shell gm-shell--rocket">
+    <div class="rk" id="app">
+      <header class="rk-top">
+        <button type="button" class="rk-icon-btn" id="btn-menu" aria-label="Menu">
+          <span class="rk-hamburger" aria-hidden="true"></span>
+        </button>
+        <div class="rk-ping" id="ping">72ms</div>
+        <div class="rk-wallet">
+          <img class="rk-coin" src="/rocket/assets/coin.svg" alt="" />
+          <span id="balance">0</span>
+          <button type="button" class="rk-wallet__plus" id="btn-topup" aria-label="Top up">+</button>
+        </div>
+      </header>
+
+      <div class="rk-history" id="history-bar" aria-label="Recent multipliers"></div>
+
+      <main class="rk-stage">
+        <div class="rk-players" id="players-pill">
+          <span class="rk-players__icon" aria-hidden="true">👥</span>
+          <span id="players-count">3/13</span>
+        </div>
+        <canvas id="rk-canvas" aria-hidden="true"></canvas>
+        <div class="rk-center" id="center-ui">
+          <div class="rk-center__win" id="win-banner" hidden>
+            <div class="rk-center__great">GREAT WIN</div>
+            <div class="rk-center__mult" id="win-mult">0.00X</div>
+          </div>
+          <div class="rk-center__live" id="live-mult">1.00X</div>
+        </div>
+      </main>
+
+      <footer class="rk-panel">
+        <button type="button" class="rk-auto" id="btn-auto">
+          <span>Auto Cash Out: <strong id="auto-label">Off</strong></span>
+          <span class="rk-auto__chev" aria-hidden="true">⌃</span>
+        </button>
+        <div class="rk-auto-pop" id="auto-pop" hidden>
+          <label class="rk-auto-pop__row">Target multiplier
+            <input type="number" id="auto-input" min="1.1" step="0.1" placeholder="2.00" />
+          </label>
+          <button type="button" class="rk-auto-pop__apply" id="auto-apply">Apply</button>
+          <button type="button" class="rk-auto-pop__clear" id="auto-clear">Off</button>
+        </div>
+
+        <div class="rk-controls">
+          <div class="rk-chips" id="chips"></div>
+          <div class="rk-action-wrap">
+            <button type="button" class="rk-auto-bet" id="btn-auto-bet" title="Auto bet" aria-label="Auto bet">
+              <span>A</span>
+              <img src="/rocket/assets/coin.svg" alt="" />
+              <span id="auto-bet-amt">5K</span>
+            </button>
+            <button type="button" class="rk-action" id="btn-action">
+              <span class="rk-action__label" id="action-label">BET</span>
+              <span class="rk-action__amt">
+                <img src="/rocket/assets/coin.svg" alt="" />
+                <span id="action-amt">5K</span>
+              </span>
+            </button>
+          </div>
+        </div>
+      </footer>
+
+      <div class="rk-toast" id="toast" role="status"></div>
+    </div>
+  </div>
+  <script type="module" src="/rocket/rocket.js"></script>
+</body>
+</html>

@@ -32,6 +32,12 @@ const DISPLAY = {
     theme: 'lucky77',
     icon: '🎡',
   },
+  rocket: {
+    tagline: 'Ride the rocket — cash out before it crashes',
+    badge: 'Crash',
+    theme: 'rocket',
+    icon: '🚀',
+  },
 };
 
 function escapeHtml(s) {
