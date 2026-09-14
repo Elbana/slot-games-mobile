@@ -41,13 +41,15 @@ function syncGreedyEmbedScale() {
   if (!sheet || !host || !inner) return;
 
   inner.style.transform = 'none';
-  inner.style.marginBottom = '0';
   const designH = inner.offsetHeight || inner.scrollHeight || 900;
 
-  const availW = host.clientWidth || sheet.clientWidth;
-  const availH = host.clientHeight || sheet.clientHeight;
-  const fitW = availW / GREEDY_DESIGN_W;
-  const fitH = availH / designH;
+  const hostRect = host.getBoundingClientRect();
+  const availW = hostRect.width || host.clientWidth || sheet.clientWidth;
+  const availH = hostRect.height || host.clientHeight || sheet.clientHeight;
+  if (availW <= 0 || availH <= 0) return;
+
+  const fitW = (availW * 0.996) / GREEDY_DESIGN_W;
+  const fitH = (availH * 0.996) / designH;
   const fit = fitW * designH <= availH + 1 ? fitW : Math.min(fitW, fitH);
 
   const visualW = GREEDY_DESIGN_W * fit;
@@ -58,9 +60,18 @@ function syncGreedyEmbedScale() {
   inner.style.width = `${GREEDY_DESIGN_W}px`;
   inner.style.transformOrigin = '0 0';
   inner.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${fit})`;
-  inner.style.marginBottom = `${designH * (fit - 1)}px`;
+
   host.style.setProperty('--greedy-fit', String(fit));
   host.style.setProperty('--greedy-design-h', String(designH));
+  host.style.setProperty('--greedy-host-w', `${Math.round(availW)}px`);
+  host.style.setProperty('--greedy-host-h', `${Math.round(availH)}px`);
+
+  const compact = [];
+  if (availW < 360) compact.push('w');
+  if (availW < 330) compact.push('xs');
+  if (availH < 430) compact.push('h');
+  if (availH < 390) compact.push('sh');
+  host.dataset.greedyCompact = compact.join(' ') || 'none';
 }
 
 function setupGreedyEmbedScale() {
@@ -82,6 +93,9 @@ function setupGreedyEmbedScale() {
       ro.observe(inner);
     }
   }
+
+  document.querySelector('.gm-shell--greedy.gm-shell--embed .main > .bg')
+    ?.addEventListener('load', remeasure, { once: true });
 
   requestAnimationFrame(() => {
     syncGreedyEmbedScale();

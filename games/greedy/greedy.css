@@ -796,6 +796,7 @@ html, body {
 /* ── Half-screen embed — reference-style layout ── */
 .gm-shell--greedy.gm-shell--embed .gm-sheet {
   container-type: size;
+  container-name: greedy-sheet;
   background: #ffd44d;
 }
 
@@ -810,15 +811,19 @@ html, body {
   min-height: 0;
   width: 100%;
   overflow: hidden;
-  container-type: inline-size;
+  container-type: size;
+  container-name: greedy-host;
   position: relative;
 }
 
 .gm-shell--greedy.gm-shell--embed .greedy-scale-inner {
-  container-type: inline-size;
+  position: absolute;
+  left: 0;
+  top: 0;
   width: 750px;
-  --r: calc(100cqw / 750 * 0.93);
-  --result-r: calc(100cqw / 750 * 1.28);
+  --r: 0.93px;
+  --result-r: 1.28px;
+  will-change: transform;
 }
 
 .gm-shell--greedy.gm-shell--embed .popup-content {
@@ -856,6 +861,12 @@ html, body {
   font-weight: 700;
   color: #111;
   white-space: nowrap;
+  max-width: min(100%, calc(var(--greedy-host-w, 100%) - 120px));
+}
+
+.gm-shell--greedy.gm-shell--embed .header-balance #balance {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .gm-shell--greedy.gm-shell--embed .header-balance .coin-icon {
@@ -917,7 +928,7 @@ html, body {
   flex-wrap: nowrap;
 }
 
-@container (max-width: 380px) {
+@container greedy-host (max-width: 380px) {
   .gm-shell--greedy.gm-shell--embed .goldItem {
     width: calc(68 * var(--r));
     height: calc(68 * var(--r));
@@ -942,6 +953,45 @@ html, body {
     width: calc(36 * var(--r));
     height: calc(36 * var(--r));
   }
+
+  .gm-shell--greedy.gm-shell--embed .period-text {
+    font-size: calc(14 * var(--r));
+    max-width: calc(var(--greedy-host-w, 100%) - 8px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@container greedy-host (max-width: 330px) {
+  .gm-shell--greedy.gm-shell--embed .goldItem {
+    width: calc(60 * var(--r));
+    height: calc(60 * var(--r));
+  }
+
+  .gm-shell--greedy.gm-shell--embed .goldItemIcon {
+    width: calc(48 * var(--r));
+    height: calc(48 * var(--r));
+    font-size: calc(14 * var(--r));
+  }
+
+  .gm-shell--greedy.gm-shell--embed .gold-row {
+    gap: calc(2 * var(--r));
+  }
+
+  .gm-shell--greedy.gm-shell--embed .bottom-two {
+    padding-left: calc(10 * var(--r));
+    padding-right: calc(10 * var(--r));
+  }
+}
+
+.gm-shell--greedy.gm-shell--embed .greedy-scale-host[data-greedy-compact~="xs"] .goldItem {
+  width: calc(60 * var(--r));
+  height: calc(60 * var(--r));
+}
+
+.gm-shell--greedy.gm-shell--embed .greedy-scale-host[data-greedy-compact~="w"] .header-balance {
+  font-size: calc(18 * var(--r));
 }
 
 .gm-shell--greedy.gm-shell--embed .footer {
@@ -979,7 +1029,7 @@ html, body {
   font-size: calc(16 * var(--r));
 }
 
-@container (max-height: 540px) {
+@container greedy-host (max-height: 460px) {
   .gm-shell--greedy.gm-shell--embed .main {
     margin-top: calc(-40 * var(--r));
   }
@@ -987,4 +1037,30 @@ html, body {
   .gm-shell--greedy.gm-shell--embed .footMain .two {
     height: calc(64 * var(--r));
   }
+
+  .gm-shell--greedy.gm-shell--embed .main .bottom {
+    bottom: calc(10 * var(--r));
+  }
+}
+
+@container greedy-host (max-height: 400px) {
+  .gm-shell--greedy.gm-shell--embed .main {
+    margin-top: calc(-52 * var(--r));
+  }
+
+  .gm-shell--greedy.gm-shell--embed .footMain .two {
+    height: calc(58 * var(--r));
+  }
+
+  .gm-shell--greedy.gm-shell--embed .footMain .two .history-label {
+    font-size: calc(20 * var(--r));
+  }
+}
+
+.gm-shell--greedy.gm-shell--embed .greedy-scale-host[data-greedy-compact~="h"] .main {
+  margin-top: calc(-40 * var(--r));
+}
+
+.gm-shell--greedy.gm-shell--embed .greedy-scale-host[data-greedy-compact~="sh"] .main {
+  margin-top: calc(-52 * var(--r));
 }
