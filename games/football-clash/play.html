@@ -37,6 +37,10 @@
 
           <div class="fc-stadium-card">
             <canvas id="fc-stadium" class="fc-stadium-canvas" aria-label="Live match"></canvas>
+            <div class="fc-goal-overlay" id="goal-overlay" hidden aria-hidden="true">
+              <span class="fc-goal-overlay__text">GOAL!</span>
+              <span class="fc-goal-overlay__cheer" aria-hidden="true">🎉 👏 ⚽</span>
+            </div>
           </div>
 
           <div class="fc-commentary" id="events" aria-live="polite"></div>
@@ -52,21 +56,21 @@
             <button type="button" class="fc-pick__btn" data-pred="home">
               <div class="fc-pick__face">
                 <img src="" alt="" class="fc-pick__flag" id="pick-flag-home" />
-                <span id="pick-label-home">—</span><small>×1.92</small>
+                <small>×1.92</small>
               </div>
               <span class="fc-pick__amt" data-amt>0</span>
             </button>
             <button type="button" class="fc-pick__btn" data-pred="draw">
               <div class="fc-pick__face">
-                <img src="/football-clash/assets/flag-draw.svg" alt="" class="fc-pick__flag" />
-                <span>Draw</span><small>×3.5</small>
+                <img src="/football-clash/assets/flag-draw.svg" alt="Draw" class="fc-pick__flag" />
+                <small>×3.5</small>
               </div>
               <span class="fc-pick__amt" data-amt>0</span>
             </button>
             <button type="button" class="fc-pick__btn" data-pred="away">
               <div class="fc-pick__face">
                 <img src="" alt="" class="fc-pick__flag" id="pick-flag-away" />
-                <span id="pick-label-away">—</span><small>×1.92</small>
+                <small>×1.92</small>
               </div>
               <span class="fc-pick__amt" data-amt>0</span>
             </button>

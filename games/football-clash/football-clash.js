@@ -1,6 +1,7 @@
 import { footballClashInit, footballClashState, footballClashBet } from './api.js';
 
 const ASSET = '/football-clash/assets';
+const DRAW_FLAG = `${ASSET}/flag-draw.svg`;
 const CHIP_STYLE_CLASSES = ['100', '1k', '10k', '100k', '100k', '100k'];
 const RING_C = 238.76;
 
@@ -19,13 +20,24 @@ let scorePop = { home: 0, away: 0 };
 /** @type {{ pred: string, amount: number } | null} */
 let lastBet = null;
 let betLock = false;
-/** @type {AudioContext | null} */
-let audioCtx = null;
-
 /** @type {{ x:number,y:number,vx:number,vy:number,life:number,color:string,size:number }[]} */
 let confetti = [];
+/** @type {{ x:number,y:number,vx:number,vy:number,life:number,char:string,size:number }[]} */
+let cheerBits = [];
+
+let audioUnlocked = false;
+/** @type {HTMLAudioElement | null} */
+let ambientAudio = null;
+/** @type {HTMLAudioElement | null} */
+let kickAudio = null;
+/** @type {HTMLAudioElement | null} */
+let goalAudio = null;
+let kickTimer = null;
+let goalOverlayTimer = null;
 /** @type {Map<string, HTMLImageElement>} */
 const flagImgs = new Map();
+/** @type {Map<string, string>} */
+const teamLogoById = new Map();
 
 const stadiumCanvas = document.getElementById('fc-stadium');
 const stadiumCtx = stadiumCanvas.getContext('2d');
@@ -46,21 +58,34 @@ const vis = {
 
 const $ = (id) => document.getElementById(id);
 
-function flagSrc(teamId) {
-  return `${ASSET}/flags/${teamId}.svg`;
+function buildTeamLogoMap(teams) {
+  teamLogoById.clear();
+  for (const team of teams || []) {
+    if (team?.id && team.logo) teamLogoById.set(team.id, team.logo);
+  }
+}
+
+function teamLogoSrc(teamOrId) {
+  if (!teamOrId) return '';
+  if (typeof teamOrId === 'object') {
+    return teamOrId.logo || teamLogoById.get(teamOrId.id) || '';
+  }
+  return teamLogoById.get(teamOrId) || '';
 }
 
 function historyFlagSrc(winnerTeamId) {
-  if (winnerTeamId === 'draw') return `${ASSET}/flag-draw.svg`;
-  return flagSrc(winnerTeamId);
+  if (winnerTeamId === 'draw') return DRAW_FLAG;
+  return teamLogoSrc(winnerTeamId);
 }
 
 function loadFlag(teamId) {
   if (!teamId || teamId === 'draw' || flagImgs.has(teamId)) return flagImgs.get(teamId);
+  const url = teamLogoSrc(teamId);
+  if (!url) return null;
   const img = new Image();
-  img.src = flagSrc(teamId);
+  img.crossOrigin = 'anonymous';
+  img.src = url;
   flagImgs.set(teamId, img);
-  img.onload = () => { /* redraw on next frame */ };
   return img;
 }
 
@@ -100,38 +125,95 @@ function toast(msg) {
   toast._t = setTimeout(() => { el.hidden = true; }, 2200);
 }
 
-function playGoalSound() {
-  try {
-    if (!audioCtx) audioCtx = new AudioContext();
-    const ctx = audioCtx;
-    if (ctx.state === 'suspended') ctx.resume();
+function initAudio() {
+  ambientAudio = new Audio(`${ASSET}/audio/ambient.mp3`);
+  ambientAudio.loop = true;
+  ambientAudio.volume = 0.32;
+  ambientAudio.preload = 'auto';
 
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(160, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(520, ctx.currentTime + 0.14);
-    gain.gain.setValueAtTime(0.09, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.4);
+  kickAudio = new Audio(`${ASSET}/audio/kick.mp3`);
+  kickAudio.volume = 0.55;
+  kickAudio.preload = 'auto';
 
-    const bufferSize = Math.floor(ctx.sampleRate * 0.18);
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+  goalAudio = new Audio(`${ASSET}/audio/goal-cheer.mp3`);
+  goalAudio.volume = 0.88;
+  goalAudio.preload = 'auto';
+}
+
+function unlockAudio() {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+  [ambientAudio, kickAudio, goalAudio].forEach((a) => {
+    if (!a) return;
+    a.load();
+  });
+  syncMatchAudio(vis.phase);
+}
+
+function clearKickTimer() {
+  if (kickTimer) {
+    clearTimeout(kickTimer);
+    kickTimer = null;
+  }
+}
+
+function scheduleKickSounds() {
+  clearKickTimer();
+  if (!audioUnlocked || vis.phase !== 'playing') return;
+  const delay = 1600 + Math.random() * 2400;
+  kickTimer = setTimeout(() => {
+    playKickSound();
+    scheduleKickSounds();
+  }, delay);
+}
+
+function playKickSound() {
+  if (!audioUnlocked || !kickAudio || vis.phase !== 'playing') return;
+  const clip = kickAudio.cloneNode();
+  clip.volume = 0.4 + Math.random() * 0.25;
+  clip.play().catch(() => {});
+}
+
+function syncMatchAudio(phase) {
+  if (!audioUnlocked) return;
+  if (phase === 'playing') {
+    if (ambientAudio?.paused) {
+      ambientAudio.currentTime = 0;
+      ambientAudio.play().catch(() => {});
     }
-    const noise = ctx.createBufferSource();
-    noise.buffer = buffer;
-    const ng = ctx.createGain();
-    ng.gain.value = 0.07;
-    noise.connect(ng);
-    ng.connect(ctx.destination);
-    noise.start();
-  } catch { /* ignore audio errors */ }
+    scheduleKickSounds();
+  } else {
+    clearKickTimer();
+    if (ambientAudio) {
+      ambientAudio.pause();
+      ambientAudio.currentTime = 0;
+    }
+  }
+}
+
+function playGoalSound() {
+  if (!audioUnlocked || !goalAudio) return;
+  ambientAudio?.pause();
+  goalAudio.currentTime = 0;
+  goalAudio.play().catch(() => {});
+  setTimeout(() => {
+    if (vis.phase === 'playing' && ambientAudio?.paused) {
+      ambientAudio.play().catch(() => {});
+    }
+  }, 3200);
+}
+
+function showGoalOverlay() {
+  const overlay = $('goal-overlay');
+  if (!overlay) return;
+  overlay.hidden = false;
+  overlay.style.animation = 'none';
+  void overlay.offsetHeight;
+  overlay.style.animation = '';
+  clearTimeout(goalOverlayTimer);
+  goalOverlayTimer = setTimeout(() => {
+    overlay.hidden = true;
+  }, 3000);
 }
 
 function resize() {
@@ -158,14 +240,45 @@ function burstConfetti(color) {
   }
 }
 
+function burstGoalCheer() {
+  burstConfetti('#fbbf24');
+  burstConfetti('#fde68a');
+  const icons = ['👏', '🎉', '⚽', '✨', '🙌'];
+  for (let i = 0; i < 28; i++) {
+    cheerBits.push({
+      x: 0.5 + (Math.random() - 0.5) * 0.55,
+      y: 0.48 + (Math.random() - 0.5) * 0.12,
+      vx: (Math.random() - 0.5) * 0.016,
+      vy: -0.006 - Math.random() * 0.014,
+      life: 1,
+      char: icons[Math.floor(Math.random() * icons.length)],
+      size: 12 + Math.random() * 10,
+    });
+  }
+}
+
 function drawConfetti(w, h) {
   for (let i = confetti.length - 1; i >= 0; i--) {
     const p = confetti[i];
-    p.x += p.vx; p.y += p.vy; p.vy += 0.0003; p.life -= 0.011;
+    p.x += p.vx; p.y += p.vy; p.vy += 0.0003; p.life -= 0.008;
     if (p.life <= 0) { confetti.splice(i, 1); continue; }
     stadiumCtx.globalAlpha = p.life;
     stadiumCtx.fillStyle = p.color;
     stadiumCtx.fillRect(p.x * w, p.y * h, p.size, p.size * 0.55);
+  }
+  stadiumCtx.globalAlpha = 1;
+}
+
+function drawCheerBits(w, h) {
+  for (let i = cheerBits.length - 1; i >= 0; i--) {
+    const p = cheerBits[i];
+    p.x += p.vx; p.y += p.vy; p.vy += 0.00025; p.life -= 0.007;
+    if (p.life <= 0) { cheerBits.splice(i, 1); continue; }
+    stadiumCtx.globalAlpha = p.life;
+    stadiumCtx.font = `${p.size}px system-ui`;
+    stadiumCtx.textAlign = 'center';
+    stadiumCtx.textBaseline = 'middle';
+    stadiumCtx.fillText(p.char, p.x * w, p.y * h);
   }
   stadiumCtx.globalAlpha = 1;
 }
@@ -254,13 +367,13 @@ function drawScoreHud(w, h) {
   scorePop.home *= 0.88;
   scorePop.away *= 0.88;
 
-  const barH = Math.min(34, h * 0.2);
-  const barW = Math.min(w * 0.78, 320);
+  const barH = Math.min(36, h * 0.22);
+  const barW = Math.min(w * 0.72, 280);
   const barX = (w - barW) / 2;
   const barY = Math.max(4, h * 0.04);
-  const midY = barY + barH * 0.46;
+  const midY = barY + barH * 0.5;
   const cx = w / 2;
-  const flagSize = Math.min(22, barH * 0.62);
+  const flagSize = Math.min(30, barH * 0.78);
 
   stadiumCtx.fillStyle = 'rgba(0,0,0,0.58)';
   stadiumCtx.strokeStyle = 'rgba(255,255,255,0.2)';
@@ -269,8 +382,8 @@ function drawScoreHud(w, h) {
   stadiumCtx.fill();
   stadiumCtx.stroke();
 
-  const homeX = barX + barW * 0.14;
-  const awayX = barX + barW * 0.86;
+  const homeX = barX + barW * 0.2;
+  const awayX = barX + barW * 0.8;
 
   const drawTeamFlag = (x, team) => {
     if (!team) return;
@@ -284,17 +397,8 @@ function drawScoreHud(w, h) {
   drawTeamFlag(homeX, vis.homeTeam);
   drawTeamFlag(awayX, vis.awayTeam);
 
-  const labelSize = Math.max(8, barH * 0.24);
-  const scoreSize = Math.min(barH * 0.52, 18);
+  const scoreSize = Math.min(barH * 0.52, 20);
   stadiumCtx.textBaseline = 'middle';
-
-  stadiumCtx.fillStyle = 'rgba(255,255,255,0.75)';
-  stadiumCtx.font = `700 ${labelSize}px system-ui,sans-serif`;
-  stadiumCtx.textAlign = 'right';
-  stadiumCtx.fillText(vis.homeTeam.shortName || 'HOM', homeX + flagSize * 0.55, midY);
-  stadiumCtx.textAlign = 'left';
-  stadiumCtx.fillText(vis.awayTeam.shortName || 'AWY', awayX - flagSize * 0.55, midY);
-
   stadiumCtx.fillStyle = '#fff';
   stadiumCtx.textAlign = 'center';
   stadiumCtx.font = `900 ${scoreSize * popH}px system-ui,sans-serif`;
@@ -328,7 +432,7 @@ function drawBall(w, h, t) {
 
 function drawGoalFlash(w, h) {
   if (goalFlash <= 0) return;
-  goalFlash *= 0.88;
+  goalFlash *= 0.94;
   stadiumCtx.fillStyle = `rgba(255,255,255,${goalFlash * 0.35})`;
   stadiumCtx.fillRect(0, 0, w, h);
   stadiumCtx.fillStyle = `rgba(74,222,128,${goalFlash * 0.25})`;
@@ -337,22 +441,29 @@ function drawGoalFlash(w, h) {
 
 function drawGoalBanner(w, h) {
   if (goalBanner <= 0) return;
-  goalBanner -= 0.016;
-  const alpha = Math.min(1, goalBanner * 1.4);
-  const pulse = 1 + Math.sin(animTime * 0.02) * 0.04;
-  const fontSize = Math.min(w * 0.2 * pulse, 68);
+  goalBanner -= 0.0048;
+  const fadeOut = goalBanner < 0.2 ? goalBanner / 0.2 : 1;
+  const alpha = Math.min(1, goalBanner * 1.1) * fadeOut;
+  const pulse = 1 + Math.sin(animTime * 0.014) * 0.05;
+  const fontSize = Math.min(w * 0.2 * pulse, 64);
+  const y = h * 0.5;
 
   stadiumCtx.save();
   stadiumCtx.textAlign = 'center';
   stadiumCtx.textBaseline = 'middle';
   stadiumCtx.font = `900 ${fontSize}px system-ui,sans-serif`;
-  stadiumCtx.shadowColor = 'rgba(34,197,94,0.85)';
-  stadiumCtx.shadowBlur = 18;
-  stadiumCtx.strokeStyle = `rgba(21,128,61,${alpha})`;
+  stadiumCtx.globalAlpha = alpha;
+  stadiumCtx.shadowColor = 'rgba(251, 191, 36, 0.95)';
+  stadiumCtx.shadowBlur = 22;
+  stadiumCtx.strokeStyle = 'rgba(146, 64, 14, 0.9)';
   stadiumCtx.lineWidth = 5;
-  stadiumCtx.strokeText('GOAL!', w / 2, h * 0.5);
-  stadiumCtx.fillStyle = `rgba(255,255,255,${alpha})`;
-  stadiumCtx.fillText('GOAL!', w / 2, h * 0.5);
+  stadiumCtx.strokeText('GOAL!', w / 2, y);
+  const grad = stadiumCtx.createLinearGradient(w / 2, y - fontSize * 0.5, w / 2, y + fontSize * 0.5);
+  grad.addColorStop(0, '#fde68a');
+  grad.addColorStop(0.45, '#fbbf24');
+  grad.addColorStop(1, '#d97706');
+  stadiumCtx.fillStyle = grad;
+  stadiumCtx.fillText('GOAL!', w / 2, y);
   stadiumCtx.restore();
 }
 
@@ -379,6 +490,7 @@ function drawStadium(t) {
   drawBall(w, h, t);
   drawGoalBanner(w, h);
   drawGoalFlash(w, h);
+  drawCheerBits(w, h);
   drawConfetti(w, h);
 }
 
@@ -416,6 +528,8 @@ function checkNewGoals(events) {
   lastGoalEventKey = key;
   goalBanner = 1;
   goalFlash = 1;
+  burstGoalCheer();
+  showGoalOverlay();
   playGoalSound();
 }
 
@@ -458,14 +572,38 @@ function setupHistoryModal() {
   $('history-backdrop').addEventListener('click', close);
 }
 
+function ensurePickFlagImg(el) {
+  if (!el) return null;
+  if (el.tagName === 'IMG') return el;
+  const img = document.createElement('img');
+  img.id = el.id;
+  img.className = 'fc-pick__flag';
+  el.replaceWith(img);
+  return img;
+}
+
+function setPickFlag(el, team) {
+  if (!el || !team) return;
+  const imgEl = ensurePickFlagImg(el);
+  if (!imgEl) return;
+  const url = teamLogoSrc(team);
+  imgEl.alt = team.shortName || team.name || '';
+  imgEl.src = url;
+  imgEl.onerror = () => {
+    imgEl.onerror = null;
+    const span = document.createElement('span');
+    span.id = imgEl.id;
+    span.className = 'fc-pick__flag fc-pick__flag--emoji';
+    span.textContent = team.emoji || '⚽';
+    imgEl.replaceWith(span);
+  };
+  loadFlag(team.id);
+}
+
 function updateTeamPicks(match) {
   if (!match?.homeTeam || !match?.awayTeam) return;
-  $('pick-flag-home').src = flagSrc(match.homeTeam.id);
-  $('pick-flag-away').src = flagSrc(match.awayTeam.id);
-  $('pick-label-home').textContent = match.homeTeam.shortName;
-  $('pick-label-away').textContent = match.awayTeam.shortName;
-  loadFlag(match.homeTeam.id);
-  loadFlag(match.awayTeam.id);
+  setPickFlag($('pick-flag-home'), match.homeTeam);
+  setPickFlag($('pick-flag-away'), match.awayTeam);
 }
 
 function buildChips() {
@@ -502,25 +640,33 @@ function flyChipToPick(pred, amount) {
 }
 
 function updatePickButtons() {
-  const betting = state?.phase === 'betting' && !state?.myBet;
+  const betting = state?.phase === 'betting';
+  const myBet = state?.myBet;
   document.querySelectorAll('.fc-pick__btn').forEach((btn) => {
-    btn.disabled = !betting;
+    btn.disabled = false;
     const pred = btn.dataset.pred;
-    const myBet = state?.myBet;
     const amt = myBet?.prediction === pred ? myBet.amount : 0;
     btn.querySelector('[data-amt]').textContent = amt > 0 ? fmtNum(amt) : '0';
     btn.classList.toggle('has-bet', amt > 0);
+    btn.classList.toggle('is-pick', betting && myBet?.prediction === pred);
   });
+}
+
+function bettingClosedMessage() {
+  if (state?.phase === 'playing') return 'Please wait — match in progress';
+  if (state?.phase === 'results') return 'Please wait — next match starting soon';
+  return 'Please wait';
 }
 
 async function doBet(pred) {
   if (betLock) return;
-  if (state?.myBet) {
-    toast('Already bet this round');
+  if (state?.phase !== 'betting') {
+    toast(bettingClosedMessage());
     return;
   }
-  if (state?.phase !== 'betting') {
-    toast('Betting closed — wait for kick off');
+  const myBet = state?.myBet;
+  if (myBet && myBet.prediction !== pred) {
+    toast('You can only bet on one team per match');
     return;
   }
   const amount = selectedChip;
@@ -572,8 +718,27 @@ function showResultPopup() {
       ? match.homeTeam.id
       : match.awayTeam.id;
 
-  const flagEl = $('result-flag');
-  flagEl.src = winnerId === 'draw' ? `${ASSET}/flag-draw.svg` : flagSrc(winnerId);
+  const wrap = document.querySelector('.fc-result__flag-wrap');
+  let flagEl = $('result-flag');
+  if (!flagEl || flagEl.tagName !== 'IMG') {
+    wrap.innerHTML = '<img id="result-flag" class="fc-result__flag" alt="" />';
+    flagEl = $('result-flag');
+  }
+  if (winnerId === 'draw') {
+    flagEl.src = DRAW_FLAG;
+    flagEl.onerror = null;
+  } else {
+    const winnerTeam = match.outcome === 'homeWin' ? match.homeTeam : match.awayTeam;
+    flagEl.src = teamLogoSrc(winnerTeam) || teamLogoSrc(winnerId);
+    flagEl.onerror = () => {
+      flagEl.onerror = null;
+      const span = document.createElement('span');
+      span.id = 'result-flag';
+      span.className = 'fc-result__flag fc-result__flag--emoji';
+      span.textContent = winnerTeam?.emoji || '⚽';
+      flagEl.replaceWith(span);
+    };
+  }
 
   const myBet = state?.myBet;
   const betAmt = myBet?.amount ?? 0;
@@ -611,7 +776,9 @@ function applyState(next) {
       lastGoalEventKey = '';
       lastOverlayKey = '';
       closeResultPopup();
+      cheerBits.length = 0;
     }
+    syncMatchAudio(next.phase);
   }
   prevPhase = next.phase;
   state = next;
@@ -668,6 +835,15 @@ async function poll() {
 }
 
 async function init() {
+  initAudio();
+  const unlockOnce = () => {
+    unlockAudio();
+    document.removeEventListener('pointerdown', unlockOnce);
+    document.removeEventListener('keydown', unlockOnce);
+  };
+  document.addEventListener('pointerdown', unlockOnce, { passive: true });
+  document.addEventListener('keydown', unlockOnce);
+
   window.addEventListener('resize', resize);
   if (typeof ResizeObserver !== 'undefined') {
     new ResizeObserver(() => resize()).observe(stadiumCanvas.parentElement);
@@ -685,21 +861,24 @@ async function init() {
 
   document.querySelectorAll('.fc-pick__btn').forEach((btn) => {
     btn.addEventListener('click', () => {
+      unlockAudio();
       doBet(btn.dataset.pred).catch(() => {});
     });
   });
+
+  $('chips')?.addEventListener('click', unlockAudio, { passive: true });
 
   $('btn-repeat').addEventListener('click', async () => {
     if (!lastBet) {
       toast('No previous bet');
       return;
     }
-    if (state?.myBet) {
-      toast('Already bet this round');
+    if (state?.phase !== 'betting') {
+      toast(bettingClosedMessage());
       return;
     }
-    if (state?.phase !== 'betting') {
-      toast('Betting closed — wait for kick off');
+    if (state?.myBet && state.myBet.prediction !== lastBet.pred) {
+      toast('You can only bet on one team per match');
       return;
     }
     if (chips.includes(lastBet.amount)) {
@@ -713,6 +892,7 @@ async function init() {
 
   try {
     const data = await footballClashInit();
+    buildTeamLogoMap(data.game?.teams);
     applyBettingConfig(data.betting);
     buildChips();
     applyState({ ...data.state, balance: data.balance, myBet: data.state.myBet });

@@ -190,6 +190,59 @@
   display: block;
 }
 
+.fc-goal-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.18) 0%, transparent 65%);
+  animation: fc-goal-overlay-in 3s ease-out forwards;
+}
+
+.fc-goal-overlay[hidden] { display: none !important; }
+
+.fc-goal-overlay__text {
+  font-size: clamp(36px, 14cqw, 56px);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  background: linear-gradient(180deg, #fde68a 0%, #fbbf24 45%, #d97706 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 4px 12px rgba(251, 191, 36, 0.65));
+  animation: fc-goal-pulse 0.55s ease-in-out infinite alternate;
+}
+
+.fc-goal-overlay__cheer {
+  margin-top: 6px;
+  font-size: 22px;
+  letter-spacing: 0.35em;
+  opacity: 0;
+  animation: fc-goal-cheer 3s ease-out forwards;
+}
+
+@keyframes fc-goal-overlay-in {
+  0% { opacity: 0; transform: scale(0.85); }
+  12% { opacity: 1; transform: scale(1); }
+  75% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.04); }
+}
+
+@keyframes fc-goal-pulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.06); }
+}
+
+@keyframes fc-goal-cheer {
+  0%, 10% { opacity: 0; transform: translateY(8px); }
+  25%, 70% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-6px); }
+}
+
 .fc-commentary {
   grid-column: 1 / -1;
   grid-row: 3;
@@ -404,6 +457,11 @@
   box-shadow: 0 0 10px rgba(251, 191, 36, 0.22);
 }
 
+.fc-pick__btn.is-pick {
+  border-color: rgba(251, 191, 36, 0.85);
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.35);
+}
+
 .fc-pick__face {
   display: flex;
   flex-direction: column;
@@ -413,10 +471,19 @@
 }
 
 .fc-pick__flag {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   object-fit: contain;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+}
+
+.fc-pick__flag--emoji,
+.fc-result__flag--emoji {
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+  line-height: 1;
+  object-fit: none;
 }
 
 .fc-pick__btn small { font-size: 9px; color: var(--fc-gold); font-weight: 700; }

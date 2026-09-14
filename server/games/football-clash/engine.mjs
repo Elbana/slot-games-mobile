@@ -273,15 +273,20 @@ export function createFootballClashEngine(config = FOOTBALL_CLASH_GAME) {
     if (!['home', 'away', 'draw'].includes(prediction)) {
       return { ok: false, message: 'Pick home, away, or draw' };
     }
-    const existing = bets.get(platformKey);
-    if (existing && existing.roundId === roundSeq) {
-      return { ok: false, message: 'Already bet this match' };
-    }
     const amt = Math.floor(Number(amount));
     if (!Number.isFinite(amt) || amt <= 0) return { ok: false, message: 'Invalid bet amount' };
 
+    const existing = bets.get(platformKey);
+    if (existing && existing.roundId === roundSeq) {
+      if (existing.prediction !== prediction) {
+        return { ok: false, message: 'You can only bet on one team per match' };
+      }
+      existing.amount += amt;
+      return { ok: true, data: { prediction, amount: existing.amount, added: amt, roundId: roundSeq } };
+    }
+
     bets.set(platformKey, { roundId: roundSeq, prediction, amount: amt, status: 'pending' });
-    return { ok: true, data: { prediction, amount: amt, roundId: roundSeq } };
+    return { ok: true, data: { prediction, amount: amt, added: amt, roundId: roundSeq } };
   }
 
   function serializePlayer(platformKey) {
