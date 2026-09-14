@@ -7,6 +7,7 @@ import { LUCK77_GAME } from '../games/lucky77/config.mjs';
 import { DICE_DUAL_GAME } from '../games/dice-dual/config.mjs';
 import { FOOTBALL_CLASH_GAME } from '../games/football-clash/config.mjs';
 import { ROCKET_GAME } from '../games/rocket/config.mjs';
+import { SLOT_NAME, SLOT_SLUG } from './game-names.mjs';
 
 /** @typedef {'slot' | 'lottery' | 'pvp' | 'crash'} GameType */
 
@@ -22,10 +23,10 @@ import { ROCKET_GAME } from '../games/rocket/config.mjs';
 /** @type {GameDefinition[]} */
 export const GAMES = [
   {
-    slug: 'rise-of-olympus',
-    name: 'Rise of Olympus',
+    slug: SLOT_SLUG,
+    name: SLOT_NAME,
     type: 'slot',
-    playPath: '/play/rise-of-olympus',
+    playPath: `/play/${SLOT_SLUG}`,
   },
   {
     slug: GREEDY_GAME.id,

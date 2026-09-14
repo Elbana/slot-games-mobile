@@ -7,13 +7,13 @@ describe('operator auth', () => {
   it('resolves demo operator tokens', () => {
     const all = resolveOperator('op_demo_all');
     assert.ok(all);
-    assert.equal(isGameEnabled(all, 'rise-of-olympus'), true);
-    assert.equal(isGameEnabled(all, 'greedy'), true);
+    assert.equal(isGameEnabled(all, 'throne-rush'), true);
+    assert.equal(isGameEnabled(all, 'feast-spin'), true);
 
     const lottery = resolveOperator('op_lottery_only');
     assert.ok(lottery);
-    assert.equal(isGameEnabled(lottery, 'rise-of-olympus'), false);
-    assert.equal(isGameEnabled(lottery, 'greedy'), true);
+    assert.equal(isGameEnabled(lottery, 'throne-rush'), false);
+    assert.equal(isGameEnabled(lottery, 'feast-spin'), true);
   });
 
   it('filters catalog by enabled games', () => {
@@ -23,6 +23,6 @@ describe('operator auth', () => {
       .filter((g) => isGameEnabled(operator, g.slug))
       .map(catalogEntry);
     assert.equal(games.length, 1);
-    assert.equal(games[0].slug, 'rise-of-olympus');
+    assert.equal(games[0].slug, 'throne-rush');
   });
 });

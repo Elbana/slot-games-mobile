@@ -20,17 +20,22 @@ async function api(url, opts = {}) {
   return json.data;
 }
 
+const API = '/api/dice-arena';
+
 export function diceDualInit() {
-  return api('/api/dice-dual/init');
+  return api(`${API}/init`);
 }
 
 export function diceDualState() {
-  return api('/api/dice-dual/state');
+  return api(`${API}/state`);
 }
 
 export function diceDualBet(prediction, amount) {
-  return api('/api/dice-dual/bet', {
+  return api(`${API}/bet`, {
     method: 'POST',
     body: JSON.stringify({ prediction, amount }),
+  }).then((data) => {
+    window.gmNotifyWallet?.('bet', { game: 'dice-arena', amount, balance: data.balance, delta: -amount });
+    return data;
   });
 }

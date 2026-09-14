@@ -11,6 +11,7 @@ import { auditWallet } from '../audit.mjs';
 import { bettingPayload, getBetConfig, validateBetAmount } from '../betting/bet-config.mjs';
 
 const SLUG = FOOTBALL_CLASH_GAME.id;
+const API = `/api/${SLUG}`;
 
 function ok(data) {
   return { code: 0, msg: 'ok', data };
@@ -62,7 +63,7 @@ async function settlePlayer(engine, ctx) {
 export function mountFootballClashRoutes(app) {
   const engine = getFootballClashEngine();
 
-  app.get('/api/football-clash/init', async (req, res) => {
+  app.get(`${API}/init`, async (req, res) => {
     const ctx = buildContext(req, res);
     if (!ctx) return;
 
@@ -92,7 +93,7 @@ export function mountFootballClashRoutes(app) {
     );
   });
 
-  app.get('/api/football-clash/state', async (req, res) => {
+  app.get(`${API}/state`, async (req, res) => {
     const ctx = buildContext(req, res);
     if (!ctx) return;
 
@@ -118,7 +119,7 @@ export function mountFootballClashRoutes(app) {
     );
   });
 
-  app.post('/api/football-clash/bet', async (req, res) => {
+  app.post(`${API}/bet`, async (req, res) => {
     const ctx = buildContext(req, res);
     if (!ctx) return;
 

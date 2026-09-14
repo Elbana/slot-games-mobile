@@ -20,7 +20,7 @@ const lastSpinAt = new Map();
 
 function resolveGameSlug(req) {
   const q = { ...req.query, ...req.body };
-  return q.game || 'rise-of-olympus';
+  return q.game || 'throne-rush';
 }
 
 function buildContext(req, res, slug) {

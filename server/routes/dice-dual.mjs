@@ -11,6 +11,7 @@ import { auditWallet } from '../audit.mjs';
 import { bettingPayload, getBetConfig, validateBetAmount } from '../betting/bet-config.mjs';
 
 const SLUG = DICE_DUAL_GAME.id;
+const API = `/api/${SLUG}`;
 
 function ok(data) {
   return { code: 0, msg: 'ok', data };
@@ -62,7 +63,7 @@ async function settlePlayer(engine, ctx) {
 export function mountDiceDualRoutes(app) {
   const engine = getDiceDualEngine();
 
-  app.get('/api/dice-dual/init', async (req, res) => {
+  app.get(`${API}/init`, async (req, res) => {
     const ctx = buildContext(req, res);
     if (!ctx) return;
 
@@ -92,7 +93,7 @@ export function mountDiceDualRoutes(app) {
     );
   });
 
-  app.get('/api/dice-dual/state', async (req, res) => {
+  app.get(`${API}/state`, async (req, res) => {
     const ctx = buildContext(req, res);
     if (!ctx) return;
 
@@ -118,7 +119,7 @@ export function mountDiceDualRoutes(app) {
     );
   });
 
-  app.post('/api/dice-dual/bet', async (req, res) => {
+  app.post(`${API}/bet`, async (req, res) => {
     const ctx = buildContext(req, res);
     if (!ctx) return;
 

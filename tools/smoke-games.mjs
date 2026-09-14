@@ -45,46 +45,53 @@ function fail(label, detail) {
 console.log(`Smoke test ${BASE} token=${TOKEN}\n`);
 
 const health = await get('/health');
-if (health.ok && health.json?.ok) pass('GET /health');
+if (health.ok && health.json?.ok && health.json.games?.length >= 6) pass('GET /health');
 else fail('GET /health', health.status);
 
 const catalog = await get('/api/v1/games');
-if (catalog.ok && catalog.json?.games?.length >= 3) pass('GET /api/v1/games');
+if (catalog.ok && catalog.json?.games?.length >= 6) pass('GET /api/v1/games');
 else fail('GET /api/v1/games', catalog.status);
 
-const rooSession = await get('/api/v2/session?game=rise-of-olympus');
-if (rooSession.ok && rooSession.json?.balance != null) pass('GET /api/v2/session (rise-of-olympus)');
+const launch = await get('/api/v1/launch?game=sky-streak');
+if (launch.ok && launch.json?.launchUrl?.includes('sky-streak')) pass('GET /api/v1/launch');
+else fail('GET /api/v1/launch', launch.json?.error || launch.status);
+
+const rooSession = await get('/api/v2/session?game=throne-rush');
+if (rooSession.ok && rooSession.json?.balance != null) pass('GET /api/v2/session (throne-rush)');
 else fail('GET /api/v2/session', rooSession.json?.error || rooSession.status);
 
-const rooSpin = await post('/api/v2/spin?game=rise-of-olympus&bet=20', {});
-if (rooSpin.ok && rooSpin.json?.symbols) pass('POST /api/v2/spin (rise-of-olympus)');
+const rooSpin = await post('/api/v2/spin?game=throne-rush&bet=200', {});
+if (rooSpin.ok && rooSpin.json?.symbols) pass('POST /api/v2/spin (throne-rush)');
 else fail('POST /api/v2/spin', rooSpin.json?.error || rooSpin.status);
 
-const greedyInit = await get('/api/lottery/greedy/init');
-if (greedyInit.ok && greedyInit.json?.data?.sessionId) pass('GET /api/lottery/greedy/init');
-else fail('GET /api/lottery/greedy/init', greedyInit.json?.msg || greedyInit.status);
+const feastInit = await get('/api/lottery/feast-spin/init');
+if (feastInit.ok && feastInit.json?.data?.sessionId) pass('GET /api/lottery/feast-spin/init');
+else fail('GET /api/lottery/feast-spin/init', feastInit.json?.msg || feastInit.status);
 
-const economy = await get('/api/v1/economy?game=rise-of-olympus');
-if (economy.ok && economy.json?.poolBalance != null) pass('GET /api/v1/economy');
-else fail('GET /api/v1/economy', economy.json?.error || economy.status);
+const harvestInit = await get('/api/lottery/triple-harvest/init');
+if (harvestInit.ok && harvestInit.json?.data?.sessionId) pass('GET /api/lottery/triple-harvest/init');
+else fail('GET /api/lottery/triple-harvest/init', harvestInit.json?.msg || harvestInit.status);
 
-const greedyPage = await get('/play/greedy');
-if (greedyPage.ok && greedyPage.text.includes('greedy.js')) pass('GET /play/greedy');
-else fail('GET /play/greedy', greedyPage.status);
+const skyInit = await get('/api/sky-streak/init');
+if (skyInit.ok && skyInit.json?.data?.game?.id === 'sky-streak') pass('GET /api/sky-streak/init');
+else fail('GET /api/sky-streak/init', skyInit.json?.msg || skyInit.status);
 
-const rooPage = await get('/play/rise-of-olympus');
-if (rooPage.ok && (rooPage.text.includes('main.js') || rooPage.text.includes('Rise of Olympus'))) {
-  pass('GET /play/rise-of-olympus');
-} else fail('GET /play/rise-of-olympus', rooPage.status);
+const diceInit = await get('/api/dice-arena/init');
+if (diceInit.ok && diceInit.json?.data) pass('GET /api/dice-arena/init');
+else fail('GET /api/dice-arena/init', diceInit.json?.msg || diceInit.status);
 
-if (greedyInit.json?.data?.sessionId) {
-  const odd = await post('/bigo/v1/odd_list', {
-    TypCode: 'BIGO_GREEDY',
-    LotteryCode: 'BIGO_GREEDY_001',
-  });
-  if (odd.ok && (odd.json?.data || odd.json?.status?.Code === 'ES_1000')) pass('POST /bigo/v1/odd_list');
-  else fail('POST /bigo/v1/odd_list', odd.json?.msg || odd.status);
-}
+const goalInit = await get('/api/goal-showdown/init');
+if (goalInit.ok && goalInit.json?.data) pass('GET /api/goal-showdown/init');
+else fail('GET /api/goal-showdown/init', goalInit.json?.msg || goalInit.status);
+
+const feastPage = await get('/play/feast-spin');
+if (feastPage.ok && feastPage.text.includes('greedy.js')) pass('GET /play/feast-spin');
+else fail('GET /play/feast-spin', feastPage.status);
+
+const rooPage = await get('/play/throne-rush');
+if (rooPage.ok && (rooPage.text.includes('main.js') || rooPage.text.includes('Throne'))) {
+  pass('GET /play/throne-rush');
+} else fail('GET /play/throne-rush', rooPage.status);
 
 console.log('');
 if (failed) {

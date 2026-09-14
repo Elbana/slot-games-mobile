@@ -22,22 +22,30 @@ async function fetchJson(url, init) {
   return data.data;
 }
 
+const API = '/api/sky-streak';
+
 export function rocketInit() {
-  return fetchJson('/api/rocket/init');
+  return fetchJson(`${API}/init`);
 }
 
 export function rocketState() {
-  return fetchJson('/api/rocket/state');
+  return fetchJson(`${API}/state`);
 }
 
 export function rocketBet(amount, autoCashout = 0) {
-  return fetchJson('/api/rocket/bet', {
+  return fetchJson(`${API}/bet`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ amount, autoCashout }),
+  }).then((data) => {
+    window.gmNotifyWallet?.('bet', { game: 'sky-streak', amount, balance: data.balance, delta: -amount });
+    return data;
   });
 }
 
 export function rocketCashout() {
-  return fetchJson('/api/rocket/cashout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+  return fetchJson(`${API}/cashout`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then((data) => {
+    window.gmNotifyWallet?.('win', { game: 'sky-streak', amount: data.winAmount, balance: data.balance, delta: data.winAmount });
+    return data;
+  });
 }

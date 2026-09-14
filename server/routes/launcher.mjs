@@ -5,46 +5,7 @@
 import { requireOperator, isGameEnabled } from '../auth/operator-auth.mjs';
 import { extractPlayerId } from '../auth/player-context.mjs';
 import { listGames } from '../registry/games.mjs';
-
-/** @type {Record<string, { tagline: string, badge: string, theme: string, icon: string }>} */
-const DISPLAY = {
-  'rise-of-olympus': {
-    tagline: 'Cluster pays, god multipliers & free spins',
-    badge: 'Video Slot',
-    theme: 'olympus',
-    icon: '⚡',
-  },
-  greedy: {
-    tagline: 'Bet on the food wheel — 30s live rounds',
-    badge: 'Lottery',
-    theme: 'greedy',
-    icon: '🍕',
-  },
-  lucky77: {
-    tagline: 'Bet Lemon, Watermelon or Lucky 77 — live wheel',
-    badge: 'Wheel',
-    theme: 'lucky77',
-    icon: '🎡',
-  },
-  'dice-dual': {
-    tagline: 'Red vs blue — roll 3 dice, pick the winning team',
-    badge: 'Dice',
-    theme: 'dice-dual',
-    icon: '🎲',
-  },
-  'football-clash': {
-    tagline: 'Bet home, draw, or away on live match rounds',
-    badge: 'Sports',
-    theme: 'football-clash',
-    icon: '⚽',
-  },
-  rocket: {
-    tagline: 'Ride the rocket — cash out before it crashes',
-    badge: 'Crash',
-    theme: 'rocket',
-    icon: '🚀',
-  },
-};
+import { GAME_DISPLAY } from '../registry/game-names.mjs';
 
 function escapeHtml(s) {
   return String(s)
@@ -55,7 +16,7 @@ function escapeHtml(s) {
 }
 
 function renderGameCard(game, token, player) {
-  const meta = DISPLAY[game.slug] ?? {
+  const meta = GAME_DISPLAY[game.slug] ?? {
     tagline: game.type === 'slot' ? 'Video slot game' : 'Live lottery game',
     badge: game.type === 'slot' ? 'Slot' : 'Lottery',
     theme: 'default',

@@ -20,17 +20,22 @@ async function api(url, opts = {}) {
   return json.data;
 }
 
+const API = '/api/goal-showdown';
+
 export function footballClashInit() {
-  return api('/api/football-clash/init');
+  return api(`${API}/init`);
 }
 
 export function footballClashState() {
-  return api('/api/football-clash/state');
+  return api(`${API}/state`);
 }
 
 export function footballClashBet(prediction, amount) {
-  return api('/api/football-clash/bet', {
+  return api(`${API}/bet`, {
     method: 'POST',
     body: JSON.stringify({ prediction, amount }),
+  }).then((data) => {
+    window.gmNotifyWallet?.('bet', { game: 'goal-showdown', amount, balance: data.balance, delta: -amount });
+    return data;
   });
 }

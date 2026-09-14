@@ -19,6 +19,9 @@ import { mountDiceDualRoutes } from './routes/dice-dual.mjs';
 import { mountFootballClashRoutes } from './routes/football-clash.mjs';
 import { mountRocketRoutes } from './routes/rocket.mjs';
 import { listGames } from './registry/games.mjs';
+import { SLOT_SLUG } from './registry/game-names.mjs';
+import { handleGetLaunch } from './routes/launch.mjs';
+import { verifyLaunchToken } from './auth/launch-token.mjs';
 import { describeMathProfile } from './math-profile.mjs';
 
 applyProductionDefaults();
@@ -28,6 +31,20 @@ const isDev = process.argv.includes('--dev');
 
 const app = express();
 app.use(express.json());
+
+/** Expand signed launch tokens into token/player/game query params for WebView URLs. */
+app.use((req, _res, next) => {
+  const launch = req.query.launch;
+  if (typeof launch === 'string' && launch) {
+    const payload = verifyLaunchToken(launch);
+    if (payload) {
+      req.query.token = payload.ot;
+      req.query.player = payload.pid;
+      req.query.game = payload.game;
+    }
+  }
+  next();
+});
 
 if (CORS_ORIGINS.length) {
   app.use((req, res, next) => {
@@ -51,6 +68,7 @@ app.get('/health', (_req, res) => {
 });
 
 app.get('/api/v1/games', handleGetCatalog);
+app.get('/api/v1/launch', handleGetLaunch);
 app.get('/api/v1/economy', handleGetEconomy);
 app.get('/api/v1/betting', handleGetBetting);
 app.get('/api/v2/session', handleGetSession);
@@ -74,41 +92,42 @@ app.use('/football-clash', express.static(path.join(GAMES_ROOT, 'football-clash'
 app.use('/rocket', express.static(path.join(GAMES_ROOT, 'rocket')));
 app.use('/bet-advisor', express.static(path.join(GAMES_ROOT, 'bet-advisor')));
 
-function sendPlayPage(res, htmlPath, token, player) {
+function sendPlayPage(res, htmlPath, req) {
   if (!fs.existsSync(htmlPath)) {
     return res.status(404).type('text/plain').send('Game not found');
   }
   let html = fs.readFileSync(htmlPath, 'utf8');
   const qs = new URLSearchParams();
-  if (token) qs.set('token', token);
-  if (player) qs.set('player', player);
+  if (req.query.token) qs.set('token', req.query.token);
+  if (req.query.player) qs.set('player', req.query.player);
+  if (req.query.launch) qs.set('launch', req.query.launch);
   const inject = qs.size ? `<script>window.__PLATFORM__=${JSON.stringify(Object.fromEntries(qs))};</script>` : '';
   html = injectMobilePlayHead(html, inject);
   res.type('html').send(html);
 }
 
-app.get('/play/greedy', (req, res) => {
-  sendPlayPage(res, path.join(GAMES_ROOT, 'greedy', 'play.html'), req.query.token, req.query.player);
+app.get('/play/feast-spin', (req, res) => {
+  sendPlayPage(res, path.join(GAMES_ROOT, 'greedy', 'play.html'), req);
 });
 
-app.get('/play/lucky77', (req, res) => {
-  sendPlayPage(res, path.join(GAMES_ROOT, 'lucky77', 'play.html'), req.query.token, req.query.player);
+app.get('/play/triple-harvest', (req, res) => {
+  sendPlayPage(res, path.join(GAMES_ROOT, 'lucky77', 'play.html'), req);
 });
 
-app.get('/play/dice-dual', (req, res) => {
-  sendPlayPage(res, path.join(GAMES_ROOT, 'dice-dual', 'play.html'), req.query.token, req.query.player);
+app.get('/play/dice-arena', (req, res) => {
+  sendPlayPage(res, path.join(GAMES_ROOT, 'dice-dual', 'play.html'), req);
 });
 
-app.get('/play/football-clash', (req, res) => {
-  sendPlayPage(res, path.join(GAMES_ROOT, 'football-clash', 'play.html'), req.query.token, req.query.player);
+app.get('/play/goal-showdown', (req, res) => {
+  sendPlayPage(res, path.join(GAMES_ROOT, 'football-clash', 'play.html'), req);
 });
 
-app.get('/play/rocket', (req, res) => {
-  sendPlayPage(res, path.join(GAMES_ROOT, 'rocket', 'play.html'), req.query.token, req.query.player);
+app.get('/play/sky-streak', (req, res) => {
+  sendPlayPage(res, path.join(GAMES_ROOT, 'rocket', 'play.html'), req);
 });
 
 app.get('/play/bet-advisor', (req, res) => {
-  sendPlayPage(res, path.join(GAMES_ROOT, 'bet-advisor', 'index.html'), req.query.token, req.query.player);
+  sendPlayPage(res, path.join(GAMES_ROOT, 'bet-advisor', 'index.html'), req);
 });
 
 app.get('/', handleGetLauncher);
@@ -118,7 +137,7 @@ let rooVite = null;
 
 function fixMobileShellLinks(html) {
   return html.replace(
-    /href="\/play\/rise-of-olympus\/shared\/mobile-shell\.css"/g,
+    /href="\/play\/throne-rush\/shared\/mobile-shell\.css"/g,
     'href="/shared/mobile-shell.css"',
   );
 }
@@ -136,8 +155,8 @@ async function mountRiseOfOlympus() {
       server: { middlewareMode: true, hmr: { server } },
     });
 
-    app.use('/play/rise-of-olympus', rooVite.middlewares);
-    app.get('/play/rise-of-olympus', async (req, res, next) => {
+    app.use(`/play/${SLOT_SLUG}`, rooVite.middlewares);
+    app.get(`/play/${SLOT_SLUG}`, async (req, res, next) => {
       try {
         const html = fs.readFileSync(path.join(rooRoot, 'index.html'), 'utf8');
         const qs = new URLSearchParams(req.query);
@@ -152,9 +171,9 @@ async function mountRiseOfOlympus() {
     });
     app.use(rooVite.middlewares);
   } else {
-    app.use('/play/rise-of-olympus', express.static(rooDist));
+    app.use(`/play/${SLOT_SLUG}`, express.static(rooDist));
     app.use('/assets', express.static(path.join(rooPublic, 'assets')));
-    app.get('/play/rise-of-olympus', (_req, res) => {
+    app.get(`/play/${SLOT_SLUG}`, (_req, res) => {
       const index = path.join(rooDist, 'index.html');
       if (!fs.existsSync(index)) {
         return res.status(503).type('text/plain').send('Build rise-of-olympus first: npm run build');

@@ -4,7 +4,7 @@
       "id": "demo-all",
       "token": "op_demo_all",
       "name": "Demo — all games",
-      "enabledGames": ["rise-of-olympus", "greedy", "lucky77", "dice-dual", "football-clash", "rocket"],
+      "enabledGames": ["throne-rush", "feast-spin", "triple-harvest", "dice-arena", "goal-showdown", "sky-streak"],
       "wallet": { "mode": "mock" },
       "betting": {
         "chipUnits": [200, 1000, 5000, 10000, 50000, 100000],
@@ -15,7 +15,7 @@
         "houseEdgePercent": 3,
         "poolContributionPercent": 35,
         "poolWinTriggerChance": 0.06,
-        "maxPoolWinMultiplier": 25,
+        "maxPoolWinMultiplier": 15,
         "slotMathProfile": "voice_social",
         "lotteryHouseEdgePercent": 5
       }
@@ -24,7 +24,7 @@
       "id": "demo-lottery",
       "token": "op_lottery_only",
       "name": "Demo — lottery only",
-      "enabledGames": ["greedy", "lucky77"],
+      "enabledGames": ["feast-spin", "triple-harvest"],
       "wallet": { "mode": "mock" },
       "betting": {
         "chipUnits": [200, 1000, 5000, 10000, 50000, 100000],
@@ -35,7 +35,7 @@
         "houseEdgePercent": 3,
         "poolContributionPercent": 35,
         "poolWinTriggerChance": 0.06,
-        "maxPoolWinMultiplier": 25,
+        "maxPoolWinMultiplier": 15,
         "slotMathProfile": "voice_social",
         "lotteryHouseEdgePercent": 5
       }
@@ -44,7 +44,7 @@
       "id": "demo-slots",
       "token": "op_slots_only",
       "name": "Demo — slots only",
-      "enabledGames": ["rise-of-olympus"],
+      "enabledGames": ["throne-rush"],
       "wallet": { "mode": "mock" },
       "betting": {
         "chipUnits": [200, 1000, 5000, 10000, 50000, 100000],
@@ -55,7 +55,7 @@
         "houseEdgePercent": 3,
         "poolContributionPercent": 35,
         "poolWinTriggerChance": 0.06,
-        "maxPoolWinMultiplier": 25,
+        "maxPoolWinMultiplier": 15,
         "slotMathProfile": "voice_social",
         "lotteryHouseEdgePercent": 5
       }
@@ -64,7 +64,7 @@
       "id": "voice-chat-demo",
       "token": "op_voice_chat",
       "name": "Voice chat demo",
-      "enabledGames": ["rise-of-olympus", "greedy", "lucky77", "dice-dual", "football-clash", "rocket"],
+      "enabledGames": ["throne-rush", "feast-spin", "triple-harvest", "dice-arena", "goal-showdown", "sky-streak"],
       "wallet": { "mode": "mock" },
       "betting": {
         "chipUnits": [200, 1000, 5000, 10000, 50000, 100000],
@@ -75,7 +75,7 @@
         "houseEdgePercent": 3,
         "poolContributionPercent": 40,
         "poolWinTriggerChance": 0.07,
-        "maxPoolWinMultiplier": 30,
+        "maxPoolWinMultiplier": 15,
         "slotMathProfile": "voice_social",
         "lotteryHouseEdgePercent": 5
       }

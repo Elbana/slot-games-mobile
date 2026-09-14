@@ -11,7 +11,7 @@ export const LUCK77_LOTTERY = 'luck77_2_half';
 /** @type {import('../lottery/engine.mjs').LotterySymbol[]} */
 export const LUCK77_SYMBOLS = [
   { playCode: 'LUCK77_LEMON', label: 'Lemon', emoji: '🍋', odd: 2 },
-  { playCode: 'LUCK77_SEVEN', label: 'Lucky 77', emoji: '77', odd: 8 },
+  { playCode: 'LUCK77_SEVEN', label: 'Golden Trio', emoji: '✦', odd: 8 },
   { playCode: 'LUCK77_WATERMELON', label: 'Watermelon', emoji: '🍉', odd: 2 },
 ];
 
@@ -29,8 +29,8 @@ export const LUCK77_WHEEL_STOPS = [
 ];
 
 export const LUCK77_GAME = {
-  id: 'lucky77',
-  name: 'Lucky 77',
+  id: 'triple-harvest',
+  name: 'Triple Harvest',
   typCode: LUCK77_TYP,
   lotteryCode: LUCK77_LOTTERY,
   bettingSeconds: 10,

@@ -17,7 +17,7 @@ import {
   uiPaths,
 } from './assets.mjs';
 
-const GAME_ID = 'lucky77';
+const GAME_ID = 'triple-harvest';
 const CHIP_STYLE_CLASSES = ['100', '1k', '10k', '100k', '100k', '100k'];
 /** @type {number[]} */
 let CHIPS = [200, 1000, 5000, 10000, 50000, 100000];
@@ -26,7 +26,7 @@ const SEG_ANGLE = (Math.PI * 2) / SEGMENTS;
 
 const ZONE_META = {
   LUCK77_LEMON: { kind: 'lemon', label: 'Lemon', odd: 2 },
-  LUCK77_SEVEN: { kind: 'seven', label: 'Lucky 77', odd: 8 },
+  LUCK77_SEVEN: { kind: 'seven', label: 'Golden Trio', odd: 8 },
   LUCK77_WATERMELON: { kind: 'melon', label: 'Watermelon', odd: 2 },
 };
 
@@ -763,7 +763,7 @@ function renderHistoryBar() {
     const meta = ZONE_META[row.code];
     const kind = zoneKind(row.code);
     const src = symbolAssetUrl(kind);
-    const emoji = meta?.label === 'Lucky 77' ? '77' : kind === 'melon' ? '🍉' : '🍋';
+    const emoji = meta?.kind === 'seven' ? '✦' : kind === 'melon' ? '🍉' : '🍋';
     return `<span class="l77-dot l77-dot--${kind}" title="${meta?.label || row.code}"><img src="${src}" alt="${emoji}" loading="lazy" /></span>`;
   }).join('');
 }

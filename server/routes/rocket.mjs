@@ -11,6 +11,7 @@ import { auditWallet } from '../audit.mjs';
 import { bettingPayload, getBetConfig, validateBetAmount } from '../betting/bet-config.mjs';
 
 const SLUG = ROCKET_GAME.id;
+const API = `/api/${SLUG}`;
 
 function ok(data) {
   return { code: 0, msg: 'ok', data };
@@ -62,7 +63,7 @@ async function settlePlayer(engine, ctx) {
 export function mountRocketRoutes(app) {
   const engine = getRocketEngine();
 
-  app.get('/api/rocket/init', async (req, res) => {
+  app.get(`${API}/init`, async (req, res) => {
     const ctx = buildContext(req, res);
     if (!ctx) return;
 
@@ -97,7 +98,7 @@ export function mountRocketRoutes(app) {
     );
   });
 
-  app.get('/api/rocket/state', async (req, res) => {
+  app.get(`${API}/state`, async (req, res) => {
     const ctx = buildContext(req, res);
     if (!ctx) return;
 
@@ -126,7 +127,7 @@ export function mountRocketRoutes(app) {
     );
   });
 
-  app.post('/api/rocket/bet', async (req, res) => {
+  app.post(`${API}/bet`, async (req, res) => {
     const ctx = buildContext(req, res);
     if (!ctx) return;
 
@@ -189,7 +190,7 @@ export function mountRocketRoutes(app) {
     );
   });
 
-  app.post('/api/rocket/cashout', async (req, res) => {
+  app.post(`${API}/cashout`, async (req, res) => {
     const ctx = buildContext(req, res);
     if (!ctx) return;
 

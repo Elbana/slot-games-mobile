@@ -15,13 +15,13 @@ export const GREEDY_SYMBOLS = [
   { playCode: 'BIGO_GREEDY_BEEF', label: 'Beef', emoji: '🥩', odd: 15 },
   { playCode: 'BIGO_GREEDY_CHICKEN_LEGS', label: 'Chicken', emoji: '🍗', odd: 15 },
   { playCode: 'BIGO_GREEDY_KEBABS', label: 'Kebabs', emoji: '🍢', odd: 20 },
-  { playCode: 'BIGO_GREEDY_HOT_DOGS', label: 'Hot Dogs', emoji: '🌭', odd: 25 },
-  { playCode: 'BIGO_GREEDY_PIZZA', label: 'Pizza', emoji: '🍕', odd: 30 },
+  { playCode: 'BIGO_GREEDY_HOT_DOGS', label: 'Hot Dogs', emoji: '🌭', odd: 23 },
+  { playCode: 'BIGO_GREEDY_PIZZA', label: 'Pizza', emoji: '🍕', odd: 27 },
   {
     playCode: 'BIGO_GREEDY_VEGETABLE_BASKET',
     label: 'Veg Basket',
     emoji: '🧺',
-    odd: 2,
+    odd: 1.2,
     group: [
       'BIGO_GREEDY_TOMATO',
       'BIGO_GREEDY_CABBAGE',
@@ -34,7 +34,7 @@ export const GREEDY_SYMBOLS = [
     playCode: 'BIGO_GREEDY_MEAT_PLATES',
     label: 'Meat Plates',
     emoji: '🍽️',
-    odd: 2,
+    odd: 3.5,
     group: [
       'BIGO_GREEDY_BEEF',
       'BIGO_GREEDY_CHICKEN_LEGS',
@@ -46,8 +46,8 @@ export const GREEDY_SYMBOLS = [
 ];
 
 export const GREEDY_GAME = {
-  id: 'greedy',
-  name: 'Greedy (Food Wheel)',
+  id: 'feast-spin',
+  name: 'Feast Spin',
   typCode: GREEDY_TYP,
   lotteryCode: GREEDY_LOTTERY,
   bettingSeconds: 30,
