@@ -588,6 +588,7 @@ async function init() {
     }, delay);
   }
   schedulePoll();
+  window.addEventListener('gm-realtime', () => pollOnce());
   setInterval(loadHistory, 3000);
 }
 

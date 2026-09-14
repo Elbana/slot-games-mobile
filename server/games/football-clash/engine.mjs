@@ -5,6 +5,7 @@
 import crypto from 'crypto';
 import { FOOTBALL_CLASH_GAME, FOOTBALL_TEAMS } from './config.mjs';
 import { PAYOUT_LIMITS, capWinByBet } from '../../economy/payout-limits.mjs';
+import { withRealtimeSync } from '../../realtime/sync.mjs';
 
 /** @typedef {'betting' | 'playing' | 'results'} FootballPhase */
 /** @typedef {'home' | 'away' | 'draw'} FootballPrediction */
@@ -251,11 +252,16 @@ export function createFootballClashEngine(config = FOOTBALL_CLASH_GAME) {
     const score = liveScore(now);
     const roundBets = [...bets.values()].filter((b) => b.roundId === roundSeq);
 
-    return {
+    return withRealtimeSync({
       roundId: roundSeq,
       phase,
       countdown,
+      phaseEndsAt: phaseEndsMs,
+      phaseStartedAt: phaseStartMs,
       totalBets: roundBets.length,
+      homePool: roundBets.filter((b) => b.prediction === 'home').reduce((s, b) => s + b.amount, 0),
+      awayPool: roundBets.filter((b) => b.prediction === 'away').reduce((s, b) => s + b.amount, 0),
+      drawPool: roundBets.filter((b) => b.prediction === 'draw').reduce((s, b) => s + b.amount, 0),
       history: [...history],
       match: match && match.roundId === roundSeq
         ? {
@@ -270,7 +276,7 @@ export function createFootballClashEngine(config = FOOTBALL_CLASH_GAME) {
             events: visibleEvents(now),
           }
         : null,
-    };
+    });
   }
 
   function placeBet(platformKey, prediction, amount) {

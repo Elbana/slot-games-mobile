@@ -723,6 +723,7 @@ async function init() {
   }
 
   setInterval(poll, 400);
+  window.addEventListener('gm-realtime', () => poll());
 }
 
 init();

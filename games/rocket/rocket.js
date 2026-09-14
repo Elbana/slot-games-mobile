@@ -12,6 +12,7 @@ let rocketImg = null;
 let lastPing = 72;
 let smoothMult = 1;
 let flyStartPerf = 0;
+let serverClockSkew = 0;
 let lastRoundId = 0;
 let animTime = 0;
 /** @type {{ x: number, y: number, start: number, dur: number, particles: object[] } | null} */
@@ -134,6 +135,9 @@ function updateActionButton() {
 
 function applyState(data) {
   state = data;
+  if (data.serverTime) {
+    serverClockSkew = performance.now() - data.serverTime;
+  }
   if (data.balance != null) {
     $('balance').textContent = Number(data.balance).toLocaleString();
   }
@@ -162,7 +166,7 @@ function applyState(data) {
   }
 
   if (data.phase === 'flying' && (prevPhase !== 'flying' || data.roundId !== lastRoundId)) {
-    flyStartPerf = performance.now();
+    flyStartPerf = data.flyStartMs ? data.flyStartMs + serverClockSkew : performance.now();
     smoothMult = 1;
     trailHistory = [];
   }
@@ -554,6 +558,7 @@ async function init() {
     setTimeout(loop, ms);
   }
   loop();
+  window.addEventListener('gm-realtime', () => pollState());
 
   function animFrame(now) {
     animTime = now;

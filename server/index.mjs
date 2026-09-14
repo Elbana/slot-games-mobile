@@ -21,6 +21,7 @@ import { mountRocketRoutes } from './routes/rocket.mjs';
 import { listGames } from './registry/games.mjs';
 import { SLOT_SLUG } from './registry/game-names.mjs';
 import { handleGetLaunch } from './routes/launch.mjs';
+import { mountRealtimeRoutes } from './routes/realtime.mjs';
 import { verifyLaunchToken } from './auth/launch-token.mjs';
 import { describeMathProfile } from './math-profile.mjs';
 
@@ -79,6 +80,7 @@ mountLotteryRoutes(app);
 mountDiceDualRoutes(app);
 mountFootballClashRoutes(app);
 mountRocketRoutes(app);
+mountRealtimeRoutes(app);
 
 app.use('/launcher', express.static(path.join(ROOT, 'public', 'launcher')));
 

@@ -147,8 +147,11 @@ export function mountLotteryRoutes(app) {
         ...state,
         Balance: balance,
         SessionId: lotterySession.id,
-        Items: [],
+        Items: state.poolItems ?? [],
         LastTop: [],
+        serverTime: state.serverTime,
+        phaseEndsAt: state.phaseEndsAt,
+        totalBets: state.totalBets ?? 0,
         ...(settlement?.winAmount ? { WinAmount: settlement.winAmount, WinCodes: settlement.winCodes } : {}),
       },
       req

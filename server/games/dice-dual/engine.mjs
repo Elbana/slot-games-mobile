@@ -6,6 +6,7 @@
 import crypto from 'crypto';
 import { DICE_DUAL_GAME } from './config.mjs';
 import { PAYOUT_LIMITS, capWinByBet } from '../../economy/payout-limits.mjs';
+import { withRealtimeSync } from '../../realtime/sync.mjs';
 
 /** @typedef {'betting' | 'battling' | 'results'} DiceDualPhase */
 /** @typedef {'red' | 'blue' | 'draw'} DicePrediction */
@@ -181,11 +182,12 @@ export function createDiceDualEngine(config = DICE_DUAL_GAME) {
     const countdown = Math.max(0, Math.ceil((phaseEndsMs - now) / 1000));
     const roundBets = [...bets.values()].filter((b) => b.roundId === roundSeq);
 
-    return {
+    return withRealtimeSync({
       roundId: roundSeq,
       phase,
       countdown,
       phaseEndsAt: phaseEndsMs,
+      phaseStartedAt: phaseStartMs,
       totalBets: roundBets.length,
       redPool: roundBets.filter((b) => b.prediction === 'red').reduce((s, b) => s + b.amount, 0),
       bluePool: roundBets.filter((b) => b.prediction === 'blue').reduce((s, b) => s + b.amount, 0),
@@ -202,7 +204,7 @@ export function createDiceDualEngine(config = DICE_DUAL_GAME) {
               winningTeam: battle.winningTeam,
             }
           : null,
-    };
+    });
   }
 
   function placeBet(platformKey, prediction, amount) {

@@ -124,9 +124,26 @@ export function createLotteryEngine(config) {
 
   setInterval(tick, 250);
 
+  function getPoolItems() {
+    /** @type {Record<string, number>} */
+    const byCode = {};
+    for (const [key, amt] of periodBets) {
+      const code = key.includes(':') ? key.split(':').slice(1).join(':') : key;
+      byCode[code] = (byCode[code] || 0) + amt;
+    }
+    return Object.entries(byCode).map(([PlayCode, Amount]) => ({ PlayCode, Amount }));
+  }
+
   function getBetState() {
     tick();
     const phase = getPhase();
+    const now = Date.now();
+    const elapsed = elapsedInPeriod();
+    let phaseEndsAt = now;
+    if (phase.stage === 1) phaseEndsAt = now + Math.max(0, bettingSeconds - elapsed) * 1000;
+    else if (phase.stage === 2) phaseEndsAt = now + Math.max(0, bettingSeconds + spinSeconds - elapsed) * 1000;
+    else phaseEndsAt = now + Math.max(0, totalSeconds - elapsed) * 1000;
+
     return {
       TypCode: config.typCode,
       LotteryCode: config.lotteryCode,
@@ -137,6 +154,11 @@ export function createLotteryEngine(config) {
       LastPeriod: lastPeriod,
       LastNum: lastNum.length ? [...lastNum] : [],
       ShowArea: lastWheelIndex >= 0 ? lastWheelIndex : undefined,
+      serverTime: now,
+      phaseEndsAt,
+      periodStartMs,
+      poolItems: getPoolItems(),
+      totalBets: periodBets.size,
     };
   }
 

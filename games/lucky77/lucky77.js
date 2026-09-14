@@ -1001,6 +1001,7 @@ async function init() {
     setTimeout(poll, prevStage === 2 ? 300 : 800);
   }
   poll();
+  window.addEventListener('gm-realtime', () => pollOnce());
   setInterval(loadHistory, 3000);
 }
 

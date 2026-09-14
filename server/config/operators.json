@@ -61,6 +61,30 @@
       }
     },
     {
+      "id": "riko",
+      "token": "op_riko",
+      "name": "Riko voice chat",
+      "enabledGames": ["olympus-rise", "greedy-feast", "luck-77", "dice-duel", "goal-clash", "rocket-rush"],
+      "wallet": {
+        "mode": "http",
+        "baseUrl": "http://127.0.0.1:3005/api/games-mobile-wallet",
+        "apiKey": "dev-games-mobile-key"
+      },
+      "betting": {
+        "chipUnits": [200, 1000, 5000, 10000, 50000, 100000],
+        "defaultChip": 200,
+        "minBalanceToPlay": 200
+      },
+      "economy": {
+        "houseEdgePercent": 3,
+        "poolContributionPercent": 40,
+        "poolWinTriggerChance": 0.07,
+        "maxPoolWinMultiplier": 15,
+        "slotMathProfile": "voice_social",
+        "lotteryHouseEdgePercent": 5
+      }
+    },
+    {
       "id": "voice-chat-demo",
       "token": "op_voice_chat",
       "name": "Voice chat demo",

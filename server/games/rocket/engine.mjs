@@ -4,6 +4,7 @@
 
 import { ROCKET_GAME } from './config.mjs';
 import { capMultiplier, capWinByBet } from '../../economy/payout-limits.mjs';
+import { withRealtimeSync } from '../../realtime/sync.mjs';
 
 /** @typedef {'betting' | 'flying' | 'ended'} RocketPhase */
 
@@ -131,19 +132,25 @@ export function createRocketEngine(config = ROCKET_GAME) {
     }
 
     const activeBets = [...bets.values()].filter((b) => b.roundId === roundSeq);
-    const playerCount = Math.min(13, Math.max(3, activeBets.length + 2));
-    const maxPlayers = 13;
+    const playerCount = activeBets.length;
+    const maxPlayers = 999;
+    const phaseEndsAt =
+      phase === 'betting' ? bettingEndsMs : phase === 'flying' ? flyStartMs + flightDurationSec(crashAt) * 1000 : endedAtMs + config.resultSeconds * 1000;
 
-    return {
+    return withRealtimeSync({
       roundId: roundSeq,
       phase,
       countdown,
       multiplier,
-      crashAt: phase === 'ended' ? crashAt : undefined,
+      crashAt: phase === 'ended' ? crashAt : phase === 'flying' ? crashAt : undefined,
       history: [...history],
       playerCount,
       maxPlayers,
-    };
+      phaseStartedAt: phase === 'flying' ? flyStartMs : roundStartMs,
+      phaseEndsAt,
+      flyStartMs: phase === 'flying' || phase === 'ended' ? flyStartMs : 0,
+      bettingEndsMs,
+    });
   }
 
   function playerBetKey(platformKey) {
