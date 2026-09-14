@@ -90,10 +90,10 @@ body {
 
 .gm-sheet > #app,
 .gm-sheet > .greedy-game,
-.gm-sheet > .pets-game,
 .gm-sheet > .l77,
 .gm-sheet > .fc,
 .gm-sheet > .dd,
+.gm-sheet > .rk,
 .gm-sheet > .ba-app {
   flex: 1;
   width: 100%;
@@ -108,12 +108,6 @@ body {
   background: #3d2060;
   --r: calc(100cqw / 750 * 0.93);
   --result-r: calc(100cqw / 750 * 1.28);
-}
-
-.gm-shell--pets .gm-sheet {
-  container-type: inline-size;
-  background: #1e3a5f;
-  --r: calc(100cqw / 750);
 }
 
 .gm-shell--launcher {

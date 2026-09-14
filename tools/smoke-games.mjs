@@ -68,17 +68,9 @@ const economy = await get('/api/v1/economy?game=rise-of-olympus');
 if (economy.ok && economy.json?.poolBalance != null) pass('GET /api/v1/economy');
 else fail('GET /api/v1/economy', economy.json?.error || economy.status);
 
-const petsInit = await get('/api/lottery/pets-beasts/init');
-if (petsInit.ok && petsInit.json?.data?.sessionId) pass('GET /api/lottery/pets-beasts/init');
-else fail('GET /api/lottery/pets-beasts/init', petsInit.json?.msg || petsInit.status);
-
 const greedyPage = await get('/play/greedy');
 if (greedyPage.ok && greedyPage.text.includes('greedy.js')) pass('GET /play/greedy');
 else fail('GET /play/greedy', greedyPage.status);
-
-const petsPage = await get('/play/pets-beasts');
-if (petsPage.ok && petsPage.text.includes('pets-beasts.js')) pass('GET /play/pets-beasts');
-else fail('GET /play/pets-beasts', petsPage.status);
 
 const rooPage = await get('/play/rise-of-olympus');
 if (rooPage.ok && (rooPage.text.includes('main.js') || rooPage.text.includes('Rise of Olympus'))) {

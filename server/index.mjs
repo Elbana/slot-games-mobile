@@ -67,7 +67,6 @@ app.use('/launcher', express.static(path.join(ROOT, 'public', 'launcher')));
 // Lottery static assets (legacy paths from cloned UIs)
 app.use('/shared', express.static(path.join(GAMES_ROOT, 'shared')));
 app.use('/lottery/greedy', express.static(path.join(GAMES_ROOT, 'greedy')));
-app.use('/lottery/pets-beasts', express.static(path.join(GAMES_ROOT, 'pets-beasts')));
 app.use('/lottery/petsbeasts', express.static(path.join(GAMES_ROOT, 'pets-beasts', 'assets')));
 app.use('/lottery/lucky77', express.static(path.join(GAMES_ROOT, 'lucky77')));
 app.use('/dice-dual', express.static(path.join(GAMES_ROOT, 'dice-dual')));
@@ -90,10 +89,6 @@ function sendPlayPage(res, htmlPath, token, player) {
 
 app.get('/play/greedy', (req, res) => {
   sendPlayPage(res, path.join(GAMES_ROOT, 'greedy', 'play.html'), req.query.token, req.query.player);
-});
-
-app.get('/play/pets-beasts', (req, res) => {
-  sendPlayPage(res, path.join(GAMES_ROOT, 'pets-beasts', 'play.html'), req.query.token, req.query.player);
 });
 
 app.get('/play/lucky77', (req, res) => {

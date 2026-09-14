@@ -20,12 +20,6 @@ const DISPLAY = {
     theme: 'greedy',
     icon: '🍕',
   },
-  'pets-beasts': {
-    tagline: 'Pets vs beasts — spin the animal wheel',
-    badge: 'Lottery',
-    theme: 'pets',
-    icon: '🦁',
-  },
   lucky77: {
     tagline: 'Bet Lemon, Watermelon or Lucky 77 — live wheel',
     badge: 'Wheel',

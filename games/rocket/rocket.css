@@ -2,18 +2,30 @@
   --rk-green: #3dff6a;
   --rk-green-dark: #1a9e3f;
   --rk-gold: #f5cc4d;
+}
+
+.gm-shell--rocket::before {
+  content: none;
+}
+
+.gm-shell--rocket .gm-sheet {
   background: #000;
 }
 
 .rk {
+  position: relative;
+  flex: 1;
+  width: 100%;
   container-type: inline-size;
-  min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  min-height: 0;
   background: #000;
   color: #fff;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: manipulation;
 }
 
 /* ── Top bar ── */
@@ -21,7 +33,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 12px 6px;
+  padding: 6px 10px 4px;
+  flex-shrink: 0;
   z-index: 10;
 }
 
@@ -83,9 +96,10 @@
 .rk-history {
   display: flex;
   gap: 6px;
-  padding: 4px 12px 8px;
+  padding: 2px 10px 6px;
   overflow-x: auto;
   scrollbar-width: none;
+  flex-shrink: 0;
   z-index: 10;
 }
 
@@ -187,8 +201,9 @@
 .rk-panel {
   position: relative;
   z-index: 10;
-  margin: 0 8px calc(8px + env(safe-area-inset-bottom, 0));
-  padding: 10px 12px 12px;
+  flex-shrink: 0;
+  margin: 0 8px 6px;
+  padding: 8px 10px 10px;
   background: rgba(18, 18, 22, 0.92);
   border-radius: 16px 16px 14px 14px;
   border: 1px solid rgba(255, 255, 255, 0.06);
@@ -335,9 +350,9 @@
 .rk-auto-bet img { width: 14px; height: 14px; }
 
 .rk-action {
-  min-width: clamp(100px, 28cqw, 120px);
-  min-height: 72px;
-  padding: 10px 16px;
+  min-width: clamp(92px, 26cqw, 112px);
+  min-height: 64px;
+  padding: 8px 14px;
   border: 0;
   border-radius: 12px;
   background: linear-gradient(180deg, #5dff82 0%, var(--rk-green) 45%, var(--rk-green-dark) 100%);
@@ -370,7 +385,7 @@
 }
 
 .rk-action__label {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 900;
   letter-spacing: 0.06em;
 }
@@ -387,9 +402,9 @@
 .rk-action__amt img { width: 14px; height: 14px; }
 
 .rk-toast {
-  position: fixed;
+  position: absolute;
   left: 50%;
-  bottom: calc(120px + env(safe-area-inset-bottom, 0));
+  bottom: calc(118px + env(safe-area-inset-bottom, 0));
   transform: translateX(-50%) translateY(12px);
   padding: 10px 16px;
   border-radius: 10px;
@@ -408,4 +423,55 @@
 .rk-toast.show {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+/* Half-screen embed — slightly taller sheet for canvas + bet panel */
+.gm-shell--rocket.gm-shell--embed {
+  --gm-sheet-h: min(68dvh, 580px);
+}
+
+.gm-shell--rocket.gm-shell--embed .gm-sheet {
+  container-type: size;
+  container-name: rocket-sheet;
+}
+
+@container rocket-sheet (max-height: 520px) {
+  .rk-top {
+    padding: 4px 8px 2px;
+  }
+
+  .rk-icon-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  .rk-history {
+    padding: 0 8px 4px;
+  }
+
+  .rk-pill {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  .rk-center__live {
+    font-size: clamp(34px, 12cqw, 48px);
+  }
+
+  .rk-panel {
+    margin: 0 6px 4px;
+    padding: 6px 8px 8px;
+  }
+
+  .rk-action {
+    min-height: 58px;
+  }
+
+  .rk-action__label {
+    font-size: 18px;
+  }
+
+  .rk-chip__can {
+    width: clamp(32px, 10cqw, 40px);
+  }
 }

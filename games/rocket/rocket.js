@@ -543,6 +543,10 @@ async function init() {
 
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
+  const stage = canvas.parentElement;
+  if (stage && typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(resizeCanvas).observe(stage);
+  }
 
   async function loop() {
     await pollState();
