@@ -513,7 +513,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: clamp(4px, 1.8cqw, 8px);
+  gap: clamp(3px, 1.4cqw, 6px);
   padding: 2px 0;
   min-width: 0;
   overflow: hidden;
@@ -522,13 +522,14 @@
 .fc-chip {
   --chip-bg: linear-gradient(145deg, #22c55e, #15803d 52%, #14532d);
   --chip-edge: rgba(187, 247, 208, 0.55);
-  --ball-patch: #16a34a;
+  --ball-patch: #15803d;
+  --chip-label: #bbf7d0;
   flex: 0 0 auto;
   position: relative;
-  width: clamp(40px, 10.5cqw, 48px);
-  height: clamp(40px, 10.5cqw, 48px);
-  min-width: 38px;
-  min-height: 38px;
+  width: clamp(36px, 9.2cqw, 44px);
+  height: clamp(36px, 9.2cqw, 44px);
+  min-width: 34px;
+  min-height: 34px;
   padding: 0;
   border: none;
   border-radius: 50%;
@@ -548,9 +549,9 @@
 .fc-chip::before {
   content: '';
   position: absolute;
-  inset: 4px;
+  inset: 3px;
   border-radius: 50%;
-  border: 2px dashed rgba(255, 255, 255, 0.38);
+  border: 2px dashed rgba(255, 255, 255, 0.55);
   pointer-events: none;
 }
 
@@ -567,38 +568,50 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 82%;
-  height: 82%;
-  transform: translate(-50%, -54%);
+  width: 72%;
+  height: 72%;
+  transform: translate(-50%, -50%);
   z-index: 1;
   pointer-events: none;
-  overflow: visible;
+  border-radius: 50%;
+  color: var(--ball-patch, #16a34a);
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.2));
 }
 
-.fc-chip__ball-canvas {
+.fc-chip__ball {
   width: 100%;
   height: 100%;
   display: block;
-  filter: drop-shadow(0 1px 2px rgba(15, 23, 42, 0.35));
+  border-radius: 50%;
+}
+
+.fc-ball-pents {
+  fill: var(--ball-patch, #16a34a);
 }
 
 .fc-chip__label {
   position: absolute;
-  bottom: 11%;
+  bottom: 10%;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 2;
-  font-size: clamp(7px, 2cqw, 9px);
+  z-index: 3;
+  font-size: clamp(8px, 2.5cqw, 11px);
   font-weight: 900;
   letter-spacing: -0.02em;
   line-height: 1;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  text-align: center;
+  color: var(--chip-label, #fef08a);
+  -webkit-text-stroke: 0.35px rgba(0, 0, 0, 0.65);
+  text-shadow:
+    0 0 3px rgba(0, 0, 0, 0.95),
+    0 1px 2px rgba(0, 0, 0, 0.9),
+    0 0 1px rgba(0, 0, 0, 1);
   pointer-events: none;
 }
 
 .fc-chip:active { transform: scale(0.94); }
 .fc-chip.active {
-  transform: scale(1.06);
+  transform: scale(1.04);
   box-shadow:
     0 0 0 2px rgba(255, 255, 255, 0.95),
     0 0 0 4px var(--chip-edge),
@@ -611,22 +624,26 @@
 .fc-chip--100 {
   --chip-bg: linear-gradient(145deg, #4ade80, #16a34a 50%, #14532d);
   --chip-edge: rgba(187, 247, 208, 0.65);
-  --ball-patch: #16a34a;
+  --ball-patch: #15803d;
+  --chip-label: #bbf7d0;
 }
 .fc-chip--1k {
   --chip-bg: linear-gradient(145deg, #60a5fa, #2563eb 50%, #1e3a8a);
   --chip-edge: rgba(191, 219, 254, 0.65);
-  --ball-patch: #2563eb;
+  --ball-patch: #1d4ed8;
+  --chip-label: #bfdbfe;
 }
 .fc-chip--10k {
   --chip-bg: linear-gradient(145deg, #f472b6, #db2777 50%, #831843);
   --chip-edge: rgba(251, 207, 232, 0.65);
-  --ball-patch: #db2777;
+  --ball-patch: #be185d;
+  --chip-label: #fbcfe8;
 }
 .fc-chip--100k {
   --chip-bg: linear-gradient(145deg, #fb923c, #ea580c 50%, #9a3412);
   --chip-edge: rgba(254, 215, 170, 0.65);
-  --ball-patch: #ea580c;
+  --ball-patch: #c2410c;
+  --chip-label: #fed7aa;
 }
 
 .fc-rebet {
@@ -664,10 +681,10 @@
   overflow: visible;
   left: var(--from-x);
   top: var(--from-y);
-  width: clamp(40px, 10.5cqw, 48px);
-  height: clamp(40px, 10.5cqw, 48px);
-  margin-left: calc(clamp(40px, 10.5cqw, 48px) / -2);
-  margin-top: calc(clamp(40px, 10.5cqw, 48px) / -2);
+  width: clamp(36px, 9.2cqw, 44px);
+  height: clamp(36px, 9.2cqw, 44px);
+  margin-left: calc(clamp(36px, 9.2cqw, 44px) / -2);
+  margin-top: calc(clamp(36px, 9.2cqw, 44px) / -2);
   border-radius: 50%;
   background: var(--chip-bg);
   box-shadow:
@@ -691,22 +708,26 @@
 .fc-chip-fly--100 {
   --chip-bg: linear-gradient(145deg, #4ade80, #16a34a 50%, #14532d);
   --chip-edge: rgba(187, 247, 208, 0.65);
-  --ball-patch: #16a34a;
+  --ball-patch: #15803d;
+  --chip-label: #bbf7d0;
 }
 .fc-chip-fly--1k {
   --chip-bg: linear-gradient(145deg, #60a5fa, #2563eb 50%, #1e3a8a);
   --chip-edge: rgba(191, 219, 254, 0.65);
-  --ball-patch: #2563eb;
+  --ball-patch: #1d4ed8;
+  --chip-label: #bfdbfe;
 }
 .fc-chip-fly--10k {
   --chip-bg: linear-gradient(145deg, #f472b6, #db2777 50%, #831843);
   --chip-edge: rgba(251, 207, 232, 0.65);
-  --ball-patch: #db2777;
+  --ball-patch: #be185d;
+  --chip-label: #fbcfe8;
 }
 .fc-chip-fly--100k {
   --chip-bg: linear-gradient(145deg, #fb923c, #ea580c 50%, #9a3412);
   --chip-edge: rgba(254, 215, 170, 0.65);
-  --ball-patch: #ea580c;
+  --ball-patch: #c2410c;
+  --chip-label: #fed7aa;
 }
 
 @keyframes fc-chip-fly {
