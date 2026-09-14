@@ -513,7 +513,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: clamp(3px, 1.4cqw, 6px);
+  gap: clamp(4px, 1.8cqw, 8px);
   padding: 2px 0;
   min-width: 0;
   overflow: hidden;
@@ -521,27 +521,38 @@
 
 .fc-chip {
   --chip-bg: linear-gradient(145deg, #22c55e, #15803d 52%, #14532d);
-  --chip-edge: rgba(187, 247, 208, 0.55);
+  --chip-edge: rgba(187, 247, 208, 0.72);
+  --chip-rim: rgba(255, 255, 255, 0.42);
   --ball-patch: #15803d;
   --chip-label: #bbf7d0;
   flex: 0 0 auto;
   position: relative;
-  width: clamp(36px, 9.2cqw, 44px);
-  height: clamp(36px, 9.2cqw, 44px);
-  min-width: 34px;
-  min-height: 34px;
+  width: clamp(40px, 10.5cqw, 48px);
+  height: clamp(40px, 10.5cqw, 48px);
+  min-width: 38px;
+  min-height: 38px;
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: var(--chip-bg);
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 50%, var(--chip-bg) 0%, var(--chip-bg) 54%, transparent 54.5%),
+    repeating-conic-gradient(
+      from -6deg at 50% 50%,
+      var(--chip-rim) 0deg 7deg,
+      transparent 7deg 14deg
+    ),
+    radial-gradient(circle, transparent 56%, rgba(0, 0, 0, 0.18) 57%, transparent 62%),
+    var(--chip-bg);
   color: #fff;
   cursor: pointer;
   box-shadow:
-    0 0 0 2px rgba(0, 0, 0, 0.35),
-    0 0 0 3px var(--chip-edge),
-    inset 0 2px 4px rgba(255, 255, 255, 0.28),
-    inset 0 -3px 6px rgba(0, 0, 0, 0.35),
-    0 4px 12px rgba(0, 0, 0, 0.42);
+    inset 0 0 0 1px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 4px var(--chip-edge),
+    inset 0 0 0 6px rgba(0, 0, 0, 0.28),
+    inset 0 2px 5px rgba(255, 255, 255, 0.32),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.38),
+    0 3px 10px rgba(0, 0, 0, 0.38);
   -webkit-tap-highlight-color: transparent;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
@@ -549,10 +560,11 @@
 .fc-chip::before {
   content: '';
   position: absolute;
-  inset: 3px;
+  inset: 5px;
   border-radius: 50%;
-  border: 2px dashed rgba(255, 255, 255, 0.55);
+  border: 1.5px dashed rgba(255, 255, 255, 0.52);
   pointer-events: none;
+  z-index: 2;
 }
 
 .fc-chip::after {
@@ -560,16 +572,17 @@
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.22), transparent 52%);
+  background: radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.26), transparent 48%);
   pointer-events: none;
+  z-index: 3;
 }
 
 .fc-chip__ball-wrap {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 72%;
-  height: 72%;
+  width: 66%;
+  height: 66%;
   transform: translate(-50%, -50%);
   z-index: 1;
   pointer-events: none;
@@ -611,14 +624,15 @@
 
 .fc-chip:active { transform: scale(0.94); }
 .fc-chip.active {
-  transform: scale(1.04);
+  transform: scale(1.06);
   box-shadow:
-    0 0 0 2px rgba(255, 255, 255, 0.95),
-    0 0 0 4px var(--chip-edge),
-    0 0 14px rgba(255, 255, 255, 0.35),
-    inset 0 2px 4px rgba(255, 255, 255, 0.28),
-    inset 0 -3px 6px rgba(0, 0, 0, 0.35),
-    0 6px 16px rgba(0, 0, 0, 0.48);
+    inset 0 0 0 2px rgba(255, 255, 255, 0.92),
+    inset 0 0 0 5px var(--chip-edge),
+    inset 0 0 0 7px rgba(0, 0, 0, 0.22),
+    inset 0 2px 5px rgba(255, 255, 255, 0.36),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.38),
+    0 0 10px var(--chip-edge),
+    0 4px 14px rgba(0, 0, 0, 0.45);
 }
 
 .fc-chip--100 {
@@ -675,34 +689,45 @@
 
 .fc-chip-fly {
   --chip-bg: linear-gradient(145deg, #4ade80, #16a34a 50%, #14532d);
-  --chip-edge: rgba(187, 247, 208, 0.65);
+  --chip-edge: rgba(187, 247, 208, 0.72);
+  --chip-rim: rgba(255, 255, 255, 0.42);
   --ball-patch: #16a34a;
   position: fixed;
-  overflow: visible;
+  overflow: hidden;
   left: var(--from-x);
   top: var(--from-y);
-  width: clamp(36px, 9.2cqw, 44px);
-  height: clamp(36px, 9.2cqw, 44px);
-  margin-left: calc(clamp(36px, 9.2cqw, 44px) / -2);
-  margin-top: calc(clamp(36px, 9.2cqw, 44px) / -2);
+  width: clamp(40px, 10.5cqw, 48px);
+  height: clamp(40px, 10.5cqw, 48px);
+  margin-left: calc(clamp(40px, 10.5cqw, 48px) / -2);
+  margin-top: calc(clamp(40px, 10.5cqw, 48px) / -2);
   border-radius: 50%;
-  background: var(--chip-bg);
+  background:
+    radial-gradient(circle at 50% 50%, var(--chip-bg) 0%, var(--chip-bg) 54%, transparent 54.5%),
+    repeating-conic-gradient(
+      from -6deg at 50% 50%,
+      var(--chip-rim) 0deg 7deg,
+      transparent 7deg 14deg
+    ),
+    radial-gradient(circle, transparent 56%, rgba(0, 0, 0, 0.18) 57%, transparent 62%),
+    var(--chip-bg);
   box-shadow:
-    0 0 0 2px rgba(0, 0, 0, 0.35),
-    0 0 0 3px var(--chip-edge),
-    inset 0 2px 4px rgba(255, 255, 255, 0.28),
-    inset 0 -3px 6px rgba(0, 0, 0, 0.35),
-    0 8px 22px rgba(0, 0, 0, 0.5);
+    inset 0 0 0 1px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 4px var(--chip-edge),
+    inset 0 0 0 6px rgba(0, 0, 0, 0.28),
+    inset 0 2px 5px rgba(255, 255, 255, 0.32),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.38),
+    0 6px 18px rgba(0, 0, 0, 0.48);
   animation: fc-chip-fly 0.58s cubic-bezier(0.22, 1.05, 0.36, 1) forwards;
 }
 
 .fc-chip-fly::before {
   content: '';
   position: absolute;
-  inset: 4px;
+  inset: 5px;
   border-radius: 50%;
-  border: 2px dashed rgba(255, 255, 255, 0.38);
+  border: 1.5px dashed rgba(255, 255, 255, 0.52);
   pointer-events: none;
+  z-index: 2;
 }
 
 .fc-chip-fly--100 {
