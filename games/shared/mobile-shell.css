@@ -110,14 +110,6 @@ body {
   --result-r: calc(100cqw / 750 * 1.28);
 }
 
-.gm-shell--greedy.gm-shell--embed .gm-sheet {
-  container-type: size;
-  --r-w: calc(100cqw / 750 * 0.93);
-  --r-h: calc(100cqh / 880 * 0.93);
-  --r: min(var(--r-w), var(--r-h));
-  --result-r: min(calc(100cqw / 750 * 1.28), calc(100cqh / 880 * 1.28));
-}
-
 .gm-shell--pets .gm-sheet {
   container-type: inline-size;
   background: #1e3a5f;

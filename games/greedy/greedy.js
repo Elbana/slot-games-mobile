@@ -26,6 +26,22 @@ const FOODS = [
 
 const CHIPS = [2, 10, 50, 100, 1000];
 
+const GREEDY_DESIGN_W = 750;
+
+function syncGreedyEmbedScale() {
+  const sheet = document.querySelector('.gm-shell--greedy.gm-shell--embed .gm-sheet');
+  const inner = sheet?.querySelector('.greedy-scale-inner');
+  if (!sheet || !inner) return;
+
+  const designH = inner.scrollHeight || 1353;
+  const fit = Math.min(
+    sheet.clientWidth / GREEDY_DESIGN_W,
+    sheet.clientHeight / designH,
+  );
+  inner.style.setProperty('--greedy-fit', String(fit));
+  inner.style.setProperty('--greedy-design-h', String(designH));
+}
+
 /** History icon ring color by food group (matches original) */
 const FOOD_GROUP = {
   BIGO_GREEDY_HOT_DOGS: 'pizza',
@@ -413,6 +429,17 @@ async function init() {
   buildArena();
   buildChips();
   updateOdds();
+  syncGreedyEmbedScale();
+  window.addEventListener('resize', syncGreedyEmbedScale);
+  if (typeof ResizeObserver !== 'undefined') {
+    const sheet = document.querySelector('.gm-shell--greedy.gm-shell--embed .gm-sheet');
+    const inner = sheet?.querySelector('.greedy-scale-inner');
+    if (sheet && inner) {
+      const ro = new ResizeObserver(() => syncGreedyEmbedScale());
+      ro.observe(sheet);
+      ro.observe(inner);
+    }
+  }
 
   $('bet-veg').addEventListener('click', () => betGroup('VEG').catch(() => {}));
   $('bet-meat').addEventListener('click', () => betGroup('MEAT').catch(() => {}));

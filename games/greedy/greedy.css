@@ -793,89 +793,34 @@ html, body {
 
 .toast.show { opacity: 1; }
 
-/* ── Half-screen embed — fit arena + controls in bottom sheet ── */
+/* ── Half-screen embed — scale fixed 750px layout to fit sheet ── */
 .gm-shell--greedy.gm-shell--embed .greedy-game {
   min-height: 0;
   overflow: hidden;
 }
 
-.gm-shell--greedy.gm-shell--embed .popup-content {
+.gm-shell--greedy.gm-shell--embed .greedy-scale-host {
   flex: 1;
   min-height: 0;
-  padding-top: calc(12 * var(--r));
-  overflow: hidden;
-}
-
-.gm-shell--greedy.gm-shell--embed .header {
-  padding: 6px 10px;
-  flex-shrink: 0;
-}
-
-.gm-shell--greedy.gm-shell--embed .left-icons img.icon-btn {
-  width: 24px;
-  height: 24px;
-  margin-right: 8px;
-}
-
-.gm-shell--greedy.gm-shell--embed .period-text {
-  font-size: calc(18 * var(--r));
-}
-
-.gm-shell--greedy.gm-shell--embed .main {
-  flex: 1 1 auto;
-  min-height: 0;
-  margin-top: calc(6 * var(--r));
-  overflow: hidden;
-}
-
-.gm-shell--greedy.gm-shell--embed .main > .bg {
   width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: center top;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
 }
 
-.gm-shell--greedy.gm-shell--embed .main .bottom {
-  bottom: calc(4 * var(--r));
-}
-
-.gm-shell--greedy.gm-shell--embed .footer {
+.gm-shell--greedy.gm-shell--embed .greedy-scale-inner {
+  container-type: inline-size;
+  width: 750px;
   flex-shrink: 0;
-  height: calc(290 * var(--r));
-  padding-top: calc(36 * var(--r));
-}
-
-.gm-shell--greedy.gm-shell--embed .footerbg {
-  height: 100%;
-  object-fit: cover;
-  object-position: top center;
-}
-
-.gm-shell--greedy.gm-shell--embed .footMain {
-  top: calc(36 * var(--r));
-}
-
-.gm-shell--greedy.gm-shell--embed .footMain .one {
-  height: calc(78 * var(--r));
-  padding-top: calc(4 * var(--r));
-  gap: calc(8 * var(--r));
-}
-
-.gm-shell--greedy.gm-shell--embed .footMain .two {
-  height: calc(68 * var(--r));
-  margin: calc(8 * var(--r)) calc(2 * var(--r)) calc(4 * var(--r));
+  margin-inline: auto;
+  transform: scale(var(--greedy-fit, 1));
+  transform-origin: top center;
+  margin-bottom: calc(var(--greedy-design-h, 1353) * 1px * (var(--greedy-fit, 1) - 1));
+  --r: calc(100cqw / 750 * 0.93);
+  --result-r: calc(100cqw / 750 * 1.28);
 }
 
 .gm-shell--greedy.gm-shell--embed .footMain .three {
   display: none;
-}
-
-.gm-shell--greedy.gm-shell--embed .balance-btn,
-.gm-shell--greedy.gm-shell--embed .reward-btn {
-  height: calc(68 * var(--r));
-}
-
-.gm-shell--greedy.gm-shell--embed .toast {
-  top: calc(8px + env(safe-area-inset-top, 0px));
-  font-size: calc(18 * var(--r));
 }
