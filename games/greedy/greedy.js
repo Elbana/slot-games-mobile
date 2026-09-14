@@ -27,6 +27,48 @@ const FOODS = [
 const CHIPS = [2, 10, 50, 100, 1000];
 
 const GREEDY_DESIGN_W = 750;
+const GREEDY_EDGE_PAD = 2;
+const GREEDY_SIDE_CROP = 24;
+const GREEDY_BOUNDS_INFLATE_X = 2;
+const GREEDY_BOUNDS_INFLATE_Y = 8;
+
+function measureGreedyEmbedBounds(content) {
+  const base = content.getBoundingClientRect();
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+
+  const measureWidth = (el) => {
+    const r = el.getBoundingClientRect();
+    minX = Math.min(minX, r.left);
+    maxX = Math.max(maxX, r.right);
+  };
+  const measureHeight = (el) => {
+    const r = el.getBoundingClientRect();
+    minY = Math.min(minY, r.top);
+    maxY = Math.max(maxY, r.bottom);
+  };
+
+  content.querySelectorAll('.animal-item, .startBox').forEach(measureWidth);
+  content.querySelectorAll('.animal-item, .startBox, .main .bottom, .footer').forEach(measureHeight);
+
+  if (!Number.isFinite(minX)) {
+    return {
+      x: 0,
+      y: 0,
+      w: GREEDY_DESIGN_W,
+      h: content.offsetHeight || content.scrollHeight || 900,
+    };
+  }
+
+  return {
+    x: minX - base.left - GREEDY_BOUNDS_INFLATE_X,
+    y: minY - base.top - GREEDY_BOUNDS_INFLATE_Y,
+    w: maxX - minX + GREEDY_BOUNDS_INFLATE_X * 2,
+    h: maxY - minY + GREEDY_BOUNDS_INFLATE_Y + GREEDY_BOUNDS_INFLATE_X,
+  };
+}
 
 function syncGreedyBalanceDisplay() {
   const val = $('balance')?.textContent ?? '0';
@@ -38,31 +80,57 @@ function syncGreedyEmbedScale() {
   const sheet = document.querySelector('.gm-shell--greedy.gm-shell--embed .gm-sheet');
   const host = sheet?.querySelector('.greedy-scale-host');
   const inner = sheet?.querySelector('.greedy-scale-inner');
-  if (!sheet || !host || !inner) return;
+  const content = inner?.querySelector('.popup-content');
+  if (!sheet || !host || !inner || !content) return;
 
-  inner.style.transform = 'none';
-  const designH = inner.offsetHeight || inner.scrollHeight || 900;
+  content.style.transform = 'none';
+  const bounds = measureGreedyEmbedBounds(content);
 
-  const hostRect = host.getBoundingClientRect();
-  const availW = hostRect.width || host.clientWidth || sheet.clientWidth;
-  const availH = hostRect.height || host.clientHeight || sheet.clientHeight;
+  const stage = inner.getBoundingClientRect();
+  const availW = stage.width || inner.clientWidth || sheet.clientWidth;
+  const availH = stage.height || inner.clientHeight;
   if (availW <= 0 || availH <= 0) return;
 
-  const fitW = (availW * 0.996) / GREEDY_DESIGN_W;
-  const fitH = (availH * 0.996) / designH;
-  const fit = fitW * designH <= availH + 1 ? fitW : Math.min(fitW, fitH);
+  const pad = GREEDY_EDGE_PAD;
+  const contentW = bounds.w;
+  const contentH = bounds.h;
 
-  const visualW = GREEDY_DESIGN_W * fit;
-  const visualH = designH * fit;
-  const offsetX = Math.max(0, (availW - visualW) / 2);
-  const offsetY = Math.max(0, (availH - visualH) / 2);
+  const fitCanvasW = (availW - pad * 2) / GREEDY_DESIGN_W;
+  const fitH = (availH - pad * 2) / contentH;
+  const fitFillW = (availW + GREEDY_SIDE_CROP) / contentW;
 
-  inner.style.width = `${GREEDY_DESIGN_W}px`;
-  inner.style.transformOrigin = '0 0';
-  inner.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${fit})`;
+  let fit = fitCanvasW;
+  const fillFit = Math.min(fitH, fitFillW);
+  if (fillFit > fit && fillFit * contentH <= availH - pad * 2) {
+    fit = fillFit;
+  }
+  if (fit * contentH > availH - pad * 2) {
+    fit = Math.min(fit, fitH);
+  }
+
+  const visualH = contentH * fit;
+  const overflowsX = contentW * fit > availW - pad * 2;
+  const overflowsY = visualH > availH - pad * 2;
+
+  const minOffsetX = pad - bounds.x * fit;
+  const maxOffsetX = availW - pad - bounds.x * fit - contentW * fit;
+  const minOffsetY = pad - bounds.y * fit;
+  const maxOffsetY = availH - pad - bounds.y * fit - visualH;
+
+  let offsetX = (availW - contentW * fit) / 2 - bounds.x * fit;
+  const verticalSlack = Math.max(0, maxOffsetY - minOffsetY);
+  let offsetY = minOffsetY + (overflowsY ? 0 : verticalSlack * 0.08);
+  if (!overflowsX) {
+    offsetX = Math.min(Math.max(offsetX, minOffsetX), maxOffsetX);
+  }
+  offsetY = Math.min(Math.max(offsetY, minOffsetY), maxOffsetY);
+
+  content.style.width = `${GREEDY_DESIGN_W}px`;
+  content.style.transformOrigin = '0 0';
+  content.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${fit})`;
 
   host.style.setProperty('--greedy-fit', String(fit));
-  host.style.setProperty('--greedy-design-h', String(designH));
+  host.style.setProperty('--greedy-design-h', String(bounds.h));
   host.style.setProperty('--greedy-host-w', `${Math.round(availW)}px`);
   host.style.setProperty('--greedy-host-h', `${Math.round(availH)}px`);
 
@@ -87,10 +155,12 @@ function setupGreedyEmbedScale() {
     const sheet = document.querySelector('.gm-shell--greedy.gm-shell--embed .gm-sheet');
     const host = sheet?.querySelector('.greedy-scale-host');
     const inner = sheet?.querySelector('.greedy-scale-inner');
+    const content = inner?.querySelector('.popup-content');
     if (host && inner) {
       const ro = new ResizeObserver(remeasure);
       ro.observe(host);
       ro.observe(inner);
+      if (content) ro.observe(content);
     }
   }
 

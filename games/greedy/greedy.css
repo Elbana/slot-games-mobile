@@ -794,6 +794,10 @@ html, body {
 .toast.show { opacity: 1; }
 
 /* ── Half-screen embed — reference-style layout ── */
+.gm-shell--greedy.gm-shell--embed {
+  --gm-sheet-h: min(75dvh, 640px);
+}
+
 .gm-shell--greedy.gm-shell--embed .gm-sheet {
   container-type: size;
   container-name: greedy-sheet;
@@ -802,7 +806,7 @@ html, body {
 
 .gm-shell--greedy.gm-shell--embed .greedy-game {
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
   background: #ffd44d;
 }
 
@@ -810,38 +814,66 @@ html, body {
   flex: 1;
   min-height: 0;
   width: 100%;
-  overflow: hidden;
+  overflow: visible;
   container-type: size;
   container-name: greedy-host;
   position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.gm-shell--greedy.gm-shell--embed .greedy-embed-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: calc(6 * var(--r)) calc(10 * var(--r)) calc(4 * var(--r));
+  background: transparent;
+  pointer-events: none;
+}
+
+.gm-shell--greedy.gm-shell--embed .greedy-embed-header a,
+.gm-shell--greedy.gm-shell--embed .greedy-embed-header img,
+.gm-shell--greedy.gm-shell--embed .greedy-embed-header .header-balance,
+.gm-shell--greedy.gm-shell--embed .greedy-embed-header .period-text {
+  pointer-events: auto;
 }
 
 .gm-shell--greedy.gm-shell--embed .greedy-scale-inner {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 750px;
+  flex: 1 1 auto;
+  min-height: 0;
+  position: relative;
+  width: 100%;
+  overflow: visible;
   --r: 0.93px;
   --result-r: 1.28px;
   will-change: transform;
 }
 
+.gm-shell--greedy.gm-shell--embed .greedy-scale-inner > .popup-content {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 750px;
+}
+
 .gm-shell--greedy.gm-shell--embed .popup-content {
   padding-top: 0;
   background: transparent;
+  overflow: visible;
 }
 
-.gm-shell--greedy.gm-shell--embed .header {
-  position: relative;
-  z-index: 20;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding: calc(6 * var(--r)) calc(10 * var(--r)) calc(2 * var(--r));
-  background: linear-gradient(180deg, rgba(255, 220, 80, 0.65), transparent);
+.gm-shell--greedy.gm-shell--embed .greedy-embed-header .left-icons img.icon-btn {
+  width: calc(42 * var(--r));
+  height: calc(42 * var(--r));
+  margin-right: calc(4 * var(--r));
 }
 
-.gm-shell--greedy.gm-shell--embed .header__right {
+.gm-shell--greedy.gm-shell--embed .greedy-embed-header .header__right {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -849,7 +881,7 @@ html, body {
   min-width: 0;
 }
 
-.gm-shell--greedy.gm-shell--embed .header-balance {
+.gm-shell--greedy.gm-shell--embed .greedy-embed-header .header-balance {
   display: flex;
   align-items: center;
   gap: calc(5 * var(--r));
@@ -864,37 +896,41 @@ html, body {
   max-width: min(100%, calc(var(--greedy-host-w, 100%) - 120px));
 }
 
-.gm-shell--greedy.gm-shell--embed .header-balance #balance {
+.gm-shell--greedy.gm-shell--embed .greedy-embed-header .header-balance #balance {
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.gm-shell--greedy.gm-shell--embed .header-balance .coin-icon {
+.gm-shell--greedy.gm-shell--embed .greedy-embed-header .header-balance .coin-icon {
   width: calc(24 * var(--r));
   height: calc(24 * var(--r));
 }
 
-.gm-shell--greedy.gm-shell--embed .period-text {
+.gm-shell--greedy.gm-shell--embed .greedy-embed-header .period-text {
   font-size: calc(16 * var(--r));
   font-weight: 600;
   color: #4a3200;
   opacity: 0.9;
 }
 
-.gm-shell--greedy.gm-shell--embed .left-icons img.icon-btn {
-  width: calc(42 * var(--r));
-  height: calc(42 * var(--r));
-  margin-right: calc(4 * var(--r));
-}
-
 .gm-shell--greedy.gm-shell--embed .main {
-  margin-top: calc(-32 * var(--r));
+  margin-top: 0;
   overflow: visible;
 }
 
+.gm-shell--greedy.gm-shell--embed .animal-item {
+  z-index: 25;
+}
+
 .gm-shell--greedy.gm-shell--embed .main > .bg {
+  position: relative;
+  z-index: 0;
   width: 100%;
   display: block;
+}
+
+.gm-shell--greedy.gm-shell--embed .startBox {
+  z-index: 8;
 }
 
 .gm-shell--greedy.gm-shell--embed .main .bottom {
@@ -911,16 +947,16 @@ html, body {
 }
 
 .gm-shell--greedy.gm-shell--embed .goldItem {
-  width: calc(76 * var(--r));
-  height: calc(76 * var(--r));
+  width: calc(84 * var(--r));
+  height: calc(84 * var(--r));
   border-width: calc(3 * var(--r));
   border-radius: calc(12 * var(--r));
 }
 
 .gm-shell--greedy.gm-shell--embed .goldItemIcon {
-  width: calc(60 * var(--r));
-  height: calc(60 * var(--r));
-  font-size: calc(18 * var(--r));
+  width: calc(66 * var(--r));
+  height: calc(66 * var(--r));
+  font-size: calc(20 * var(--r));
 }
 
 .gm-shell--greedy.gm-shell--embed .gold-row {
@@ -930,26 +966,26 @@ html, body {
 
 @container greedy-host (max-width: 380px) {
   .gm-shell--greedy.gm-shell--embed .goldItem {
-    width: calc(68 * var(--r));
-    height: calc(68 * var(--r));
+    width: calc(76 * var(--r));
+    height: calc(76 * var(--r));
   }
 
   .gm-shell--greedy.gm-shell--embed .goldItemIcon {
-    width: calc(54 * var(--r));
-    height: calc(54 * var(--r));
-    font-size: calc(16 * var(--r));
+    width: calc(60 * var(--r));
+    height: calc(60 * var(--r));
+    font-size: calc(18 * var(--r));
   }
 
   .gm-shell--greedy.gm-shell--embed .gold-row {
     gap: calc(4 * var(--r));
   }
 
-  .gm-shell--greedy.gm-shell--embed .header-balance {
+  .gm-shell--greedy.gm-shell--embed .greedy-embed-header .header-balance {
     font-size: calc(18 * var(--r));
     padding: calc(3 * var(--r)) calc(8 * var(--r));
   }
 
-  .gm-shell--greedy.gm-shell--embed .left-icons img.icon-btn {
+  .gm-shell--greedy.gm-shell--embed .greedy-embed-header .left-icons img.icon-btn {
     width: calc(36 * var(--r));
     height: calc(36 * var(--r));
   }
@@ -965,14 +1001,14 @@ html, body {
 
 @container greedy-host (max-width: 330px) {
   .gm-shell--greedy.gm-shell--embed .goldItem {
-    width: calc(60 * var(--r));
-    height: calc(60 * var(--r));
+    width: calc(68 * var(--r));
+    height: calc(68 * var(--r));
   }
 
   .gm-shell--greedy.gm-shell--embed .goldItemIcon {
-    width: calc(48 * var(--r));
-    height: calc(48 * var(--r));
-    font-size: calc(14 * var(--r));
+    width: calc(54 * var(--r));
+    height: calc(54 * var(--r));
+    font-size: calc(16 * var(--r));
   }
 
   .gm-shell--greedy.gm-shell--embed .gold-row {
@@ -986,18 +1022,20 @@ html, body {
 }
 
 .gm-shell--greedy.gm-shell--embed .greedy-scale-host[data-greedy-compact~="xs"] .goldItem {
-  width: calc(60 * var(--r));
-  height: calc(60 * var(--r));
+  width: calc(68 * var(--r));
+  height: calc(68 * var(--r));
 }
 
-.gm-shell--greedy.gm-shell--embed .greedy-scale-host[data-greedy-compact~="w"] .header-balance {
+.gm-shell--greedy.gm-shell--embed .greedy-scale-host[data-greedy-compact~="w"] .greedy-embed-header .header-balance {
   font-size: calc(18 * var(--r));
 }
 
 .gm-shell--greedy.gm-shell--embed .footer {
   height: auto;
   padding-top: 0;
-  margin-top: calc(-8 * var(--r));
+  margin-top: calc(-28 * var(--r));
+  position: relative;
+  z-index: 12;
   overflow: visible;
 }
 
@@ -1030,10 +1068,6 @@ html, body {
 }
 
 @container greedy-host (max-height: 460px) {
-  .gm-shell--greedy.gm-shell--embed .main {
-    margin-top: calc(-40 * var(--r));
-  }
-
   .gm-shell--greedy.gm-shell--embed .footMain .two {
     height: calc(64 * var(--r));
   }
@@ -1044,10 +1078,6 @@ html, body {
 }
 
 @container greedy-host (max-height: 400px) {
-  .gm-shell--greedy.gm-shell--embed .main {
-    margin-top: calc(-52 * var(--r));
-  }
-
   .gm-shell--greedy.gm-shell--embed .footMain .two {
     height: calc(58 * var(--r));
   }
@@ -1057,10 +1087,45 @@ html, body {
   }
 }
 
-.gm-shell--greedy.gm-shell--embed .greedy-scale-host[data-greedy-compact~="h"] .main {
-  margin-top: calc(-40 * var(--r));
+/* Result popup — compact for half-sheet (uses sheet --r / --result-r) */
+.gm-shell--greedy.gm-shell--embed .overlay .result {
+  max-height: 82%;
+  padding-top: calc(54 * var(--result-r));
+  padding-bottom: calc(14 * var(--result-r));
 }
 
-.gm-shell--greedy.gm-shell--embed .greedy-scale-host[data-greedy-compact~="sh"] .main {
-  margin-top: calc(-52 * var(--r));
+.gm-shell--greedy.gm-shell--embed .overlay .result .main {
+  margin: 0 calc(10 * var(--result-r)) calc(10 * var(--result-r));
+  width: calc(100% - 20 * var(--result-r));
+  padding: calc(56 * var(--result-r)) calc(18 * var(--result-r)) calc(16 * var(--result-r));
+}
+
+.gm-shell--greedy.gm-shell--embed .overlay .result .result-banner {
+  top: calc(-48 * var(--result-r));
+  width: calc(300 * var(--result-r));
+  height: calc(108 * var(--result-r));
+}
+
+.gm-shell--greedy.gm-shell--embed .overlay .result-row {
+  margin-top: calc(12 * var(--result-r));
+  font-size: calc(30 * var(--result-r));
+  gap: calc(8 * var(--result-r));
+}
+
+.gm-shell--greedy.gm-shell--embed .overlay .result-food {
+  width: calc(56 * var(--result-r));
+  height: calc(56 * var(--result-r));
+}
+
+.gm-shell--greedy.gm-shell--embed .overlay .divider-row {
+  margin: calc(14 * var(--result-r)) 0;
+}
+
+.gm-shell--greedy.gm-shell--embed .overlay .divider-text {
+  font-size: calc(18 * var(--result-r));
+}
+
+.gm-shell--greedy.gm-shell--embed .overlay .no-winners {
+  padding: calc(10 * var(--result-r)) 0;
+  font-size: calc(18 * var(--result-r));
 }
