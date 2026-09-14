@@ -38,7 +38,7 @@ let glowStopTimer = null;
 let lastSpinKey = '';
 let lastSpinPeriod = '';
 let winningSegmentIndex = -1;
-let winnerPulseActive = false;
+let showSegmentGlow = false;
 let glowPhase = 0;
 const GLOW_DURATION_MS = 1200;
 let prevStage = null;
@@ -161,69 +161,27 @@ function normalizeAngle(angle) {
   return a;
 }
 
-function segmentFillGradient(kind, cx, cy, outer, start, end, isWinner = false) {
+function segmentFillGradient(kind, cx, cy, outer, start, end) {
   const mid = (start + end) / 2;
   const gx = cx + Math.cos(mid) * outer * 0.35;
   const gy = cy + Math.sin(mid) * outer * 0.35;
   const grad = ctx.createRadialGradient(gx, gy, outer * 0.08, cx, cy, outer);
   if (kind === 'seven') {
-    if (isWinner) {
-      grad.addColorStop(0, '#a78bfa');
-      grad.addColorStop(0.5, '#7c3aed');
-      grad.addColorStop(1, '#4c1d95');
-      return grad;
-    }
     grad.addColorStop(0, '#6d28d9');
     grad.addColorStop(0.55, '#4c1d95');
     grad.addColorStop(1, '#1e1b4b');
     return grad;
   }
   if (kind === 'melon') {
-    if (isWinner) {
-      grad.addColorStop(0, '#5b9fd4');
-      grad.addColorStop(0.5, '#3d7ab5');
-      grad.addColorStop(1, '#245a8a');
-      return grad;
-    }
-    grad.addColorStop(0, '#3d6f9e');
-    grad.addColorStop(0.5, '#2d5a84');
-    grad.addColorStop(1, '#1a4060');
+    grad.addColorStop(0, '#34d399');
+    grad.addColorStop(0.5, '#15803d');
+    grad.addColorStop(1, '#052e16');
     return grad;
   }
-  if (isWinner) {
-    grad.addColorStop(0, '#4a8cc4');
-    grad.addColorStop(0.5, '#316fa8');
-    grad.addColorStop(1, '#1e5080');
-    return grad;
-  }
-  grad.addColorStop(0, '#2a5580');
-  grad.addColorStop(0.5, '#1e4468');
-  grad.addColorStop(1, '#122f4a');
+  grad.addColorStop(0, '#fbbf24');
+  grad.addColorStop(0.45, '#b45309');
+  grad.addColorStop(1, '#451a03');
   return grad;
-}
-
-function drawWinnerUnderLight(cx, cy, outer, inner, start, end, pulse) {
-  const mid = start + (end - start) / 2;
-  const lx = cx + Math.cos(mid) * outer * 0.72;
-  const ly = cy + Math.sin(mid) * outer * 0.72;
-  const flash = 0.55
-    + Math.sin(pulse * 16) * 0.22
-    + Math.sin(pulse * 24) * 0.12;
-
-  ctx.save();
-  ctx.beginPath();
-  ctx.moveTo(cx, cy);
-  ctx.arc(cx, cy, outer, start, end);
-  ctx.closePath();
-  ctx.clip();
-
-  const glow = ctx.createRadialGradient(lx, ly, inner * 0.2, lx, ly, outer * 0.55);
-  glow.addColorStop(0, `rgba(180, 220, 255, ${0.55 * flash})`);
-  glow.addColorStop(0.45, `rgba(120, 180, 240, ${0.28 * flash})`);
-  glow.addColorStop(1, 'rgba(80, 140, 220, 0)');
-  ctx.fillStyle = glow;
-  ctx.fillRect(cx - outer, cy - outer, outer * 2, outer * 2);
-  ctx.restore();
 }
 
 function drawSegmentIcon(code, x, y, r) {
@@ -255,6 +213,48 @@ function drawSegmentIcon(code, x, y, r) {
   ctx.fillText('77', x, y + 1);
 }
 
+function drawWinGlow(cx, cy, outer, inner, start, end, pulse) {
+  const flash = 0.78
+    + Math.sin(pulse * 18) * 0.16
+    + Math.sin(pulse * 27) * 0.1;
+  const bolt = 0.55 + Math.max(0, Math.sin(pulse * 32)) * 0.45;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.arc(cx, cy, outer, start, end);
+  ctx.closePath();
+  ctx.clip();
+
+  const grad = ctx.createRadialGradient(cx, cy - outer * 0.42, inner * 0.4, cx, cy, outer * 1.02);
+  grad.addColorStop(0, `rgba(255, 252, 220, ${0.92 * flash})`);
+  grad.addColorStop(0.2, `rgba(255, 228, 90, ${0.78 * flash})`);
+  grad.addColorStop(0.45, `rgba(255, 185, 40, ${0.52 * flash * bolt})`);
+  grad.addColorStop(0.72, `rgba(255, 140, 0, ${0.22 * flash})`);
+  grad.addColorStop(1, 'rgba(255, 120, 0, 0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(cx - outer, cy - outer, outer * 2, outer * 2);
+  ctx.restore();
+}
+
+function drawPointerSpotlight(cx, cy, outer, pulse) {
+  const flash = 0.72
+    + Math.sin(pulse * 20) * 0.18
+    + Math.sin(pulse * 31) * 0.12;
+  const topY = cy - outer * 0.72;
+  ctx.save();
+  const spot = ctx.createRadialGradient(cx, topY, 0, cx, topY, outer * 0.48);
+  spot.addColorStop(0, `rgba(255, 252, 210, ${0.9 * flash})`);
+  spot.addColorStop(0.35, `rgba(255, 215, 70, ${0.55 * flash})`);
+  spot.addColorStop(0.65, `rgba(255, 170, 20, ${0.25 * flash})`);
+  spot.addColorStop(1, 'rgba(255, 140, 0, 0)');
+  ctx.fillStyle = spot;
+  ctx.beginPath();
+  ctx.arc(cx, topY, outer * 0.48, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
 function drawWheelLayer(rotation, alpha = 1) {
   const w = canvas.width;
   const h = canvas.height;
@@ -280,17 +280,15 @@ function drawWheelLayer(rotation, alpha = 1) {
     ctx.moveTo(0, 0);
     ctx.arc(0, 0, outer, start, end);
     ctx.closePath();
-    const isWinner = winningSegmentIndex === i;
-    ctx.fillStyle = segmentFillGradient(kind, 0, 0, outer, start, end, isWinner);
+    ctx.fillStyle = segmentFillGradient(kind, 0, 0, outer, start, end);
     ctx.fill();
 
-    if (isWinner && winnerPulseActive) {
-      drawWinnerUnderLight(0, 0, outer, inner, start, end, glowPhase);
+    const isWinner = showSegmentGlow && i === winningSegmentIndex;
+    if (isWinner) {
+      drawWinGlow(0, 0, outer, inner, start, end, glowPhase);
     }
 
-    ctx.strokeStyle = isWinner
-      ? 'rgba(200, 230, 255, 0.45)'
-      : 'rgba(255, 255, 255, 0.14)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
     ctx.lineWidth = w * 0.003;
     ctx.beginPath();
     ctx.moveTo(Math.cos(start) * inner, Math.sin(start) * inner);
@@ -329,7 +327,7 @@ function drawWheelSelector(cx, cy, outer, inner, w) {
   const hubBand = w * 0.0135;
   const hubPurpleR = inner;
   const hubGoldOuter = hubPurpleR + hubBand;
-  const highlight = winningSegmentIndex >= 0;
+  const highlight = showSegmentGlow && winningSegmentIndex >= 0;
 
   ctx.save();
 
@@ -437,6 +435,9 @@ function drawWheelFrame(cx, cy, outer, inner, w) {
   ctx.stroke();
   ctx.restore();
 
+  if (showSegmentGlow && winningSegmentIndex >= 0) {
+    drawPointerSpotlight(cx, cy, outer, glowPhase);
+  }
 }
 
 function drawWheel(rotation, blurStrength = 0) {
@@ -481,7 +482,7 @@ function startGlowLoop() {
   function frame(now) {
     glowPhase = (now - start) / 1000;
     drawWheel(wheelRotation);
-    if (winnerPulseActive) {
+    if (showSegmentGlow) {
       glowAnim = requestAnimationFrame(frame);
     } else {
       glowAnim = null;
@@ -490,9 +491,9 @@ function startGlowLoop() {
   glowAnim = requestAnimationFrame(frame);
 }
 
-function clearWinnerHighlight() {
+function stopGlowLoop() {
+  showSegmentGlow = false;
   winningSegmentIndex = -1;
-  winnerPulseActive = false;
   if (glowStopTimer) {
     clearTimeout(glowStopTimer);
     glowStopTimer = null;
@@ -506,7 +507,7 @@ function clearWinnerHighlight() {
 function scheduleGlowEnd() {
   if (glowStopTimer) clearTimeout(glowStopTimer);
   glowStopTimer = setTimeout(() => {
-    winnerPulseActive = false;
+    showSegmentGlow = false;
     if (glowAnim) {
       cancelAnimationFrame(glowAnim);
       glowAnim = null;
@@ -518,7 +519,7 @@ function scheduleGlowEnd() {
 
 function animateWheelToStop(index, durationMs = 4200) {
   if (spinAnim) cancelAnimationFrame(spinAnim);
-  clearWinnerHighlight();
+  stopGlowLoop();
   const startRot = wheelRotation;
   const endRot = rotationForStop(index, startRot);
   const delta = endRot - startRot;
@@ -539,7 +540,7 @@ function animateWheelToStop(index, durationMs = 4200) {
       } else {
         wheelRotation = endRot;
         winningSegmentIndex = index;
-        winnerPulseActive = true;
+        showSegmentGlow = true;
         drawWheel(wheelRotation, 0);
         startGlowLoop();
         scheduleGlowEnd();
@@ -564,7 +565,7 @@ function snapRotationForStop(index) {
 function snapWheelToStop(index) {
   wheelRotation = snapRotationForStop(index);
   winningSegmentIndex = index;
-  winnerPulseActive = true;
+  showSegmentGlow = true;
   drawWheel(wheelRotation);
   startGlowLoop();
   scheduleGlowEnd();
@@ -726,7 +727,7 @@ async function tick() {
     }
   } else if (state.Stage === 4 && idx >= 0) {
     document.querySelectorAll('.l77-bet').forEach((b) => { b.disabled = true; });
-    if (!spinAnim && winningSegmentIndex !== idx && (periodChanged || spinKey !== lastSpinKey)) {
+    if (!spinAnim && !showSegmentGlow && (periodChanged || spinKey !== lastSpinKey)) {
       snapWheelToStop(idx);
       lastSpinKey = spinKey;
       lastSpinPeriod = state.Period;
@@ -736,8 +737,8 @@ async function tick() {
       if (periodChanged) {
         lastSpinKey = '';
         lastSpinPeriod = state.Period;
-        clearWinnerHighlight();
       }
+      stopGlowLoop();
       drawWheel(wheelRotation);
     }
     document.querySelectorAll('.l77-bet').forEach((b) => { b.disabled = !betting; });
