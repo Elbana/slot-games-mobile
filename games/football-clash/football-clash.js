@@ -10,6 +10,7 @@ let selectedChip = 200;
 let state = null;
 let prevPhase = null;
 let lastEventCount = 0;
+let lastActionEventCount = 0;
 let lastGoalEventKey = '';
 let lastOverlayKey = '';
 let cachedHistory = [];
@@ -30,9 +31,10 @@ const SFX = {
   kick: `${ASSET}/audio/kick.mp3`,
   shot: `${ASSET}/audio/shot.mp3`,
   goal: `${ASSET}/audio/goal-cheer.mp3`,
+  chip: `${ASSET}/audio/chip.mp3`,
 };
 
-const SFX_VOL = { whistle: 0.9, kick: 0.52, shot: 0.5, goal: 0.85 };
+const SFX_VOL = { whistle: 0.9, kick: 0.88, shot: 0.68, goal: 0.85, chip: 0.72 };
 
 let audioUnlocked = false;
 /** @type {Record<string, HTMLAudioElement>} */
@@ -113,6 +115,14 @@ function chipStyleClass(v) {
   return CHIP_STYLE_CLASSES[Math.max(0, Math.min(idx, CHIP_STYLE_CLASSES.length - 1))];
 }
 
+function chipInnerHtml(cls, label) {
+  return `<span class="fc-chip__ball-wrap" aria-hidden="true"><span class="fc-chip__ball fc-chip__ball--${cls}"></span></span><span class="fc-chip__label">${label}</span>`;
+}
+
+function playChipSound() {
+  playSfxKey('chip', SFX_VOL.chip);
+}
+
 function fmtNum(n) { return Number(n || 0).toLocaleString(); }
 
 function applyBettingConfig(betting) {
@@ -144,7 +154,7 @@ function flushPendingAudio() {
     pendingKickoffWhistle = false;
     playSfxKey('whistle', SFX_VOL.whistle);
   }
-  if (vis.phase === 'playing') scheduleKickSounds('playing');
+  if (vis.phase === 'playing') scheduleKickSounds();
 }
 
 function unlockAudio() {
@@ -167,11 +177,22 @@ function unlockAudio() {
 
 function playSfxKey(key, volume) {
   if (!audioUnlocked) return false;
-  const url = SFX[key];
-  if (!url) return false;
-  const a = new Audio(url);
-  a.volume = volume ?? SFX_VOL[key] ?? 0.5;
-  a.play().catch(() => {});
+  const base = sfxPool[key];
+  if (!base) return false;
+  const vol = volume ?? SFX_VOL[key] ?? 0.5;
+  let a;
+  try {
+    a = base.cloneNode(true);
+  } catch {
+    a = new Audio(base.src);
+  }
+  a.volume = vol;
+  a.play().catch(() => {
+    base.pause();
+    base.currentTime = 0;
+    base.volume = vol;
+    base.play().catch(() => {});
+  });
   return true;
 }
 
@@ -182,21 +203,20 @@ function clearKickTimer() {
   }
 }
 
-function scheduleKickSounds(phase = vis.phase) {
+function scheduleKickSounds() {
   clearKickTimer();
-  if (!audioUnlocked || phase !== 'playing') return;
-  const delay = 1400 + Math.random() * 2200;
+  if (!audioUnlocked || vis.phase !== 'playing') return;
+  const delay = 400 + Math.random() * 900;
   kickTimer = setTimeout(() => {
+    kickTimer = null;
     playKickSound();
-    scheduleKickSounds(phase);
+    scheduleKickSounds();
   }, delay);
 }
 
 function playKickSound() {
   if (!audioUnlocked || vis.phase !== 'playing') return;
-  const useShot = Math.random() < 0.4;
-  const key = useShot ? 'shot' : 'kick';
-  playSfxKey(key, (SFX_VOL[key] ?? 0.5) + Math.random() * 0.12);
+  playSfxKey('kick', (SFX_VOL.kick ?? 0.5) + Math.random() * 0.08);
 }
 
 function playWhistle() {
@@ -212,16 +232,20 @@ function syncMatchAudio(phase, fromPhase = null) {
   if (phase === 'playing' && fromPhase !== 'playing') {
     pendingKickoffWhistle = true;
     playWhistle();
-    if (audioUnlocked) scheduleKickSounds('playing');
-    return;
   }
   if (phase === 'playing' && audioUnlocked) {
-    scheduleKickSounds('playing');
-    return;
-  }
-  if (phase !== 'playing') {
+    scheduleKickSounds();
+  } else if (phase !== 'playing') {
     clearKickTimer();
   }
+}
+
+function checkActionSounds(events) {
+  if (!audioUnlocked || vis.phase !== 'playing') return;
+  const actions = (events || []).filter((e) => e.type === 'shot' || e.type === 'corner');
+  if (actions.length <= lastActionEventCount) return;
+  lastActionEventCount = actions.length;
+  playKickSound();
 }
 
 function playGoalSound() {
@@ -635,7 +659,7 @@ function updateTeamPicks(match) {
 function buildChips() {
   $('chips').innerHTML = chips.map((v) => {
     const cls = chipStyleClass(v);
-    return `<button type="button" class="fc-chip fc-chip--${cls}${v === selectedChip ? ' active' : ''}" data-chip="${v}">${chipLabel(v)}</button>`;
+    return `<button type="button" class="fc-chip fc-chip--${cls}${v === selectedChip ? ' active' : ''}" data-chip="${v}">${chipInnerHtml(cls, chipLabel(v))}</button>`;
   }).join('');
   $('chips').querySelectorAll('.fc-chip').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -654,14 +678,16 @@ function flyChipToPick(pred, amount) {
 
   const from = chipBtn.getBoundingClientRect();
   const to = pickBtn.getBoundingClientRect();
+  const cls = chipStyleClass(amount);
   const chip = document.createElement('div');
-  chip.className = `fc-chip-fly fc-chip-fly--${chipStyleClass(amount)}`;
-  chip.textContent = chipLabel(amount);
+  chip.className = `fc-chip-fly fc-chip-fly--${cls}`;
+  chip.innerHTML = chipInnerHtml(cls, chipLabel(amount));
   chip.style.setProperty('--from-x', `${from.left + from.width / 2}px`);
   chip.style.setProperty('--from-y', `${from.top + from.height / 2}px`);
   chip.style.setProperty('--to-x', `${to.left + to.width / 2}px`);
   chip.style.setProperty('--to-y', `${to.top + to.height / 2}px`);
   layer.appendChild(chip);
+  playChipSound();
   chip.addEventListener('animationend', () => chip.remove(), { once: true });
 }
 
@@ -796,8 +822,10 @@ function showResultPopup() {
 
 function applyState(next) {
   const prevScore = { h: vis.homeScore, a: vis.awayScore };
+  vis.phase = next.phase;
   if (prevPhase !== next.phase) {
     lastEventCount = 0;
+    lastActionEventCount = 0;
     if (next.phase === 'betting') {
       lastGoalEventKey = '';
       lastOverlayKey = '';
@@ -805,6 +833,8 @@ function applyState(next) {
       cheerBits.length = 0;
     }
     syncMatchAudio(next.phase, prevPhase);
+  } else if (next.phase === 'playing' && audioUnlocked && !kickTimer) {
+    scheduleKickSounds();
   }
   prevPhase = next.phase;
   state = next;
@@ -823,7 +853,6 @@ function applyState(next) {
   renderHistoryBar(next.history);
 
   const m = next.match;
-  vis.phase = next.phase;
   if (m) {
     vis.homeTeam = m.homeTeam;
     vis.awayTeam = m.awayTeam;
@@ -839,6 +868,7 @@ function applyState(next) {
 
     const events = m.events || [];
     checkNewGoals(events);
+    checkActionSounds(events);
     if (events.length !== lastEventCount) {
       lastEventCount = events.length;
       $('events').innerHTML = events.slice(-4).reverse().map((ev) =>

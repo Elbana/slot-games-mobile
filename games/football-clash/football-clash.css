@@ -520,29 +520,144 @@
 }
 
 .fc-chip {
+  --chip-bg: linear-gradient(145deg, #22c55e, #15803d 52%, #14532d);
+  --chip-edge: rgba(187, 247, 208, 0.55);
+  --ball-patch: #14532d;
+  --ball-highlight: #f0fdf4;
   flex: 0 0 auto;
-  width: clamp(36px, 9.5cqw, 44px);
-  height: clamp(36px, 9.5cqw, 44px);
-  min-width: 34px;
-  min-height: 34px;
+  position: relative;
+  width: clamp(40px, 10.5cqw, 48px);
+  height: clamp(40px, 10.5cqw, 48px);
+  min-width: 38px;
+  min-height: 38px;
   padding: 0;
+  border: none;
   border-radius: 50%;
-  border: 2px dashed rgba(255, 255, 255, 0.35);
+  background: var(--chip-bg);
   color: #fff;
-  font-size: clamp(8px, 2.2cqw, 10px);
-  font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+  box-shadow:
+    0 0 0 2px rgba(0, 0, 0, 0.35),
+    0 0 0 3px var(--chip-edge),
+    inset 0 2px 4px rgba(255, 255, 255, 0.28),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.35),
+    0 4px 12px rgba(0, 0, 0, 0.42);
   -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.fc-chip::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  border: 2px dashed rgba(255, 255, 255, 0.38);
+  pointer-events: none;
+}
+
+.fc-chip::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.22), transparent 52%);
+  pointer-events: none;
+}
+
+.fc-chip__ball-wrap {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  animation: fc-chip-ball-roll 1.35s linear infinite;
+  z-index: 1;
+}
+
+.fc-chip__ball {
+  width: 54%;
+  height: 54%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 28%, var(--ball-highlight) 0%, #fff 38%, #e2e8f0 72%, #94a3b8 100%);
+  box-shadow:
+    inset -2px -3px 4px rgba(0, 0, 0, 0.22),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.85),
+    0 1px 3px rgba(0, 0, 0, 0.35);
+  position: relative;
+}
+
+.fc-chip__ball::before {
+  content: '';
+  position: absolute;
+  width: 34%;
+  height: 34%;
+  top: 10%;
+  left: 33%;
+  border-radius: 50%;
+  background: var(--ball-patch);
+  box-shadow:
+    0.17em 0.26em 0 0 var(--ball-patch),
+    -0.2em 0.2em 0 0 var(--ball-patch),
+    0.04em -0.19em 0 0 var(--ball-patch),
+    0.24em -0.04em 0 0 var(--ball-patch);
+}
+
+.fc-chip__label {
+  position: absolute;
+  bottom: 11%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  font-size: clamp(7px, 2cqw, 9px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  pointer-events: none;
 }
 
 .fc-chip:active { transform: scale(0.94); }
-.fc-chip.active { outline: 2px solid #fff; outline-offset: 2px; }
-.fc-chip--100 { background: linear-gradient(145deg, #22c55e, #15803d); }
-.fc-chip--1k { background: linear-gradient(145deg, #3b82f6, #1d4ed8); }
-.fc-chip--10k { background: linear-gradient(145deg, #ec4899, #9d174d); }
-.fc-chip--100k { background: linear-gradient(145deg, #f97316, #c2410c); }
+.fc-chip.active {
+  transform: scale(1.06);
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.95),
+    0 0 0 4px var(--chip-edge),
+    0 0 14px rgba(255, 255, 255, 0.35),
+    inset 0 2px 4px rgba(255, 255, 255, 0.28),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.35),
+    0 6px 16px rgba(0, 0, 0, 0.48);
+}
+.fc-chip.active .fc-chip__ball-wrap { animation-duration: 0.85s; }
+
+.fc-chip--100 {
+  --chip-bg: linear-gradient(145deg, #4ade80, #16a34a 50%, #14532d);
+  --chip-edge: rgba(187, 247, 208, 0.65);
+  --ball-patch: #14532d;
+  --ball-highlight: #ecfdf5;
+}
+.fc-chip--1k {
+  --chip-bg: linear-gradient(145deg, #60a5fa, #2563eb 50%, #1e3a8a);
+  --chip-edge: rgba(191, 219, 254, 0.65);
+  --ball-patch: #1e3a8a;
+  --ball-highlight: #eff6ff;
+}
+.fc-chip--10k {
+  --chip-bg: linear-gradient(145deg, #f472b6, #db2777 50%, #831843);
+  --chip-edge: rgba(251, 207, 232, 0.65);
+  --ball-patch: #831843;
+  --ball-highlight: #fdf2f8;
+}
+.fc-chip--100k {
+  --chip-bg: linear-gradient(145deg, #fb923c, #ea580c 50%, #9a3412);
+  --chip-edge: rgba(254, 215, 170, 0.65);
+  --ball-patch: #7c2d12;
+  --ball-highlight: #fff7ed;
+}
+
+@keyframes fc-chip-ball-roll {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 
 .fc-rebet {
   flex-shrink: 0;
@@ -572,29 +687,64 @@
 }
 
 .fc-chip-fly {
+  --chip-bg: linear-gradient(145deg, #4ade80, #16a34a 50%, #14532d);
+  --chip-edge: rgba(187, 247, 208, 0.65);
+  --ball-patch: #14532d;
+  --ball-highlight: #ecfdf5;
   position: fixed;
+  overflow: visible;
   left: var(--from-x);
   top: var(--from-y);
-  width: clamp(36px, 9.5cqw, 44px);
-  height: clamp(36px, 9.5cqw, 44px);
-  margin-left: calc(clamp(36px, 9.5cqw, 44px) / -2);
-  margin-top: calc(clamp(36px, 9.5cqw, 44px) / -2);
+  width: clamp(40px, 10.5cqw, 48px);
+  height: clamp(40px, 10.5cqw, 48px);
+  margin-left: calc(clamp(40px, 10.5cqw, 48px) / -2);
+  margin-top: calc(clamp(40px, 10.5cqw, 48px) / -2);
   border-radius: 50%;
-  border: 2px dashed rgba(255, 255, 255, 0.4);
-  display: grid;
-  place-items: center;
-  font-size: clamp(8px, 2.2cqw, 10px);
-  font-weight: 800;
-  color: #fff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.75);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  background: var(--chip-bg);
+  box-shadow:
+    0 0 0 2px rgba(0, 0, 0, 0.35),
+    0 0 0 3px var(--chip-edge),
+    inset 0 2px 4px rgba(255, 255, 255, 0.28),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.35),
+    0 8px 22px rgba(0, 0, 0, 0.5);
   animation: fc-chip-fly 0.58s cubic-bezier(0.22, 1.05, 0.36, 1) forwards;
 }
 
-.fc-chip-fly--100 { background: linear-gradient(145deg, #22c55e, #15803d); }
-.fc-chip-fly--1k { background: linear-gradient(145deg, #3b82f6, #1d4ed8); }
-.fc-chip-fly--10k { background: linear-gradient(145deg, #ec4899, #9d174d); }
-.fc-chip-fly--100k { background: linear-gradient(145deg, #f97316, #c2410c); }
+.fc-chip-fly::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  border: 2px dashed rgba(255, 255, 255, 0.38);
+  pointer-events: none;
+}
+
+.fc-chip-fly .fc-chip__ball-wrap { animation-duration: 0.55s; }
+
+.fc-chip-fly--100 {
+  --chip-bg: linear-gradient(145deg, #4ade80, #16a34a 50%, #14532d);
+  --chip-edge: rgba(187, 247, 208, 0.65);
+  --ball-patch: #14532d;
+  --ball-highlight: #ecfdf5;
+}
+.fc-chip-fly--1k {
+  --chip-bg: linear-gradient(145deg, #60a5fa, #2563eb 50%, #1e3a8a);
+  --chip-edge: rgba(191, 219, 254, 0.65);
+  --ball-patch: #1e3a8a;
+  --ball-highlight: #eff6ff;
+}
+.fc-chip-fly--10k {
+  --chip-bg: linear-gradient(145deg, #f472b6, #db2777 50%, #831843);
+  --chip-edge: rgba(251, 207, 232, 0.65);
+  --ball-patch: #831843;
+  --ball-highlight: #fdf2f8;
+}
+.fc-chip-fly--100k {
+  --chip-bg: linear-gradient(145deg, #fb923c, #ea580c 50%, #9a3412);
+  --chip-edge: rgba(254, 215, 170, 0.65);
+  --ball-patch: #7c2d12;
+  --ball-highlight: #fff7ed;
+}
 
 @keyframes fc-chip-fly {
   0% { left: var(--from-x); top: var(--from-y); transform: scale(1) rotate(0deg); opacity: 1; }
