@@ -13,7 +13,7 @@ import {
   symbolAssetUrl,
   symbolAssetUrls,
   uiAssetUrl,
-  chipAssetUrl,
+  uiPaths,
 } from './assets.mjs';
 
 const GAME_ID = 'lucky77';
@@ -125,17 +125,30 @@ function applyDomAssets() {
   });
   const coin = document.getElementById('asset-coin');
   if (coin) coin.src = uiAssetUrl('coin');
-  const pointer = document.getElementById('asset-pointer');
-  if (pointer) pointer.src = uiAssetUrl('pointer');
   const shell = document.querySelector('.gm-shell--lucky77');
-  if (shell) {
+  if (shell && uiPaths.stageBg) {
     shell.style.setProperty('--l77-stage-bg', `url("${uiAssetUrl('stageBg')}")`);
   }
-  document.querySelectorAll('.l77-statue').forEach((el) => {
-    el.style.backgroundImage = `url("${uiAssetUrl('statue')}")`;
+}
+
+function setupSettings() {
+  const panel = $('settings-panel');
+  const btn = $('btn-settings');
+  const close = () => {
+    panel.hidden = true;
+    btn.setAttribute('aria-expanded', 'false');
+  };
+  btn.addEventListener('click', () => {
+    const open = panel.hidden;
+    panel.hidden = !open;
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
-  const ring = document.querySelector('.l77-wheel-ring');
-  if (ring) ring.style.backgroundImage = `url("${uiAssetUrl('wheelRing')}")`;
+  $('settings-close').addEventListener('click', close);
+  $('settings-backdrop').addEventListener('click', close);
+  $('setting-help').addEventListener('click', () => {
+    close();
+    toast('Pick Lemon, Watermelon, or 77 — wheel lands on 8 wedges. 77 pays ×8!');
+  });
 }
 
 function normalizeAngle(angle) {
@@ -402,8 +415,7 @@ function buildChips() {
   $('chips').innerHTML = CHIPS.map((v) => {
     const cls = v === 100 ? '100' : v === 1000 ? '1k' : v === 10000 ? '10k' : '100k';
     const label = v >= 1000 ? `${v / 1000}k` : String(v);
-    const src = chipAssetUrl(v);
-    return `<button type="button" class="l77-chip l77-chip--${cls}${v === selectedChip ? ' active' : ''}" data-chip="${v}" style="background-image:url('${src}')"><span>${label}</span></button>`;
+    return `<button type="button" class="l77-chip l77-chip--${cls}${v === selectedChip ? ' active' : ''}" data-chip="${v}">${label}</button>`;
   }).join('');
   $('chips').querySelectorAll('.l77-chip').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -633,6 +645,7 @@ async function init() {
 
   $('btn-topup').addEventListener('click', () => toast('Demo wallet — use launcher token'));
   $('win-close').addEventListener('click', () => { $('win-overlay').hidden = true; });
+  setupSettings();
 
   await tick();
   await loadHistory();

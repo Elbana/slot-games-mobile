@@ -11,76 +11,104 @@
 <body>
   <div class="gm-shell gm-shell--lucky77">
     <div class="l77" id="app">
-      <header class="l77-header">
-        <div class="l77-header__left">
-          <a class="l77-icon-btn" href="/" title="Home">⌂</a>
-          <button type="button" class="l77-icon-btn" id="btn-rank" title="Rank">🏆</button>
-        </div>
-        <div class="l77-header__center">
+      <header class="l77-top">
+        <div class="l77-top__info">
+          <span class="l77-title">Lucky 77</span>
           <span class="l77-round" id="round-label">Round --</span>
         </div>
-        <div class="l77-header__right">
-          <span class="l77-players" id="players-count">👤 1</span>
-          <button type="button" class="l77-icon-btn" id="btn-menu" title="Menu">☰</button>
-        </div>
+        <button type="button" class="l77-settings-btn" id="btn-settings" aria-label="Settings" aria-expanded="false" aria-controls="settings-panel">
+          <svg class="l77-settings-btn__icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96a7.02 7.02 0 0 0-1.63-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.63.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87a.49.49 0 0 0 .12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.04.7 1.63.94l.36 2.54c.05.24.23.41.47.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.63-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.49.49 0 0 0-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/></svg>
+        </button>
       </header>
 
       <main class="l77-stage">
         <div class="l77-statue l77-statue--left" aria-hidden="true"></div>
         <div class="l77-statue l77-statue--right" aria-hidden="true"></div>
         <div class="l77-wheel-wrap">
-          <div class="l77-wheel-ring" aria-hidden="true"></div>
           <canvas id="wheel-canvas" width="600" height="600" aria-label="Lucky 77 wheel"></canvas>
-          <img class="l77-pointer" id="asset-pointer" src="" alt="" aria-hidden="true" />
+          <div class="l77-pointer" aria-hidden="true"></div>
           <div class="l77-wheel-hub">
             <span class="l77-wheel-count" id="countdown" aria-live="polite">10</span>
           </div>
         </div>
       </main>
 
-      <section class="l77-history">
-        <span class="l77-history__new">NEW</span>
-        <div class="l77-history__dots" id="history"></div>
-      </section>
+      <div class="l77-controls">
+        <section class="l77-history">
+          <span class="l77-history__new">NEW</span>
+          <div class="l77-history__dots" id="history"></div>
+        </section>
 
-      <section class="l77-bets" id="bet-zones">
-        <button type="button" class="l77-bet l77-bet--lemon" data-code="LUCK77_LEMON">
-          <div class="l77-bet__icon"><img data-l77-symbol="lemon" src="" alt="" /></div>
-          <span class="l77-bet__odd">×2</span>
-          <span class="l77-bet__amt" data-amt>0</span>
-        </button>
-        <button type="button" class="l77-bet l77-bet--seven" data-code="LUCK77_SEVEN">
-          <div class="l77-bet__icon"><img data-l77-symbol="seven" src="" alt="" /></div>
-          <span class="l77-bet__odd">×8</span>
-          <span class="l77-bet__amt" data-amt>0</span>
-        </button>
-        <button type="button" class="l77-bet l77-bet--melon" data-code="LUCK77_WATERMELON">
-          <div class="l77-bet__icon"><img data-l77-symbol="melon" src="" alt="" /></div>
-          <span class="l77-bet__odd">×2</span>
-          <span class="l77-bet__amt" data-amt>0</span>
-        </button>
-      </section>
+        <section class="l77-bets" id="bet-zones">
+          <button type="button" class="l77-bet l77-bet--lemon" data-code="LUCK77_LEMON">
+            <div class="l77-bet__icon"><img data-l77-symbol="lemon" src="" alt="" /></div>
+            <span class="l77-bet__odd">×2</span>
+            <span class="l77-bet__amt" data-amt>0</span>
+          </button>
+          <button type="button" class="l77-bet l77-bet--seven" data-code="LUCK77_SEVEN">
+            <div class="l77-bet__icon"><img data-l77-symbol="seven" src="" alt="" /></div>
+            <span class="l77-bet__odd">×8</span>
+            <span class="l77-bet__amt" data-amt>0</span>
+          </button>
+          <button type="button" class="l77-bet l77-bet--melon" data-code="LUCK77_WATERMELON">
+            <div class="l77-bet__icon"><img data-l77-symbol="melon" src="" alt="" /></div>
+            <span class="l77-bet__odd">×2</span>
+            <span class="l77-bet__amt" data-amt>0</span>
+          </button>
+        </section>
 
-      <section class="l77-chips" id="chips"></section>
+        <section class="l77-chips" id="chips"></section>
 
-      <footer class="l77-footer">
-        <div class="l77-footer__user">
-          <span class="l77-footer__name" id="player-name">Player</span>
-          <div class="l77-footer__balance">
-            <img class="l77-coin" id="asset-coin" src="" alt="" />
-            <span id="balance">0</span>
-            <button type="button" class="l77-plus" id="btn-topup" title="Top up">+</button>
+        <footer class="l77-footer">
+          <div class="l77-footer__user">
+            <span class="l77-footer__name" id="player-name">Player</span>
+            <div class="l77-footer__balance">
+              <img class="l77-coin" id="asset-coin" src="" alt="" />
+              <span id="balance">0</span>
+              <button type="button" class="l77-plus" id="btn-topup" title="Top up">+</button>
+            </div>
           </div>
-        </div>
-        <button type="button" class="l77-rebet" id="btn-rebet" title="Re-bet last round">↻</button>
-      </footer>
+          <button type="button" class="l77-rebet" id="btn-rebet" title="Re-bet last round" aria-label="Re-bet">↻</button>
+        </footer>
+      </div>
 
-      <div class="l77-toast" id="toast"></div>
+      <div class="l77-toast" id="toast" role="status"></div>
+
       <div class="l77-win" id="win-overlay" hidden>
         <div class="l77-win__card">
           <div class="l77-win__title" id="win-title">You won!</div>
           <div class="l77-win__amount" id="win-amount">+0</div>
           <button type="button" class="l77-win__close" id="win-close">OK</button>
+        </div>
+      </div>
+
+      <div class="l77-settings" id="settings-panel" hidden>
+        <button type="button" class="l77-settings__backdrop" id="settings-backdrop" aria-label="Close settings"></button>
+        <div class="l77-settings__sheet" role="dialog" aria-labelledby="settings-title">
+          <div class="l77-settings__head">
+            <h2 class="l77-settings__title" id="settings-title">Settings</h2>
+            <button type="button" class="l77-settings__close" id="settings-close" aria-label="Close">✕</button>
+          </div>
+          <ul class="l77-settings__list">
+            <li class="l77-settings__row">
+              <span>Sound effects</span>
+              <label class="l77-toggle">
+                <input type="checkbox" id="setting-sound" checked />
+                <span class="l77-toggle__track"></span>
+              </label>
+            </li>
+            <li class="l77-settings__row">
+              <span>Vibration</span>
+              <label class="l77-toggle">
+                <input type="checkbox" id="setting-vibration" />
+                <span class="l77-toggle__track"></span>
+              </label>
+            </li>
+            <li class="l77-settings__row l77-settings__row--info">
+              <span>How to play</span>
+              <button type="button" class="l77-settings__link" id="setting-help">View rules</button>
+            </li>
+          </ul>
         </div>
       </div>
     </div>

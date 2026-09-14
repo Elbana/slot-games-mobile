@@ -9,21 +9,13 @@ export const L77_ASSET_BASE = '/lottery/lucky77/assets';
 let symbolPaths = {
   lemon: 'lemon.png',
   melon: 'watermelon.png',
-  seven: 'seven.png',
+  seven: 'seven.svg',
 };
 
 /** @type {Record<string, string>} */
 let uiPaths = {
   coin: 'coin.png',
-  pointer: 'pointer.png',
-  wheelRing: 'wheel-ring.png',
   stageBg: 'stage-bg.jpg',
-  statue: 'statue.png',
-  betPanel: 'bet-panel.png',
-  chip100: 'chip-100.png',
-  chip1k: 'chip-1k.png',
-  chip10k: 'chip-10k.png',
-  chip100k: 'chip-100k.png',
 };
 
 export function assetUrl(relativePath) {
@@ -37,17 +29,6 @@ export function symbolAssetUrl(kind) {
 
 export function uiAssetUrl(key) {
   const file = uiPaths[key];
-  return file ? assetUrl(file) : '';
-}
-
-export function chipAssetUrl(value) {
-  const map = {
-    100: uiPaths.chip100,
-    1000: uiPaths.chip1k,
-    10000: uiPaths.chip10k,
-    100000: uiPaths.chip100k,
-  };
-  const file = map[value];
   return file ? assetUrl(file) : '';
 }
 
