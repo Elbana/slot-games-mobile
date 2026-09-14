@@ -1,8 +1,9 @@
 import { footballClashInit, footballClashState, footballClashBet } from './api.js';
 
-let chips = [5000, 25000, 50000, 250000];
-let selectedChip = 5000;
-let selectedPred = 'home';
+const CHIP_STYLE_CLASSES = ['100', '1k', '10k', '100k', '100k', '100k'];
+
+let chips = [200, 1000, 5000, 10000, 50000, 100000];
+let selectedChip = 200;
 let state = null;
 let prevPhase = null;
 let lastEventCount = 0;
@@ -10,12 +11,13 @@ let lastOverlayKey = '';
 let animTime = 0;
 let goalFlash = 0;
 let scorePop = { home: 0, away: 0 };
+/** @type {{ pred: string, amount: number } | null} */
+let lastBet = null;
+let betLock = false;
 
 /** @type {{ x:number,y:number,vx:number,vy:number,life:number,color:string,size:number }[]} */
 let confetti = [];
 
-const fxCanvas = document.getElementById('fc-fx');
-const fxCtx = fxCanvas.getContext('2d');
 const stadiumCanvas = document.getElementById('fc-stadium');
 const stadiumCtx = stadiumCanvas.getContext('2d');
 const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -31,12 +33,30 @@ const vis = {
   displayAway: 0,
   ball: { x: 0.5, y: 0.55, vx: 0, vy: 0 },
   crowd: 0,
+  pitch: null,
 };
 
 const $ = (id) => document.getElementById(id);
 
-function fmtChip(v) { return v >= 1000 ? `${Math.round(v / 1000)}K` : String(v); }
+function chipLabel(v) {
+  if (v >= 1000 && v % 1000 === 0) return `${v / 1000}k`;
+  return String(v);
+}
+
+function chipStyleClass(v) {
+  const idx = chips.indexOf(v);
+  return CHIP_STYLE_CLASSES[Math.max(0, Math.min(idx, CHIP_STYLE_CLASSES.length - 1))];
+}
+
 function fmtNum(n) { return Number(n || 0).toLocaleString(); }
+
+function applyBettingConfig(betting) {
+  if (!betting?.chipUnits?.length) return;
+  chips = betting.chipUnits.map((v) => Math.floor(Number(v))).filter((v) => v > 0);
+  if (!chips.length) return;
+  const preferred = Math.floor(Number(betting.defaultChip));
+  selectedChip = chips.includes(preferred) ? preferred : chips[0];
+}
 
 function toast(msg) {
   const el = $('toast');
@@ -47,15 +67,13 @@ function toast(msg) {
 }
 
 function resize() {
-  for (const c of [fxCanvas, stadiumCanvas]) {
-    const rect = c === fxCanvas
-      ? document.body.getBoundingClientRect()
-      : c.parentElement.getBoundingClientRect();
-    c.width = Math.floor(rect.width * dpr);
-    c.height = Math.floor(rect.height * dpr);
-    c.style.width = `${rect.width}px`;
-    c.style.height = `${rect.height}px`;
-  }
+  const rect = stadiumCanvas.parentElement.getBoundingClientRect();
+  const w = Math.max(1, rect.width);
+  const h = Math.max(1, rect.height);
+  stadiumCanvas.width = Math.floor(w * dpr);
+  stadiumCanvas.height = Math.floor(h * dpr);
+  stadiumCanvas.style.width = `${w}px`;
+  stadiumCanvas.style.height = `${h}px`;
 }
 
 function burstConfetti() {
@@ -72,126 +90,139 @@ function burstConfetti() {
   }
 }
 
-function drawFx(w, h) {
-  fxCtx.clearRect(0, 0, w, h);
+function drawConfetti(w, h) {
   for (let i = confetti.length - 1; i >= 0; i--) {
     const p = confetti[i];
     p.x += p.vx; p.y += p.vy; p.vy += 0.0003; p.life -= 0.011;
     if (p.life <= 0) { confetti.splice(i, 1); continue; }
-    fxCtx.globalAlpha = p.life;
-    fxCtx.fillStyle = p.color;
-    fxCtx.fillRect(p.x * w, p.y * h, p.size, p.size * 0.55);
+    stadiumCtx.globalAlpha = p.life;
+    stadiumCtx.fillStyle = p.color;
+    stadiumCtx.fillRect(p.x * w, p.y * h, p.size, p.size * 0.55);
   }
-  fxCtx.globalAlpha = 1;
+  stadiumCtx.globalAlpha = 1;
 }
 
-function drawField(w, h, t) {
-  const sky = stadiumCtx.createLinearGradient(0, 0, 0, h * 0.45);
-  sky.addColorStop(0, '#0f2847');
-  sky.addColorStop(1, '#1e3c72');
-  stadiumCtx.fillStyle = sky;
-  stadiumCtx.fillRect(0, 0, w, h * 0.45);
-
-  const grass = stadiumCtx.createLinearGradient(0, h * 0.38, 0, h);
-  grass.addColorStop(0, '#2ecc71');
-  grass.addColorStop(0.5, '#27ae60');
-  grass.addColorStop(1, '#1e8449');
+function drawPitchFull(w, h, t) {
+  const grass = stadiumCtx.createLinearGradient(0, 0, 0, h);
+  grass.addColorStop(0, '#34d399');
+  grass.addColorStop(0.45, '#22c55e');
+  grass.addColorStop(1, '#15803d');
   stadiumCtx.fillStyle = grass;
-  stadiumCtx.fillRect(0, h * 0.38, w, h * 0.62);
+  stadiumCtx.fillRect(0, 0, w, h);
 
-  const stripeW = 28;
-  const offset = (t * 0.02) % (stripeW * 2);
-  stadiumCtx.fillStyle = 'rgba(0,0,0,0.06)';
-  for (let x = -offset; x < w + stripeW; x += stripeW * 2) {
-    stadiumCtx.fillRect(x, h * 0.38, stripeW, h * 0.62);
+  const sky = stadiumCtx.createLinearGradient(0, 0, 0, h * 0.28);
+  sky.addColorStop(0, 'rgba(8, 24, 48, 0.75)');
+  sky.addColorStop(1, 'rgba(8, 24, 48, 0)');
+  stadiumCtx.fillStyle = sky;
+  stadiumCtx.fillRect(0, 0, w, h * 0.28);
+
+  vis.crowd = 0.5 + 0.5 * Math.sin(t * 0.003);
+  const lights = vis.phase === 'playing' ? 0.7 + vis.crowd * 0.3 : 0.2;
+  const lightCount = Math.max(10, Math.floor(w / 22));
+  for (let i = 0; i < lightCount; i++) {
+    const x = (i / (lightCount - 1)) * (w - 8) + 4;
+    const flicker = 0.5 + 0.5 * Math.sin(t * 0.005 + i * 1.7);
+    stadiumCtx.fillStyle = `rgba(255, 220, 100, ${lights * flicker * 0.4})`;
+    stadiumCtx.fillRect(x, h * 0.04, 4, 2);
   }
 
-  stadiumCtx.strokeStyle = 'rgba(255,255,255,0.55)';
-  stadiumCtx.lineWidth = 2;
-  const fy = h * 0.42;
-  const fh = h - fy - 12;
-  stadiumCtx.strokeRect(14, fy, w - 28, fh);
+  const stripeW = Math.max(14, w * 0.055);
+  const offset = (t * 0.012) % (stripeW * 2);
+  stadiumCtx.fillStyle = 'rgba(0,0,0,0.045)';
+  for (let x = -offset; x < w + stripeW; x += stripeW * 2) {
+    stadiumCtx.fillRect(x, 0, stripeW, h);
+  }
+
+  const m = Math.max(3, w * 0.012);
+  const fx = m;
+  const fy = m;
+  const fw = w - m * 2;
+  const fh = h - m * 2;
+  const lw = Math.max(1, w / 280);
+
+  stadiumCtx.strokeStyle = 'rgba(255,255,255,0.6)';
+  stadiumCtx.lineWidth = lw;
+  stadiumCtx.strokeRect(fx, fy, fw, fh);
   stadiumCtx.beginPath();
   stadiumCtx.moveTo(w / 2, fy);
   stadiumCtx.lineTo(w / 2, fy + fh);
   stadiumCtx.stroke();
   stadiumCtx.beginPath();
-  stadiumCtx.arc(w / 2, fy + fh / 2, 36, 0, Math.PI * 2);
+  stadiumCtx.arc(w / 2, fy + fh / 2, Math.min(fw * 0.11, fh * 0.22), 0, Math.PI * 2);
   stadiumCtx.stroke();
 
-  const spotGrad = stadiumCtx.createRadialGradient(w / 2, fy + fh / 2, 0, w / 2, fy + fh / 2, 50);
-  spotGrad.addColorStop(0, 'rgba(255,255,255,0.08)');
-  spotGrad.addColorStop(1, 'rgba(255,255,255,0)');
-  stadiumCtx.fillStyle = spotGrad;
-  stadiumCtx.fillRect(0, fy, w, fh);
+  const boxW = Math.min(fw * 0.16, 52);
+  const boxH = Math.min(fh * 0.55, 72);
+  stadiumCtx.strokeRect(fx, fy + (fh - boxH) / 2, boxW, boxH);
+  stadiumCtx.strokeRect(fx + fw - boxW, fy + (fh - boxH) / 2, boxW, boxH);
+
+  vis.pitch = { fx, fy, fw, fh };
 }
 
-function drawCrowd(w, h, t) {
-  vis.crowd = 0.5 + 0.5 * Math.sin(t * 0.003);
-  const lights = vis.phase === 'playing' ? 0.6 + vis.crowd * 0.4 : 0.25;
-  for (let i = 0; i < 24; i++) {
-    const x = (i / 24) * w + 8;
-    const flicker = 0.5 + 0.5 * Math.sin(t * 0.005 + i * 1.7);
-    stadiumCtx.fillStyle = `rgba(255, 220, 100, ${lights * flicker * 0.35})`;
-    stadiumCtx.fillRect(x, h * 0.08, 6, 4);
-  }
-}
+function drawScoreHud(w, h) {
+  if (!vis.homeTeam || !vis.awayTeam) return;
 
-function drawTeamBadge(x, y, r, team, isHome) {
-  if (!team) return;
-  const color = team.color || '#fff';
-  const glow = stadiumCtx.createRadialGradient(x, y, r * 0.2, x, y, r * 1.4);
-  glow.addColorStop(0, `${color}88`);
-  glow.addColorStop(1, 'transparent');
-  stadiumCtx.fillStyle = glow;
-  stadiumCtx.beginPath();
-  stadiumCtx.arc(x, y, r * 1.4, 0, Math.PI * 2);
-  stadiumCtx.fill();
-
-  stadiumCtx.fillStyle = 'rgba(0,0,0,0.35)';
-  stadiumCtx.strokeStyle = color;
-  stadiumCtx.lineWidth = 3;
-  stadiumCtx.beginPath();
-  stadiumCtx.arc(x, y, r, 0, Math.PI * 2);
-  stadiumCtx.fill();
-  stadiumCtx.stroke();
-
-  stadiumCtx.font = `${r * 0.9}px system-ui`;
-  stadiumCtx.textAlign = 'center';
-  stadiumCtx.textBaseline = 'middle';
-  stadiumCtx.fillText(team.emoji || (isHome ? '🏠' : '✈️'), x, y + 1);
-
-  stadiumCtx.fillStyle = '#fff';
-  stadiumCtx.font = `bold ${Math.max(11, r * 0.38)}px system-ui,sans-serif`;
-  stadiumCtx.fillText(team.shortName || '—', x, y + r + 16);
-}
-
-function drawScoreboard(w, h) {
-  const cx = w / 2;
-  const cy = h * 0.52;
-  const popH = 1 + scorePop.home * 0.15;
-  const popA = 1 + scorePop.away * 0.15;
+  const popH = 1 + scorePop.home * 0.12;
+  const popA = 1 + scorePop.away * 0.12;
   scorePop.home *= 0.88;
   scorePop.away *= 0.88;
 
-  stadiumCtx.fillStyle = 'rgba(0,0,0,0.55)';
-  stadiumCtx.strokeStyle = 'rgba(255,255,255,0.25)';
-  stadiumCtx.lineWidth = 2;
-  roundRect(stadiumCtx, cx - 54, cy - 28, 108, 56, 12);
+  const barH = Math.min(34, h * 0.2);
+  const barW = Math.min(w * 0.78, 320);
+  const barX = (w - barW) / 2;
+  const barY = Math.max(4, h * 0.04);
+  const midY = barY + barH * 0.46;
+  const cx = w / 2;
+  const badgeR = Math.min(10, barH * 0.28);
+
+  stadiumCtx.fillStyle = 'rgba(0,0,0,0.58)';
+  stadiumCtx.strokeStyle = 'rgba(255,255,255,0.2)';
+  stadiumCtx.lineWidth = 1;
+  roundRect(stadiumCtx, barX, barY, barW, barH, 8);
   stadiumCtx.fill();
   stadiumCtx.stroke();
 
+  const homeX = barX + barW * 0.14;
+  const awayX = barX + barW * 0.86;
+
+  const drawBadge = (x, team) => {
+    if (!team) return;
+    stadiumCtx.fillStyle = 'rgba(0,0,0,0.4)';
+    stadiumCtx.strokeStyle = team.color || '#fff';
+    stadiumCtx.lineWidth = 1.5;
+    stadiumCtx.beginPath();
+    stadiumCtx.arc(x, midY, badgeR, 0, Math.PI * 2);
+    stadiumCtx.fill();
+    stadiumCtx.stroke();
+    stadiumCtx.font = `${Math.floor(badgeR * 1.1)}px system-ui`;
+    stadiumCtx.textAlign = 'center';
+    stadiumCtx.textBaseline = 'middle';
+    stadiumCtx.fillText(team.emoji || '⚽', x, midY);
+  };
+  drawBadge(homeX, vis.homeTeam);
+  drawBadge(awayX, vis.awayTeam);
+
+  const labelSize = Math.max(8, barH * 0.24);
+  const scoreSize = Math.min(barH * 0.52, 18);
+  stadiumCtx.textBaseline = 'middle';
+
+  stadiumCtx.fillStyle = 'rgba(255,255,255,0.75)';
+  stadiumCtx.font = `700 ${labelSize}px system-ui,sans-serif`;
+  stadiumCtx.textAlign = 'right';
+  stadiumCtx.fillText(vis.homeTeam.shortName || 'HOM', homeX + badgeR + 6, midY);
+  stadiumCtx.textAlign = 'left';
+  stadiumCtx.fillText(vis.awayTeam.shortName || 'AWY', awayX - badgeR - 6, midY);
+
   stadiumCtx.fillStyle = '#fff';
   stadiumCtx.textAlign = 'center';
-  stadiumCtx.textBaseline = 'middle';
-  stadiumCtx.font = `900 ${28 * popH}px system-ui,sans-serif`;
-  stadiumCtx.fillText(String(vis.displayHome), cx - 28, cy);
-  stadiumCtx.font = '900 18px system-ui,sans-serif';
+  stadiumCtx.font = `900 ${scoreSize * popH}px system-ui,sans-serif`;
+  stadiumCtx.fillText(String(vis.displayHome), cx - scoreSize * 0.9, midY);
+  stadiumCtx.font = `900 ${scoreSize * 0.55}px system-ui,sans-serif`;
   stadiumCtx.fillStyle = 'rgba(255,255,255,0.45)';
-  stadiumCtx.fillText(':', cx, cy - 2);
+  stadiumCtx.fillText('–', cx, midY - 1);
   stadiumCtx.fillStyle = '#fff';
-  stadiumCtx.font = `900 ${28 * popA}px system-ui,sans-serif`;
-  stadiumCtx.fillText(String(vis.displayAway), cx + 28, cy);
+  stadiumCtx.font = `900 ${scoreSize * popA}px system-ui,sans-serif`;
+  stadiumCtx.fillText(String(vis.displayAway), cx + scoreSize * 0.9, midY);
 }
 
 function roundRect(ctx, x, y, w, h, rad) {
@@ -205,16 +236,19 @@ function roundRect(ctx, x, y, w, h, rad) {
 }
 
 function drawBall(w, h, t) {
-  if (vis.phase !== 'playing') return;
-  const bx = vis.ball.x * w;
-  const by = vis.ball.y * h;
-  const bounce = Math.sin(t * 0.008) * 8;
-  stadiumCtx.fillStyle = 'rgba(0,0,0,0.25)';
+  if (vis.phase !== 'playing' || !vis.pitch) return;
+  const { fx, fy, fw, fh } = vis.pitch;
+  const bx = fx + vis.ball.x * fw;
+  const by = fy + vis.ball.y * fh;
+  const ballSize = Math.max(12, Math.min(18, h * 0.1));
+  const bounce = Math.sin(t * 0.008) * 2;
+
+  stadiumCtx.fillStyle = 'rgba(0,0,0,0.22)';
   stadiumCtx.beginPath();
-  stadiumCtx.ellipse(bx, by + 18, 10, 4, 0, 0, Math.PI * 2);
+  stadiumCtx.ellipse(bx, by + ballSize * 0.65, ballSize * 0.4, ballSize * 0.14, 0, 0, Math.PI * 2);
   stadiumCtx.fill();
 
-  stadiumCtx.font = '26px system-ui';
+  stadiumCtx.font = `${ballSize}px system-ui`;
   stadiumCtx.textAlign = 'center';
   stadiumCtx.textBaseline = 'middle';
   stadiumCtx.fillText('⚽', bx, by + bounce);
@@ -235,24 +269,23 @@ function drawStadium(t) {
   stadiumCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
   stadiumCtx.clearRect(0, 0, w, h);
 
-  drawField(w, h, t);
-  drawCrowd(w, h, t);
+  if (w < 2 || h < 2) return;
+
+  drawPitchFull(w, h, t);
 
   if (vis.homeTeam && vis.awayTeam) {
-    drawTeamBadge(w * 0.22, h * 0.58, 34, vis.homeTeam, true);
-    drawTeamBadge(w * 0.78, h * 0.58, 34, vis.awayTeam, false);
-    drawScoreboard(w, h);
-    drawBall(w, h, t);
-  }
-
-  drawGoalFlash(w, h);
-
-  if (vis.phase === 'betting' && vis.homeTeam) {
+    drawScoreHud(w, h);
+  } else {
     stadiumCtx.fillStyle = 'rgba(255,255,255,0.55)';
-    stadiumCtx.font = 'italic 12px system-ui,sans-serif';
+    stadiumCtx.font = '600 12px system-ui,sans-serif';
     stadiumCtx.textAlign = 'center';
-    stadiumCtx.fillText(`${vis.homeTeam.name} vs ${vis.awayTeam.name}`, w / 2, h * 0.36);
+    stadiumCtx.textBaseline = 'middle';
+    stadiumCtx.fillText('Loading match…', w / 2, h * 0.12);
   }
+
+  drawBall(w, h, t);
+  drawGoalFlash(w, h);
+  drawConfetti(w, h);
 }
 
 function animLoop(t) {
@@ -260,15 +293,14 @@ function animLoop(t) {
   if (vis.phase === 'playing') {
     vis.ball.x += vis.ball.vx;
     vis.ball.y += vis.ball.vy;
-    vis.ball.vx += (0.5 - vis.ball.x) * 0.0008;
-    vis.ball.vy += (0.55 - vis.ball.y) * 0.0008;
-    vis.ball.vx += (Math.random() - 0.5) * 0.0004;
-    vis.ball.vy += (Math.random() - 0.5) * 0.0004;
-    vis.ball.x = Math.max(0.15, Math.min(0.85, vis.ball.x));
-    vis.ball.y = Math.max(0.45, Math.min(0.75, vis.ball.y));
+    vis.ball.vx += (0.5 - vis.ball.x) * 0.0012;
+    vis.ball.vy += (0.5 - vis.ball.y) * 0.0012;
+    vis.ball.vx += (Math.random() - 0.5) * 0.0006;
+    vis.ball.vy += (Math.random() - 0.5) * 0.0006;
+    vis.ball.x = Math.max(0.08, Math.min(0.92, vis.ball.x));
+    vis.ball.y = Math.max(0.1, Math.min(0.9, vis.ball.y));
   }
   drawStadium(t);
-  drawFx(fxCanvas.width, fxCanvas.height);
   requestAnimationFrame(animLoop);
 }
 
@@ -282,34 +314,82 @@ function eventLabel(ev, match) {
 }
 
 function buildChips() {
-  $('chips').innerHTML = chips.map((v) => `
-    <button type="button" class="fc-chip${v === selectedChip ? ' active' : ''}" data-chip="${v}">${fmtChip(v)}</button>
-  `).join('');
+  $('chips').innerHTML = chips.map((v) => {
+    const cls = chipStyleClass(v);
+    return `<button type="button" class="fc-chip fc-chip--${cls}${v === selectedChip ? ' active' : ''}" data-chip="${v}">${chipLabel(v)}</button>`;
+  }).join('');
   $('chips').querySelectorAll('.fc-chip').forEach((btn) => {
     btn.addEventListener('click', () => {
       selectedChip = Number(btn.dataset.chip);
       buildChips();
-      $('bet-amt').textContent = fmtChip(selectedChip);
     });
   });
+}
+
+function flyChipToPick(pred, amount) {
+  const chipBtn = document.querySelector(`.fc-chip[data-chip="${amount}"]`)
+    || document.querySelector('.fc-chip.active');
+  const pickBtn = document.querySelector(`.fc-pick__btn[data-pred="${pred}"]`);
+  const layer = $('fc-fx');
+  if (!chipBtn || !pickBtn || !layer) return;
+
+  const from = chipBtn.getBoundingClientRect();
+  const to = pickBtn.getBoundingClientRect();
+  const chip = document.createElement('div');
+  chip.className = `fc-chip-fly fc-chip-fly--${chipStyleClass(amount)}`;
+  chip.textContent = chipLabel(amount);
+  chip.style.setProperty('--from-x', `${from.left + from.width / 2}px`);
+  chip.style.setProperty('--from-y', `${from.top + from.height / 2}px`);
+  chip.style.setProperty('--to-x', `${to.left + to.width / 2}px`);
+  chip.style.setProperty('--to-y', `${to.top + to.height / 2}px`);
+  layer.appendChild(chip);
+  chip.addEventListener('animationend', () => chip.remove(), { once: true });
+}
+
+function updatePickButtons() {
+  const betting = state?.phase === 'betting' && !state?.myBet;
+  document.querySelectorAll('.fc-pick__btn').forEach((btn) => {
+    btn.disabled = !betting;
+    const pred = btn.dataset.pred;
+    const myBet = state?.myBet;
+    const amt = myBet?.prediction === pred ? myBet.amount : 0;
+    btn.querySelector('[data-amt]').textContent = amt > 0 ? fmtNum(amt) : '0';
+    btn.classList.toggle('has-bet', amt > 0);
+  });
+}
+
+async function doBet(pred) {
+  if (betLock) return;
+  if (state?.myBet) {
+    toast('Already bet this round');
+    return;
+  }
+  if (state?.phase !== 'betting') {
+    toast('Betting closed — wait for kick off');
+    return;
+  }
+  const amount = selectedChip;
+  if ((state?.balance ?? 0) < amount) {
+    toast('Insufficient balance');
+    return;
+  }
+
+  betLock = true;
+  flyChipToPick(pred, amount);
+  try {
+    const data = await footballClashBet(pred, amount);
+    lastBet = { pred, amount };
+    applyState({ ...data.state, balance: data.balance, myBet: data.myBet });
+  } catch (err) {
+    toast(err.message || 'Bet failed');
+  } finally {
+    betLock = false;
+  }
 }
 
 function setTimerRing(countdown, phase) {
   const max = phase === 'betting' ? 15 : phase === 'playing' ? 10 : 3;
   $('timer-ring').style.strokeDashoffset = String(RING_C * (1 - Math.max(0, countdown / max)));
-}
-
-function updateBetButton() {
-  const btn = $('btn-bet');
-  if (state?.myBet) {
-    btn.disabled = true;
-    btn.classList.add('is-placed');
-    $('bet-label').textContent = 'BET LOCKED';
-    return;
-  }
-  btn.disabled = state?.phase !== 'betting';
-  btn.classList.remove('is-placed');
-  $('bet-label').textContent = state?.phase === 'betting' ? 'PLACE BET' : 'WAIT…';
 }
 
 function showOverlay(myBet) {
@@ -383,7 +463,7 @@ function applyState(next) {
     vis.displayAway = 0;
   }
 
-  updateBetButton();
+  updatePickButtons();
   showOverlay(next.myBet);
 }
 
@@ -392,37 +472,49 @@ async function poll() {
 }
 
 async function init() {
-  resize();
   window.addEventListener('resize', resize);
-  requestAnimationFrame(animLoop);
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(() => resize()).observe(stadiumCanvas.parentElement);
+  }
+  requestAnimationFrame(() => {
+    resize();
+    requestAnimationFrame(animLoop);
+  });
 
   buildChips();
-  $('bet-amt').textContent = fmtChip(selectedChip);
 
   document.querySelectorAll('.fc-pick__btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-      selectedPred = btn.dataset.pred;
-      document.querySelectorAll('.fc-pick__btn').forEach((b) => b.classList.toggle('active', b === btn));
+      doBet(btn.dataset.pred).catch(() => {});
     });
   });
 
-  $('btn-bet').addEventListener('click', async () => {
-    if (state?.myBet || state?.phase !== 'betting') return;
-    try {
-      const data = await footballClashBet(selectedPred, selectedChip);
-      applyState({ ...data.state, balance: data.balance, myBet: data.myBet });
-      toast(`Locked ${fmtChip(selectedChip)} on ${selectedPred.toUpperCase()}`);
-    } catch (err) {
-      toast(err.message || 'Bet failed');
+  $('btn-repeat').addEventListener('click', async () => {
+    if (!lastBet) {
+      toast('No previous bet');
+      return;
     }
+    if (state?.myBet) {
+      toast('Already bet this round');
+      return;
+    }
+    if (state?.phase !== 'betting') {
+      toast('Betting closed — wait for kick off');
+      return;
+    }
+    if (chips.includes(lastBet.amount)) {
+      selectedChip = lastBet.amount;
+    } else {
+      selectedChip = chips.filter((c) => c <= lastBet.amount).pop() || chips[0];
+    }
+    buildChips();
+    await doBet(lastBet.pred);
   });
 
   try {
     const data = await footballClashInit();
-    chips = data.betting?.chipPresets || chips;
-    selectedChip = data.betting?.defaultChip || selectedChip;
+    applyBettingConfig(data.betting);
     buildChips();
-    $('bet-amt').textContent = fmtChip(selectedChip);
     applyState({ ...data.state, balance: data.balance, myBet: data.state.myBet });
   } catch (err) {
     toast(err.message || 'Failed to load');

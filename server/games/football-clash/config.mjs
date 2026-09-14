@@ -24,7 +24,5 @@ export const FOOTBALL_CLASH_GAME = {
   homeWinProbability: 0.42,
   awayWinProbability: 0.38,
   drawProbability: 0.20,
-  chipPresets: [5000, 25000, 50000, 250000],
-  defaultChip: 5000,
   teams: FOOTBALL_TEAMS,
 };

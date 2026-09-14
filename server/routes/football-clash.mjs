@@ -83,11 +83,7 @@ export function mountFootballClashRoutes(app) {
       ok({
         game: FOOTBALL_CLASH_GAME,
         balance,
-        betting: {
-          ...bettingPayload(ctx.betting),
-          chipPresets: FOOTBALL_CLASH_GAME.chipPresets,
-          defaultChip: FOOTBALL_CLASH_GAME.defaultChip,
-        },
+        betting: bettingPayload(ctx.betting),
         state: {
           ...engine.getPublicState(),
           myBet: engine.serializePlayer(ctx.sessionKey),
@@ -129,10 +125,7 @@ export function mountFootballClashRoutes(app) {
     const prediction = String(req.body?.prediction || '').toLowerCase();
     const amount = req.body?.amount ?? req.body?.BetAmount;
     const amt = Math.floor(Number(amount));
-    const presetOk = FOOTBALL_CLASH_GAME.chipPresets.includes(amt);
-    const betCheck = presetOk
-      ? { ok: true, amount: amt }
-      : validateBetAmount(amount, ctx.betting);
+    const betCheck = validateBetAmount(amount, ctx.betting);
     if (!betCheck.ok) return res.json(fail(betCheck.error));
 
     let balance;

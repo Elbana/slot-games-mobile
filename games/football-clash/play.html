@@ -10,60 +10,73 @@
 </head>
 <body>
   <div class="gm-shell gm-shell--football-clash">
-    <div class="fc" id="app">
-      <canvas id="fc-fx" class="fc-fx" aria-hidden="true"></canvas>
+    <div class="fc-backdrop" id="fc-backdrop" aria-hidden="true"></div>
 
-      <header class="fc-top">
-        <div class="fc-round">Match <span id="round-id">—</span></div>
-        <div class="fc-wallet">
-          <span class="fc-wallet__coin" aria-hidden="true"></span>
-          <span id="balance">0</span>
+    <div class="fc-sheet">
+      <div class="fc-handle" aria-hidden="true"></div>
+
+      <div class="fc" id="app">
+        <header class="fc-top">
+          <div class="fc-round">Match <span id="round-id">—</span></div>
+          <div class="fc-wallet">
+            <span class="fc-wallet__coin" aria-hidden="true"></span>
+            <span id="balance">0</span>
+          </div>
+        </header>
+
+        <main class="fc-stage">
+          <div class="fc-status" id="phase-chip">Pick your prediction</div>
+
+          <div class="fc-timer-wrap">
+            <svg class="fc-timer-ring" viewBox="0 0 88 88" aria-hidden="true">
+              <circle class="fc-timer-ring__track" cx="44" cy="44" r="38" />
+              <circle class="fc-timer-ring__fill" id="timer-ring" cx="44" cy="44" r="38" />
+            </svg>
+            <div class="fc-timer" id="countdown">15</div>
+          </div>
+
+          <div class="fc-stadium-card">
+            <canvas id="fc-stadium" class="fc-stadium-canvas" aria-label="Live match"></canvas>
+          </div>
+
+          <div class="fc-commentary" id="events" aria-live="polite"></div>
+        </main>
+
+        <footer class="fc-foot">
+          <div class="fc-history" id="history-bar"></div>
+          <div class="fc-pick">
+            <button type="button" class="fc-pick__btn" data-pred="home">
+              <div class="fc-pick__face">
+                <span>Home</span><small>×1.92</small>
+              </div>
+              <span class="fc-pick__amt" data-amt>0</span>
+            </button>
+            <button type="button" class="fc-pick__btn" data-pred="draw">
+              <div class="fc-pick__face">
+                <span>Draw</span><small>×3.5</small>
+              </div>
+              <span class="fc-pick__amt" data-amt>0</span>
+            </button>
+            <button type="button" class="fc-pick__btn" data-pred="away">
+              <div class="fc-pick__face">
+                <span>Away</span><small>×1.92</small>
+              </div>
+              <span class="fc-pick__amt" data-amt>0</span>
+            </button>
+          </div>
+          <div class="fc-foot-row">
+            <div class="fc-chips" id="chips"></div>
+            <button type="button" class="fc-rebet" id="btn-repeat" title="Repeat last bet">Repeat</button>
+          </div>
+        </footer>
+
+        <div class="fc-fx" id="fc-fx" aria-hidden="true"></div>
+
+        <div class="fc-overlay" id="overlay" hidden>
+          <div class="fc-overlay__card" id="overlay-card"></div>
         </div>
-      </header>
-
-      <div class="fc-history" id="history-bar"></div>
-
-      <main class="fc-stage">
-        <div class="fc-status" id="phase-chip">Pick your prediction</div>
-
-        <div class="fc-timer-wrap">
-          <svg class="fc-timer-ring" viewBox="0 0 88 88" aria-hidden="true">
-            <circle class="fc-timer-ring__track" cx="44" cy="44" r="38" />
-            <circle class="fc-timer-ring__fill" id="timer-ring" cx="44" cy="44" r="38" />
-          </svg>
-          <div class="fc-timer" id="countdown">15</div>
-        </div>
-
-        <div class="fc-stadium-card">
-          <canvas id="fc-stadium" class="fc-stadium-canvas" aria-label="Live match"></canvas>
-        </div>
-
-        <div class="fc-commentary" id="events" aria-live="polite"></div>
-      </main>
-
-      <footer class="fc-foot">
-        <div class="fc-pick">
-          <button type="button" class="fc-pick__btn active" data-pred="home">
-            <span>Home</span><small>×1.92</small>
-          </button>
-          <button type="button" class="fc-pick__btn" data-pred="draw">
-            <span>Draw</span><small>×3.5</small>
-          </button>
-          <button type="button" class="fc-pick__btn" data-pred="away">
-            <span>Away</span><small>×1.92</small>
-          </button>
-        </div>
-        <div class="fc-chips" id="chips"></div>
-        <button type="button" class="fc-bet" id="btn-bet">
-          <span id="bet-label">PLACE BET</span>
-          <strong id="bet-amt">5K</strong>
-        </button>
-      </footer>
-
-      <div class="fc-overlay" id="overlay" hidden>
-        <div class="fc-overlay__card" id="overlay-card"></div>
+        <div class="fc-toast" id="toast" hidden></div>
       </div>
-      <div class="fc-toast" id="toast" hidden></div>
     </div>
   </div>
   <script type="module" src="/football-clash/football-clash.js"></script>
