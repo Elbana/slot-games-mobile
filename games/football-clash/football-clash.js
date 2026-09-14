@@ -25,17 +25,21 @@ let confetti = [];
 /** @type {{ x:number,y:number,vx:number,vy:number,life:number,char:string,size:number }[]} */
 let cheerBits = [];
 
+const SFX = {
+  whistle: `${ASSET}/audio/whistle.mp3`,
+  kick: `${ASSET}/audio/kick.mp3`,
+  shot: `${ASSET}/audio/shot.mp3`,
+  goal: `${ASSET}/audio/goal-cheer.mp3`,
+};
+
+const SFX_VOL = { whistle: 0.9, kick: 0.52, shot: 0.5, goal: 0.85 };
+
 let audioUnlocked = false;
-/** @type {HTMLAudioElement | null} */
-let whistleAudio = null;
-/** @type {HTMLAudioElement | null} */
-let kickAudio = null;
-/** @type {HTMLAudioElement | null} */
-let shotAudio = null;
-/** @type {HTMLAudioElement | null} */
-let goalAudio = null;
+/** @type {Record<string, HTMLAudioElement>} */
+const sfxPool = {};
 let kickTimer = null;
 let goalOverlayTimer = null;
+let pendingKickoffWhistle = false;
 /** @type {Map<string, HTMLImageElement>} */
 const flagImgs = new Map();
 /** @type {Map<string, string>} */
@@ -128,31 +132,47 @@ function toast(msg) {
 }
 
 function initAudio() {
-  whistleAudio = new Audio(`${ASSET}/audio/whistle.mp3`);
-  whistleAudio.volume = 0.75;
-  whistleAudio.preload = 'auto';
+  for (const [key, url] of Object.entries(SFX)) {
+    const a = new Audio(url);
+    a.preload = 'auto';
+    sfxPool[key] = a;
+  }
+}
 
-  kickAudio = new Audio(`${ASSET}/audio/kick.mp3`);
-  kickAudio.volume = 0.5;
-  kickAudio.preload = 'auto';
-
-  shotAudio = new Audio(`${ASSET}/audio/shot.mp3`);
-  shotAudio.volume = 0.48;
-  shotAudio.preload = 'auto';
-
-  goalAudio = new Audio(`${ASSET}/audio/goal-cheer.mp3`);
-  goalAudio.volume = 0.82;
-  goalAudio.preload = 'auto';
+function flushPendingAudio() {
+  if (pendingKickoffWhistle) {
+    pendingKickoffWhistle = false;
+    playSfxKey('whistle', SFX_VOL.whistle);
+  }
+  if (vis.phase === 'playing') scheduleKickSounds('playing');
 }
 
 function unlockAudio() {
   if (audioUnlocked) return;
   audioUnlocked = true;
-  [whistleAudio, kickAudio, shotAudio, goalAudio].forEach((a) => {
-    if (!a) return;
-    a.load();
-  });
-  syncMatchAudio(vis.phase, prevPhase);
+  // Prime clips during the user tap — required on mobile / WebView
+  for (const [key, a] of Object.entries(sfxPool)) {
+    const vol = SFX_VOL[key] ?? 0.5;
+    a.volume = 0.001;
+    a.play().then(() => {
+      a.pause();
+      a.currentTime = 0;
+      a.volume = vol;
+    }).catch(() => {
+      a.volume = vol;
+    });
+  }
+  flushPendingAudio();
+}
+
+function playSfxKey(key, volume) {
+  if (!audioUnlocked) return false;
+  const url = SFX[key];
+  if (!url) return false;
+  const a = new Audio(url);
+  a.volume = volume ?? SFX_VOL[key] ?? 0.5;
+  a.play().catch(() => {});
+  return true;
 }
 
 function clearKickTimer() {
@@ -162,46 +182,51 @@ function clearKickTimer() {
   }
 }
 
-function scheduleKickSounds() {
+function scheduleKickSounds(phase = vis.phase) {
   clearKickTimer();
-  if (!audioUnlocked || vis.phase !== 'playing') return;
+  if (!audioUnlocked || phase !== 'playing') return;
   const delay = 1400 + Math.random() * 2200;
   kickTimer = setTimeout(() => {
     playKickSound();
-    scheduleKickSounds();
+    scheduleKickSounds(phase);
   }, delay);
 }
 
 function playKickSound() {
   if (!audioUnlocked || vis.phase !== 'playing') return;
   const useShot = Math.random() < 0.4;
-  const base = useShot ? shotAudio : kickAudio;
-  if (!base) return;
-  const clip = base.cloneNode();
-  clip.volume = (useShot ? 0.38 : 0.42) + Math.random() * 0.18;
-  clip.play().catch(() => {});
+  const key = useShot ? 'shot' : 'kick';
+  playSfxKey(key, (SFX_VOL[key] ?? 0.5) + Math.random() * 0.12);
 }
 
 function playWhistle() {
-  if (!audioUnlocked || !whistleAudio) return;
-  whistleAudio.currentTime = 0;
-  whistleAudio.play().catch(() => {});
+  if (!audioUnlocked) {
+    pendingKickoffWhistle = true;
+    return;
+  }
+  pendingKickoffWhistle = false;
+  playSfxKey('whistle', SFX_VOL.whistle);
 }
 
 function syncMatchAudio(phase, fromPhase = null) {
-  if (!audioUnlocked) return;
-  if (phase === 'playing') {
-    if (fromPhase === 'betting') playWhistle();
-    scheduleKickSounds();
-  } else {
+  if (phase === 'playing' && fromPhase !== 'playing') {
+    pendingKickoffWhistle = true;
+    playWhistle();
+    if (audioUnlocked) scheduleKickSounds('playing');
+    return;
+  }
+  if (phase === 'playing' && audioUnlocked) {
+    scheduleKickSounds('playing');
+    return;
+  }
+  if (phase !== 'playing') {
     clearKickTimer();
   }
 }
 
 function playGoalSound() {
-  if (!audioUnlocked || !goalAudio) return;
-  goalAudio.currentTime = 0;
-  goalAudio.play().catch(() => {});
+  if (!audioUnlocked) return;
+  playSfxKey('goal', SFX_VOL.goal);
 }
 
 function showGoalOverlay() {
@@ -840,9 +865,11 @@ async function init() {
   const unlockOnce = () => {
     unlockAudio();
     document.removeEventListener('pointerdown', unlockOnce);
+    document.removeEventListener('touchstart', unlockOnce);
     document.removeEventListener('keydown', unlockOnce);
   };
   document.addEventListener('pointerdown', unlockOnce, { passive: true });
+  document.addEventListener('touchstart', unlockOnce, { passive: true });
   document.addEventListener('keydown', unlockOnce);
 
   window.addEventListener('resize', resize);
@@ -870,6 +897,7 @@ async function init() {
   $('chips')?.addEventListener('click', unlockAudio, { passive: true });
 
   $('btn-repeat').addEventListener('click', async () => {
+    unlockAudio();
     if (!lastBet) {
       toast('No previous bet');
       return;
