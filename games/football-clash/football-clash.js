@@ -1,27 +1,35 @@
 import { footballClashInit, footballClashState, footballClashBet } from './api.js';
 
+const ASSET = '/football-clash/assets';
 const CHIP_STYLE_CLASSES = ['100', '1k', '10k', '100k', '100k', '100k'];
+const RING_C = 238.76;
 
 let chips = [200, 1000, 5000, 10000, 50000, 100000];
 let selectedChip = 200;
 let state = null;
 let prevPhase = null;
 let lastEventCount = 0;
+let lastGoalEventKey = '';
 let lastOverlayKey = '';
+let cachedHistory = [];
 let animTime = 0;
 let goalFlash = 0;
+let goalBanner = 0;
 let scorePop = { home: 0, away: 0 };
 /** @type {{ pred: string, amount: number } | null} */
 let lastBet = null;
 let betLock = false;
+/** @type {AudioContext | null} */
+let audioCtx = null;
 
 /** @type {{ x:number,y:number,vx:number,vy:number,life:number,color:string,size:number }[]} */
 let confetti = [];
+/** @type {Map<string, HTMLImageElement>} */
+const flagImgs = new Map();
 
 const stadiumCanvas = document.getElementById('fc-stadium');
 const stadiumCtx = stadiumCanvas.getContext('2d');
 const dpr = Math.min(window.devicePixelRatio || 1, 2);
-const RING_C = 238.76;
 
 const vis = {
   phase: 'betting',
@@ -37,6 +45,32 @@ const vis = {
 };
 
 const $ = (id) => document.getElementById(id);
+
+function flagSrc(teamId) {
+  return `${ASSET}/flags/${teamId}.svg`;
+}
+
+function historyFlagSrc(winnerTeamId) {
+  if (winnerTeamId === 'draw') return `${ASSET}/flag-draw.svg`;
+  return flagSrc(winnerTeamId);
+}
+
+function loadFlag(teamId) {
+  if (!teamId || teamId === 'draw' || flagImgs.has(teamId)) return flagImgs.get(teamId);
+  const img = new Image();
+  img.src = flagSrc(teamId);
+  flagImgs.set(teamId, img);
+  img.onload = () => { /* redraw on next frame */ };
+  return img;
+}
+
+function preloadFlagsFromHistory(history) {
+  for (const h of history || []) {
+    if (h.winnerTeamId && h.winnerTeamId !== 'draw') loadFlag(h.winnerTeamId);
+    if (h.homeTeamId) loadFlag(h.homeTeamId);
+    if (h.awayTeamId) loadFlag(h.awayTeamId);
+  }
+}
 
 function chipLabel(v) {
   if (v >= 1000 && v % 1000 === 0) return `${v / 1000}k`;
@@ -66,6 +100,40 @@ function toast(msg) {
   toast._t = setTimeout(() => { el.hidden = true; }, 2200);
 }
 
+function playGoalSound() {
+  try {
+    if (!audioCtx) audioCtx = new AudioContext();
+    const ctx = audioCtx;
+    if (ctx.state === 'suspended') ctx.resume();
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(160, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(520, ctx.currentTime + 0.14);
+    gain.gain.setValueAtTime(0.09, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.4);
+
+    const bufferSize = Math.floor(ctx.sampleRate * 0.18);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    const ng = ctx.createGain();
+    ng.gain.value = 0.07;
+    noise.connect(ng);
+    ng.connect(ctx.destination);
+    noise.start();
+  } catch { /* ignore audio errors */ }
+}
+
 function resize() {
   const rect = stadiumCanvas.parentElement.getBoundingClientRect();
   const w = Math.max(1, rect.width);
@@ -76,7 +144,7 @@ function resize() {
   stadiumCanvas.style.height = `${h}px`;
 }
 
-function burstConfetti() {
+function burstConfetti(color) {
   for (let i = 0; i < 50; i++) {
     confetti.push({
       x: 0.5 + (Math.random() - 0.5) * 0.3,
@@ -84,7 +152,7 @@ function burstConfetti() {
       vx: (Math.random() - 0.5) * 0.014,
       vy: -0.005 - Math.random() * 0.01,
       life: 1,
-      color: ['#4ade80', '#fbbf24', '#fff'][Math.floor(Math.random() * 3)],
+      color: color || ['#4ade80', '#fbbf24', '#fff'][Math.floor(Math.random() * 3)],
       size: 3 + Math.random() * 4,
     });
   }
@@ -100,6 +168,25 @@ function drawConfetti(w, h) {
     stadiumCtx.fillRect(p.x * w, p.y * h, p.size, p.size * 0.55);
   }
   stadiumCtx.globalAlpha = 1;
+}
+
+function roundRect(ctx, x, y, rw, rh, rad) {
+  ctx.beginPath();
+  ctx.moveTo(x + rad, y);
+  ctx.arcTo(x + rw, y, x + rw, y + rh, rad);
+  ctx.arcTo(x + rw, y + rh, x, y + rh, rad);
+  ctx.arcTo(x, y + rh, x, y, rad);
+  ctx.arcTo(x, y, x + rw, y, rad);
+  ctx.closePath();
+}
+
+function drawFlagImage(teamId, x, y, size) {
+  const img = teamId ? flagImgs.get(teamId) : null;
+  if (img?.complete && img.naturalWidth) {
+    stadiumCtx.drawImage(img, x - size / 2, y - size / 2, size, size);
+    return true;
+  }
+  return false;
 }
 
 function drawPitchFull(w, h, t) {
@@ -173,7 +260,7 @@ function drawScoreHud(w, h) {
   const barY = Math.max(4, h * 0.04);
   const midY = barY + barH * 0.46;
   const cx = w / 2;
-  const badgeR = Math.min(10, barH * 0.28);
+  const flagSize = Math.min(22, barH * 0.62);
 
   stadiumCtx.fillStyle = 'rgba(0,0,0,0.58)';
   stadiumCtx.strokeStyle = 'rgba(255,255,255,0.2)';
@@ -185,22 +272,17 @@ function drawScoreHud(w, h) {
   const homeX = barX + barW * 0.14;
   const awayX = barX + barW * 0.86;
 
-  const drawBadge = (x, team) => {
+  const drawTeamFlag = (x, team) => {
     if (!team) return;
-    stadiumCtx.fillStyle = 'rgba(0,0,0,0.4)';
-    stadiumCtx.strokeStyle = team.color || '#fff';
-    stadiumCtx.lineWidth = 1.5;
-    stadiumCtx.beginPath();
-    stadiumCtx.arc(x, midY, badgeR, 0, Math.PI * 2);
-    stadiumCtx.fill();
-    stadiumCtx.stroke();
-    stadiumCtx.font = `${Math.floor(badgeR * 1.1)}px system-ui`;
-    stadiumCtx.textAlign = 'center';
-    stadiumCtx.textBaseline = 'middle';
-    stadiumCtx.fillText(team.emoji || '⚽', x, midY);
+    if (!drawFlagImage(team.id, x, midY, flagSize)) {
+      stadiumCtx.fillStyle = team.color || '#fff';
+      stadiumCtx.beginPath();
+      stadiumCtx.arc(x, midY, flagSize * 0.38, 0, Math.PI * 2);
+      stadiumCtx.fill();
+    }
   };
-  drawBadge(homeX, vis.homeTeam);
-  drawBadge(awayX, vis.awayTeam);
+  drawTeamFlag(homeX, vis.homeTeam);
+  drawTeamFlag(awayX, vis.awayTeam);
 
   const labelSize = Math.max(8, barH * 0.24);
   const scoreSize = Math.min(barH * 0.52, 18);
@@ -209,9 +291,9 @@ function drawScoreHud(w, h) {
   stadiumCtx.fillStyle = 'rgba(255,255,255,0.75)';
   stadiumCtx.font = `700 ${labelSize}px system-ui,sans-serif`;
   stadiumCtx.textAlign = 'right';
-  stadiumCtx.fillText(vis.homeTeam.shortName || 'HOM', homeX + badgeR + 6, midY);
+  stadiumCtx.fillText(vis.homeTeam.shortName || 'HOM', homeX + flagSize * 0.55, midY);
   stadiumCtx.textAlign = 'left';
-  stadiumCtx.fillText(vis.awayTeam.shortName || 'AWY', awayX - badgeR - 6, midY);
+  stadiumCtx.fillText(vis.awayTeam.shortName || 'AWY', awayX - flagSize * 0.55, midY);
 
   stadiumCtx.fillStyle = '#fff';
   stadiumCtx.textAlign = 'center';
@@ -223,16 +305,6 @@ function drawScoreHud(w, h) {
   stadiumCtx.fillStyle = '#fff';
   stadiumCtx.font = `900 ${scoreSize * popA}px system-ui,sans-serif`;
   stadiumCtx.fillText(String(vis.displayAway), cx + scoreSize * 0.9, midY);
-}
-
-function roundRect(ctx, x, y, w, h, rad) {
-  ctx.beginPath();
-  ctx.moveTo(x + rad, y);
-  ctx.arcTo(x + w, y, x + w, y + h, rad);
-  ctx.arcTo(x + w, y + h, x, y + h, rad);
-  ctx.arcTo(x, y + h, x, y, rad);
-  ctx.arcTo(x, y, x + w, y, rad);
-  ctx.closePath();
 }
 
 function drawBall(w, h, t) {
@@ -263,6 +335,27 @@ function drawGoalFlash(w, h) {
   stadiumCtx.fillRect(0, 0, w, h);
 }
 
+function drawGoalBanner(w, h) {
+  if (goalBanner <= 0) return;
+  goalBanner -= 0.016;
+  const alpha = Math.min(1, goalBanner * 1.4);
+  const pulse = 1 + Math.sin(animTime * 0.02) * 0.04;
+  const fontSize = Math.min(w * 0.2 * pulse, 68);
+
+  stadiumCtx.save();
+  stadiumCtx.textAlign = 'center';
+  stadiumCtx.textBaseline = 'middle';
+  stadiumCtx.font = `900 ${fontSize}px system-ui,sans-serif`;
+  stadiumCtx.shadowColor = 'rgba(34,197,94,0.85)';
+  stadiumCtx.shadowBlur = 18;
+  stadiumCtx.strokeStyle = `rgba(21,128,61,${alpha})`;
+  stadiumCtx.lineWidth = 5;
+  stadiumCtx.strokeText('GOAL!', w / 2, h * 0.5);
+  stadiumCtx.fillStyle = `rgba(255,255,255,${alpha})`;
+  stadiumCtx.fillText('GOAL!', w / 2, h * 0.5);
+  stadiumCtx.restore();
+}
+
 function drawStadium(t) {
   const w = stadiumCanvas.width / dpr;
   const h = stadiumCanvas.height / dpr;
@@ -284,6 +377,7 @@ function drawStadium(t) {
   }
 
   drawBall(w, h, t);
+  drawGoalBanner(w, h);
   drawGoalFlash(w, h);
   drawConfetti(w, h);
 }
@@ -311,6 +405,67 @@ function eventLabel(ev, match) {
   if (ev.type === 'corner') return `${ev.minute}' 🚩 Corner kick (${team})`;
   if (ev.type === 'shot') return `${ev.minute}' 🎯 Shot on target (${team})`;
   return `${ev.minute}' Foul (${team})`;
+}
+
+function checkNewGoals(events) {
+  const goals = (events || []).filter((e) => e.type === 'goal');
+  if (!goals.length) return;
+  const last = goals[goals.length - 1];
+  const key = `${last.minute}-${last.team}-${last.player || ''}`;
+  if (key === lastGoalEventKey) return;
+  lastGoalEventKey = key;
+  goalBanner = 1;
+  goalFlash = 1;
+  playGoalSound();
+}
+
+function renderHistoryBar(history) {
+  cachedHistory = history || [];
+  preloadFlagsFromHistory(cachedHistory);
+  $('history-bar').innerHTML = cachedHistory.slice(0, 12).map((h, i) => {
+    const latest = i === 0 ? ' fc-dot--latest' : '';
+    const src = historyFlagSrc(h.winnerTeamId);
+    const title = `#${h.round} ${h.home} ${h.score} ${h.away}`;
+    return `<span class="fc-dot${latest}" title="${title}">
+      <img src="${src}" alt="" loading="lazy" />
+    </span>`;
+  }).join('');
+}
+
+function renderHistoryGrid() {
+  const grid = $('history-grid');
+  if (!cachedHistory.length) {
+    grid.innerHTML = '<p class="fc-history-empty">No results yet</p>';
+    return;
+  }
+  grid.innerHTML = cachedHistory.map((h, i) => {
+    const latest = i === 0 ? ' fc-history-cell--latest' : '';
+    const src = historyFlagSrc(h.winnerTeamId);
+    return `<div class="fc-history-cell${latest}" title="Round ${h.round}: ${h.home} ${h.score} ${h.away}">
+      <img src="${src}" alt="" loading="lazy" />
+    </div>`;
+  }).join('');
+}
+
+function setupHistoryModal() {
+  const modal = $('history-modal');
+  const close = () => { modal.hidden = true; };
+  $('btn-history').addEventListener('click', () => {
+    renderHistoryGrid();
+    modal.hidden = false;
+  });
+  $('history-close').addEventListener('click', close);
+  $('history-backdrop').addEventListener('click', close);
+}
+
+function updateTeamPicks(match) {
+  if (!match?.homeTeam || !match?.awayTeam) return;
+  $('pick-flag-home').src = flagSrc(match.homeTeam.id);
+  $('pick-flag-away').src = flagSrc(match.awayTeam.id);
+  $('pick-label-home').textContent = match.homeTeam.shortName;
+  $('pick-label-away').textContent = match.awayTeam.shortName;
+  loadFlag(match.homeTeam.id);
+  loadFlag(match.awayTeam.id);
 }
 
 function buildChips() {
@@ -392,32 +547,72 @@ function setTimerRing(countdown, phase) {
   $('timer-ring').style.strokeDashoffset = String(RING_C * (1 - Math.max(0, countdown / max)));
 }
 
-function showOverlay(myBet) {
-  const overlay = $('overlay');
-  const card = $('overlay-card');
-  if (!myBet || state?.phase !== 'results') {
-    overlay.hidden = true;
-    lastOverlayKey = '';
+function closeResultPopup() {
+  $('result-popup').hidden = true;
+}
+
+function showResultPopup() {
+  const popup = $('result-popup');
+  const match = state?.match;
+  if (state?.phase !== 'results' || !match) {
+    if (state?.phase !== 'results') {
+      popup.hidden = true;
+      lastOverlayKey = '';
+    }
     return;
   }
-  const key = `${state.roundId}-${myBet.status}`;
+
+  const key = `${state.roundId}-${match.outcome}-${match.homeScore}-${match.awayScore}`;
   if (key === lastOverlayKey) return;
   lastOverlayKey = key;
-  overlay.hidden = false;
-  if (myBet.status === 'won') {
-    card.className = 'fc-overlay__card fc-overlay__card--win';
-    card.innerHTML = `FULL TIME WIN!<span class="fc-overlay__sub">+${fmtNum(myBet.winAmount)} coins</span>`;
-    burstConfetti();
+
+  const winnerId = match.outcome === 'draw'
+    ? 'draw'
+    : match.outcome === 'homeWin'
+      ? match.homeTeam.id
+      : match.awayTeam.id;
+
+  const flagEl = $('result-flag');
+  flagEl.src = winnerId === 'draw' ? `${ASSET}/flag-draw.svg` : flagSrc(winnerId);
+
+  const myBet = state?.myBet;
+  const betAmt = myBet?.amount ?? 0;
+  const winAmt = myBet?.status === 'won' ? (myBet.winAmount ?? 0) : 0;
+
+  $('result-bet-amt').textContent = fmtNum(betAmt);
+  $('result-win-amt').textContent = fmtNum(winAmt);
+  $('result-score').textContent = `${match.homeTeam.shortName} ${match.homeScore} – ${match.awayScore} ${match.awayTeam.shortName}`;
+
+  if (match.outcome === 'draw') {
+    $('result-title').textContent = 'Draw';
   } else {
-    card.className = 'fc-overlay__card fc-overlay__card--lose';
-    card.innerHTML = `FULL TIME<span class="fc-overlay__sub">Wrong call — try again</span>`;
+    const winnerName = match.outcome === 'homeWin' ? match.homeTeam.name : match.awayTeam.name;
+    $('result-title').textContent = `${winnerName} wins!`;
   }
-  setTimeout(() => { if (state?.phase !== 'results') overlay.hidden = true; }, 2800);
+
+  const card = $('result-card');
+  const won = myBet?.status === 'won';
+  card.className = 'fc-result__card';
+  if (won) {
+    card.classList.add('fc-result__card--win');
+    burstConfetti('#4ade80');
+  } else if (betAmt > 0) {
+    card.classList.add('fc-result__card--lose');
+  }
+
+  popup.hidden = false;
 }
 
 function applyState(next) {
   const prevScore = { h: vis.homeScore, a: vis.awayScore };
-  if (prevPhase !== next.phase) lastEventCount = 0;
+  if (prevPhase !== next.phase) {
+    lastEventCount = 0;
+    if (next.phase === 'betting') {
+      lastGoalEventKey = '';
+      lastOverlayKey = '';
+      closeResultPopup();
+    }
+  }
   prevPhase = next.phase;
   state = next;
 
@@ -432,9 +627,7 @@ function applyState(next) {
   chip.classList.toggle('is-live', next.phase === 'playing');
   chip.classList.toggle('is-ft', next.phase === 'results');
 
-  $('history-bar').innerHTML = (next.history || []).slice(0, 8).map((h) =>
-    `<span class="fc-pill">#${h.round} ${h.home} ${h.score} ${h.away}</span>`,
-  ).join('');
+  renderHistoryBar(next.history);
 
   const m = next.match;
   vis.phase = next.phase;
@@ -446,10 +639,13 @@ function applyState(next) {
     vis.displayHome = m.homeScore;
     vis.displayAway = m.awayScore;
 
-    if (m.homeScore > prevScore.h) { scorePop.home = 1; goalFlash = 1; }
-    if (m.awayScore > prevScore.a) { scorePop.away = 1; goalFlash = 1; }
+    updateTeamPicks(m);
+
+    if (m.homeScore > prevScore.h) scorePop.home = 1;
+    if (m.awayScore > prevScore.a) scorePop.away = 1;
 
     const events = m.events || [];
+    checkNewGoals(events);
     if (events.length !== lastEventCount) {
       lastEventCount = events.length;
       $('events').innerHTML = events.slice(-4).reverse().map((ev) =>
@@ -464,7 +660,7 @@ function applyState(next) {
   }
 
   updatePickButtons();
-  showOverlay(next.myBet);
+  showResultPopup();
 }
 
 async function poll() {
@@ -480,6 +676,10 @@ async function init() {
     resize();
     requestAnimationFrame(animLoop);
   });
+
+  setupHistoryModal();
+  $('result-ok').addEventListener('click', closeResultPopup);
+  $('result-backdrop').addEventListener('click', closeResultPopup);
 
   buildChips();
 

@@ -11,6 +11,14 @@ export const FOOTBALL_TEAMS = [
   { id: 'bayern', name: 'Bayern', shortName: 'BAY', color: '#DC052D', emoji: '⭐', rating: 90 },
   { id: 'psg', name: 'PSG', shortName: 'PSG', color: '#004170', emoji: '🗼', rating: 87 },
   { id: 'juventus', name: 'Juventus', shortName: 'JUV', color: '#000000', emoji: '⚪', rating: 87 },
+  { id: 'alhilal', name: 'Al Hilal', shortName: 'HIL', color: '#0058A3', emoji: '💙', rating: 88 },
+  { id: 'alnassr', name: 'Al Nassr', shortName: 'NSR', color: '#FEDC00', emoji: '💛', rating: 87 },
+  { id: 'alahly', name: 'Al Ahly', shortName: 'AHL', color: '#C8102E', emoji: '🔴', rating: 89 },
+  { id: 'zamalek', name: 'Zamalek', shortName: 'ZAM', color: '#009639', emoji: '🦅', rating: 85 },
+  { id: 'alittihad', name: 'Al Ittihad', shortName: 'ITH', color: '#FFD700', emoji: '⚫', rating: 86 },
+  { id: 'alain', name: 'Al Ain', shortName: 'AIN', color: '#6B0018', emoji: '🐎', rating: 84 },
+  { id: 'raja', name: 'Raja CA', shortName: 'RAJ', color: '#009E60', emoji: '🟢', rating: 83 },
+  { id: 'sadd', name: 'Al Sadd', shortName: 'SAD', color: '#8A1538', emoji: '🟣', rating: 84 },
 ];
 
 export const FOOTBALL_CLASH_GAME = {

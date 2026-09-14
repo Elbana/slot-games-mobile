@@ -43,23 +43,30 @@
         </main>
 
         <footer class="fc-foot">
-          <div class="fc-history" id="history-bar"></div>
+          <button type="button" class="fc-history" id="btn-history" aria-label="View recent results">
+            <span class="fc-history__new">NEW</span>
+            <div class="fc-history__dots" id="history-bar"></div>
+            <span class="fc-history__chev" aria-hidden="true">›</span>
+          </button>
           <div class="fc-pick">
             <button type="button" class="fc-pick__btn" data-pred="home">
               <div class="fc-pick__face">
-                <span>Home</span><small>×1.92</small>
+                <img src="" alt="" class="fc-pick__flag" id="pick-flag-home" />
+                <span id="pick-label-home">—</span><small>×1.92</small>
               </div>
               <span class="fc-pick__amt" data-amt>0</span>
             </button>
             <button type="button" class="fc-pick__btn" data-pred="draw">
               <div class="fc-pick__face">
+                <img src="/football-clash/assets/flag-draw.svg" alt="" class="fc-pick__flag" />
                 <span>Draw</span><small>×3.5</small>
               </div>
               <span class="fc-pick__amt" data-amt>0</span>
             </button>
             <button type="button" class="fc-pick__btn" data-pred="away">
               <div class="fc-pick__face">
-                <span>Away</span><small>×1.92</small>
+                <img src="" alt="" class="fc-pick__flag" id="pick-flag-away" />
+                <span id="pick-label-away">—</span><small>×1.92</small>
               </div>
               <span class="fc-pick__amt" data-amt>0</span>
             </button>
@@ -72,9 +79,36 @@
 
         <div class="fc-fx" id="fc-fx" aria-hidden="true"></div>
 
-        <div class="fc-overlay" id="overlay" hidden>
-          <div class="fc-overlay__card" id="overlay-card"></div>
+        <div class="fc-result" id="result-popup" hidden>
+          <button type="button" class="fc-result__backdrop" id="result-backdrop" aria-label="Close"></button>
+          <div class="fc-result__card" id="result-card">
+            <div class="fc-result__shimmer" aria-hidden="true"></div>
+            <div class="fc-result__flag-wrap">
+              <img id="result-flag" class="fc-result__flag" alt="" />
+            </div>
+            <h2 class="fc-result__title" id="result-title">Full Time</h2>
+            <p class="fc-result__score" id="result-score"></p>
+            <div class="fc-result__bet">
+              <div>Bet placed: <strong id="result-bet-amt">0</strong></div>
+              <div>You win: <strong id="result-win-amt">0</strong></div>
+            </div>
+            <button type="button" class="fc-result__ok" id="result-ok">OK</button>
+          </div>
         </div>
+
+        <div class="fc-history-modal" id="history-modal" hidden>
+          <button type="button" class="fc-history-modal__backdrop" id="history-backdrop" aria-label="Close"></button>
+          <div class="fc-history-modal__sheet" role="dialog" aria-labelledby="history-title">
+            <div class="fc-history-modal__head">
+              <h2 class="fc-history-modal__title" id="history-title">Recent results</h2>
+              <button type="button" class="fc-history-modal__close" id="history-close" aria-label="Close">✕</button>
+            </div>
+            <div class="fc-history-modal__body">
+              <div class="fc-history-grid" id="history-grid"></div>
+            </div>
+          </div>
+        </div>
+
         <div class="fc-toast" id="toast" hidden></div>
       </div>
     </div>

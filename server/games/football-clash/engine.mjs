@@ -106,8 +106,8 @@ export function createFootballClashEngine(config = FOOTBALL_CLASH_GAME) {
 
   const bets = new Map();
   let history = [
-    { round: 8, home: 'LIV', away: 'RMA', score: '2-1', outcome: 'homeWin' },
-    { round: 7, home: 'BAR', away: 'CHE', score: '1-1', outcome: 'draw' },
+    { round: 8, home: 'LIV', away: 'RMA', score: '2-1', outcome: 'homeWin', homeTeamId: 'liverpool', awayTeamId: 'realmadrid', winnerTeamId: 'liverpool' },
+    { round: 7, home: 'AHL', away: 'HIL', score: '1-1', outcome: 'draw', homeTeamId: 'alahly', awayTeamId: 'alhilal', winnerTeamId: 'draw' },
   ];
 
   function resolveBets() {
@@ -118,12 +118,20 @@ export function createFootballClashEngine(config = FOOTBALL_CLASH_GAME) {
       bet.winAmount = winAmount;
       bet.status = isWinner ? 'won' : 'lost';
     }
+    const winnerTeamId = match.outcome === 'draw'
+      ? 'draw'
+      : match.outcome === 'homeWin'
+        ? match.homeTeam.id
+        : match.awayTeam.id;
     history.unshift({
       round: roundSeq,
       home: match.homeTeam.shortName,
       away: match.awayTeam.shortName,
       score: `${match.homeScore}-${match.awayScore}`,
       outcome: match.outcome,
+      homeTeamId: match.homeTeam.id,
+      awayTeamId: match.awayTeam.id,
+      winnerTeamId,
     });
     if (history.length > 12) history.length = 12;
   }
