@@ -28,18 +28,22 @@ const CHIPS = [2, 10, 50, 100, 1000];
 
 const GREEDY_DESIGN_W = 750;
 
+function syncGreedyBalanceDisplay() {
+  const val = $('balance')?.textContent ?? '0';
+  const footerBal = $('balance-footer');
+  if (footerBal) footerBal.textContent = val;
+}
+
 function syncGreedyEmbedScale() {
   const sheet = document.querySelector('.gm-shell--greedy.gm-shell--embed .gm-sheet');
   const inner = sheet?.querySelector('.greedy-scale-inner');
   if (!sheet || !inner) return;
 
-  const designH = inner.scrollHeight || 1353;
+  const designH = inner.scrollHeight || 900;
   const fitW = sheet.clientWidth / GREEDY_DESIGN_W;
   const fitH = sheet.clientHeight / designH;
   const fit = fitW * designH <= sheet.clientHeight + 2 ? fitW : Math.min(fitW, fitH);
   const offsetX = Math.max(0, (sheet.clientWidth - GREEDY_DESIGN_W * fit) / 2);
-  inner.style.setProperty('--greedy-fit', String(fit));
-  inner.style.setProperty('--greedy-design-h', String(designH));
   inner.style.width = `${GREEDY_DESIGN_W}px`;
   inner.style.transformOrigin = '0 0';
   inner.style.transform = `translate(${offsetX}px, 0) scale(${fit})`;
@@ -48,10 +52,8 @@ function syncGreedyEmbedScale() {
 
 function setupGreedyEmbedScale() {
   if (!document.querySelector('.gm-shell--greedy.gm-shell--embed')) return;
-
   syncGreedyEmbedScale();
   window.addEventListener('resize', syncGreedyEmbedScale);
-
   if (typeof ResizeObserver !== 'undefined') {
     const sheet = document.querySelector('.gm-shell--greedy.gm-shell--embed .gm-sheet');
     const inner = sheet?.querySelector('.greedy-scale-inner');
@@ -61,7 +63,6 @@ function setupGreedyEmbedScale() {
       ro.observe(inner);
     }
   }
-
   requestAnimationFrame(() => {
     syncGreedyEmbedScale();
     requestAnimationFrame(syncGreedyEmbedScale);
@@ -331,6 +332,7 @@ async function tick() {
 
     if (state.Balance != null) {
       $('balance').textContent = Number(state.Balance).toLocaleString();
+      syncGreedyBalanceDisplay();
     }
 
     const labelEl = $('time-label');
@@ -444,6 +446,7 @@ async function init() {
   }
   if (res.data.balance != null) {
     $('balance').textContent = Number(res.data.balance).toLocaleString();
+    syncGreedyBalanceDisplay();
   }
 
   try {
@@ -470,6 +473,7 @@ async function init() {
   $('start-box').classList.add('ready');
   await loadHistory();
   await loadRankings();
+  syncGreedyEmbedScale();
 
   function schedulePoll() {
     const delay = prevStage === 2 || prevStage === 4 ? 300 : 1000;

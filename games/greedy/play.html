@@ -16,14 +16,20 @@
         <div class="greedy-scale-host">
           <div class="greedy-scale-inner">
         <div class="popup-content">
-          <div class="header">
+          <header class="header">
             <div class="left-icons">
               <a href="/"><img class="icon-btn" src="/lottery/greedy/home-icon@2x.png" alt="home" /></a>
               <img class="icon-btn" id="btn-help" src="/lottery/greedy/help-icon.png" alt="help" />
               <img class="icon-btn" id="btn-history" src="/lottery/greedy/time-icon.png" alt="history" />
             </div>
-            <span class="period-text" id="period-label">Today's round --</span>
-          </div>
+            <div class="header__right">
+              <div class="header-balance">
+                <img class="coin-icon" src="/lottery/greedy/zs@2x.png" alt="" />
+                <span id="balance">0</span>
+              </div>
+              <span class="period-text" id="period-label">Today's round --</span>
+            </div>
+          </header>
 
           <div class="main" id="arena">
             <img class="bg" src="/lottery/greedy/gameBg.png" alt="" />
@@ -57,10 +63,9 @@
             </div>
           </div>
 
-          <div class="footer">
-            <img class="footerbg" src="/lottery/greedy/bottom-bg.png" alt="" />
+          <footer class="footer footer--result">
             <div class="footMain">
-              <div class="one account-row">
+              <div class="one account-row greedy-embed-extra">
                 <div class="switch-wrap">
                   <img class="switch-img" src="/lottery/greedy/switch-icon.png" alt="switch" />
                 </div>
@@ -68,7 +73,7 @@
                   <span class="balance-label">Balance</span>
                   <div class="balance-value">
                     <img class="coin-icon" src="/lottery/greedy/zs@2x.png" alt="" />
-                    <span id="balance">0</span>
+                    <span id="balance-footer" aria-hidden="true">0</span>
                     <span class="arrow-sm">›</span>
                   </div>
                 </div>
@@ -84,7 +89,7 @@
                 <span class="history-label">Result</span>
                 <div class="history-icons" id="history"></div>
               </div>
-              <div class="three ranking-row">
+              <div class="three ranking-row greedy-embed-extra">
                 <div class="ranking-avatar">
                   <div class="avatar-placeholder" id="rank-avatar">$</div>
                   <div class="rank-badge">1</div>
@@ -99,7 +104,7 @@
                 <span class="arrow">›</span>
               </div>
             </div>
-          </div>
+          </footer>
         </div>
           </div>
         </div>
