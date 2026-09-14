@@ -20,7 +20,7 @@ async function api(url, opts = {}) {
   return json.data;
 }
 
-const API = '/api/goal-showdown';
+const API = '/api/goal-clash';
 
 export function footballClashInit() {
   return api(`${API}/init`);
@@ -35,7 +35,7 @@ export function footballClashBet(prediction, amount) {
     method: 'POST',
     body: JSON.stringify({ prediction, amount }),
   }).then((data) => {
-    window.gmNotifyWallet?.('bet', { game: 'goal-showdown', amount, balance: data.balance, delta: -amount });
+    window.gmNotifyWallet?.('bet', { game: 'goal-clash', amount, balance: data.balance, delta: -amount });
     return data;
   });
 }

@@ -22,7 +22,7 @@ async function fetchJson(url, init) {
   return data.data;
 }
 
-const API = '/api/sky-streak';
+const API = '/api/rocket-rush';
 
 export function rocketInit() {
   return fetchJson(`${API}/init`);
@@ -38,14 +38,14 @@ export function rocketBet(amount, autoCashout = 0) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ amount, autoCashout }),
   }).then((data) => {
-    window.gmNotifyWallet?.('bet', { game: 'sky-streak', amount, balance: data.balance, delta: -amount });
+    window.gmNotifyWallet?.('bet', { game: 'rocket-rush', amount, balance: data.balance, delta: -amount });
     return data;
   });
 }
 
 export function rocketCashout() {
   return fetchJson(`${API}/cashout`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then((data) => {
-    window.gmNotifyWallet?.('win', { game: 'sky-streak', amount: data.winAmount, balance: data.balance, delta: data.winAmount });
+    window.gmNotifyWallet?.('win', { game: 'rocket-rush', amount: data.winAmount, balance: data.balance, delta: data.winAmount });
     return data;
   });
 }

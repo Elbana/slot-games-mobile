@@ -16,9 +16,12 @@ Open **http://localhost:5180/**
 
 | Slug | Type | Play URL |
 |------|------|----------|
-| `rise-of-olympus` | Slot (PixiJS) | `/play/rise-of-olympus` |
-| `greedy` | Lottery wheel | `/play/greedy` |
-| `pets-beasts` | Lottery wheel | `/play/pets-beasts` |
+| `olympus-rise` | Slot (PixiJS) | `/play/olympus-rise` |
+| `greedy-feast` | Lottery wheel | `/play/greedy-feast` |
+| `luck-77` | Lottery wheel | `/play/luck-77` |
+| `dice-duel` | PvP dice | `/play/dice-duel` |
+| `goal-clash` | PvP football | `/play/goal-clash` |
+| `rocket-rush` | Crash | `/play/rocket-rush` |
 
 Demo: `?token=op_demo_all&player=demo`
 

@@ -24,8 +24,8 @@ export const FOOTBALL_TEAMS = [
 ];
 
 export const FOOTBALL_CLASH_GAME = {
-  id: 'goal-showdown',
-  name: 'Goal Showdown',
+  id: 'goal-clash',
+  name: 'Goal Clash',
   bettingSeconds: 15,
   matchSeconds: 10,
   resultSeconds: 3,

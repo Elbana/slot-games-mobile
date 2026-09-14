@@ -4,7 +4,7 @@
       "id": "demo-all",
       "token": "op_demo_all",
       "name": "Demo — all games",
-      "enabledGames": ["throne-rush", "feast-spin", "triple-harvest", "dice-arena", "goal-showdown", "sky-streak"],
+      "enabledGames": ["olympus-rise", "greedy-feast", "luck-77", "dice-duel", "goal-clash", "rocket-rush"],
       "wallet": { "mode": "mock" },
       "betting": {
         "chipUnits": [200, 1000, 5000, 10000, 50000, 100000],
@@ -24,7 +24,7 @@
       "id": "demo-lottery",
       "token": "op_lottery_only",
       "name": "Demo — lottery only",
-      "enabledGames": ["feast-spin", "triple-harvest"],
+      "enabledGames": ["greedy-feast", "luck-77"],
       "wallet": { "mode": "mock" },
       "betting": {
         "chipUnits": [200, 1000, 5000, 10000, 50000, 100000],
@@ -44,7 +44,7 @@
       "id": "demo-slots",
       "token": "op_slots_only",
       "name": "Demo — slots only",
-      "enabledGames": ["throne-rush"],
+      "enabledGames": ["olympus-rise"],
       "wallet": { "mode": "mock" },
       "betting": {
         "chipUnits": [200, 1000, 5000, 10000, 50000, 100000],
@@ -64,7 +64,7 @@
       "id": "voice-chat-demo",
       "token": "op_voice_chat",
       "name": "Voice chat demo",
-      "enabledGames": ["throne-rush", "feast-spin", "triple-harvest", "dice-arena", "goal-showdown", "sky-streak"],
+      "enabledGames": ["olympus-rise", "greedy-feast", "luck-77", "dice-duel", "goal-clash", "rocket-rush"],
       "wallet": { "mode": "mock" },
       "betting": {
         "chipUnits": [200, 1000, 5000, 10000, 50000, 100000],

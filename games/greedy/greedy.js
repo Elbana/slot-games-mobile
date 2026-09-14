@@ -10,7 +10,7 @@ import {
 
 const ASSET = '/lottery/greedy';
 const BOX_ASSET = '/lottery/petsbeasts';
-const GAME_ID = 'feast-spin';
+const GAME_ID = 'greedy-feast';
 
 /** 8 wheel slots — same layout positions as Pets & Beasts */
 const FOODS = [

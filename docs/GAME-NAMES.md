@@ -1,14 +1,12 @@
-# Game names (original branding)
+# Game names
 
-All titles are original names to avoid third-party trademark issues. Internal asset folders may retain legacy paths; public slugs and display names use this table.
+Close to familiar titles players already know — same game feel, unique to our platform.
 
-| Slug | Display name | Type | Former reference |
-|------|--------------|------|------------------|
-| `throne-rush` | Throne Rush | Slot | Rise of Olympus–style cluster slot |
-| `feast-spin` | Feast Spin | Lottery | Greedy food wheel |
-| `triple-harvest` | Triple Harvest | Lottery | Lucky 77 fruit wheel |
-| `dice-arena` | Dice Arena | PvP | Dice Dual |
-| `goal-showdown` | Goal Showdown | PvP | Football Clash |
-| `sky-streak` | Sky Streak | Crash | Rocket multiplier |
-
-Golden Trio replaces “Lucky 77” as the high-pay wheel symbol label in Triple Harvest.
+| Slug | Display name | Feels like |
+|------|--------------|------------|
+| `olympus-rise` | Olympus Rise | Rise of Olympus |
+| `greedy-feast` | Greedy Feast | Greedy |
+| `luck-77` | Luck 77 | Lucky 77 |
+| `dice-duel` | Dice Duel | Dice Dual |
+| `goal-clash` | Goal Clash | Football Clash |
+| `rocket-rush` | Rocket Rush | Rocket |

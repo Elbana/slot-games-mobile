@@ -1,52 +1,52 @@
 /**
- * Canonical display names and slugs — original branding (no third-party trademarks).
+ * Public slugs + display names — close to familiar titles, unique to our platform.
  */
 
-export const SLOT_SLUG = 'throne-rush';
-export const SLOT_NAME = 'Throne Rush';
+export const SLOT_SLUG = 'olympus-rise';
+export const SLOT_NAME = 'Olympus Rise';
 
 /** @type {Record<string, { name: string, tagline: string, badge: string, theme: string, icon: string }>} */
 export const GAME_DISPLAY = {
   [SLOT_SLUG]: {
     name: SLOT_NAME,
-    tagline: 'Divine cascades, rising multipliers & free spins',
+    tagline: 'Cluster pays, god multipliers & free spins',
     badge: 'Video Slot',
-    theme: 'throne-rush',
+    theme: 'olympus',
     icon: '⚡',
   },
-  'feast-spin': {
-    name: 'Feast Spin',
-    tagline: 'Bet on the feast wheel — live 30s rounds',
+  'greedy-feast': {
+    name: 'Greedy Feast',
+    tagline: 'Bet on the food wheel — 30s live rounds',
     badge: 'Lottery',
-    theme: 'feast-spin',
+    theme: 'greedy',
     icon: '🍕',
   },
-  'triple-harvest': {
-    name: 'Triple Harvest',
-    tagline: 'Pick lemon, watermelon, or golden trio on the live wheel',
+  'luck-77': {
+    name: 'Luck 77',
+    tagline: 'Bet Lemon, Watermelon or Luck 77 — live wheel',
     badge: 'Wheel',
-    theme: 'triple-harvest',
+    theme: 'lucky77',
     icon: '🎡',
   },
-  'dice-arena': {
-    name: 'Dice Arena',
-    tagline: 'Red vs blue — roll the dice, pick your champion',
+  'dice-duel': {
+    name: 'Dice Duel',
+    tagline: 'Red vs blue — roll 3 dice, pick the winning team',
     badge: 'Dice',
-    theme: 'dice-arena',
+    theme: 'dice-dual',
     icon: '🎲',
   },
-  'goal-showdown': {
-    name: 'Goal Showdown',
-    tagline: 'Predict home, draw, or away in live match rounds',
+  'goal-clash': {
+    name: 'Goal Clash',
+    tagline: 'Bet home, draw, or away on live match rounds',
     badge: 'Sports',
-    theme: 'goal-showdown',
+    theme: 'football-clash',
     icon: '⚽',
   },
-  'sky-streak': {
-    name: 'Sky Streak',
-    tagline: 'Ride the streak — cash out before the fall',
+  'rocket-rush': {
+    name: 'Rocket Rush',
+    tagline: 'Ride the rocket — cash out before it crashes',
     badge: 'Crash',
-    theme: 'sky-streak',
+    theme: 'rocket',
     icon: '🚀',
   },
 };

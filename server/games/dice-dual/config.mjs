@@ -1,8 +1,8 @@
 /** Dice Dual — red vs blue, 5 dice each; bet red, blue, or draw. */
 
 export const DICE_DUAL_GAME = {
-  id: 'dice-arena',
-  name: 'Dice Arena',
+  id: 'dice-duel',
+  name: 'Dice Duel',
   bettingSeconds: 15,
   battleSeconds: 4,
   resultSeconds: 3,

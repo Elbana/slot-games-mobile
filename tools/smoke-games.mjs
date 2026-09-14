@@ -52,46 +52,46 @@ const catalog = await get('/api/v1/games');
 if (catalog.ok && catalog.json?.games?.length >= 6) pass('GET /api/v1/games');
 else fail('GET /api/v1/games', catalog.status);
 
-const launch = await get('/api/v1/launch?game=sky-streak');
-if (launch.ok && launch.json?.launchUrl?.includes('sky-streak')) pass('GET /api/v1/launch');
+const launch = await get('/api/v1/launch?game=rocket-rush');
+if (launch.ok && launch.json?.launchUrl?.includes('rocket-rush')) pass('GET /api/v1/launch');
 else fail('GET /api/v1/launch', launch.json?.error || launch.status);
 
-const rooSession = await get('/api/v2/session?game=throne-rush');
-if (rooSession.ok && rooSession.json?.balance != null) pass('GET /api/v2/session (throne-rush)');
+const rooSession = await get('/api/v2/session?game=olympus-rise');
+if (rooSession.ok && rooSession.json?.balance != null) pass('GET /api/v2/session (olympus-rise)');
 else fail('GET /api/v2/session', rooSession.json?.error || rooSession.status);
 
-const rooSpin = await post('/api/v2/spin?game=throne-rush&bet=200', {});
-if (rooSpin.ok && rooSpin.json?.symbols) pass('POST /api/v2/spin (throne-rush)');
+const rooSpin = await post('/api/v2/spin?game=olympus-rise&bet=200', {});
+if (rooSpin.ok && rooSpin.json?.symbols) pass('POST /api/v2/spin (olympus-rise)');
 else fail('POST /api/v2/spin', rooSpin.json?.error || rooSpin.status);
 
-const feastInit = await get('/api/lottery/feast-spin/init');
-if (feastInit.ok && feastInit.json?.data?.sessionId) pass('GET /api/lottery/feast-spin/init');
-else fail('GET /api/lottery/feast-spin/init', feastInit.json?.msg || feastInit.status);
+const greedyInit = await get('/api/lottery/greedy-feast/init');
+if (greedyInit.ok && greedyInit.json?.data?.sessionId) pass('GET /api/lottery/greedy-feast/init');
+else fail('GET /api/lottery/greedy-feast/init', greedyInit.json?.msg || greedyInit.status);
 
-const harvestInit = await get('/api/lottery/triple-harvest/init');
-if (harvestInit.ok && harvestInit.json?.data?.sessionId) pass('GET /api/lottery/triple-harvest/init');
-else fail('GET /api/lottery/triple-harvest/init', harvestInit.json?.msg || harvestInit.status);
+const luckyInit = await get('/api/lottery/luck-77/init');
+if (luckyInit.ok && luckyInit.json?.data?.sessionId) pass('GET /api/lottery/luck-77/init');
+else fail('GET /api/lottery/luck-77/init', luckyInit.json?.msg || luckyInit.status);
 
-const skyInit = await get('/api/sky-streak/init');
-if (skyInit.ok && skyInit.json?.data?.game?.id === 'sky-streak') pass('GET /api/sky-streak/init');
-else fail('GET /api/sky-streak/init', skyInit.json?.msg || skyInit.status);
+const rocketInit = await get('/api/rocket-rush/init');
+if (rocketInit.ok && rocketInit.json?.data?.game?.id === 'rocket-rush') pass('GET /api/rocket-rush/init');
+else fail('GET /api/rocket-rush/init', rocketInit.json?.msg || rocketInit.status);
 
-const diceInit = await get('/api/dice-arena/init');
-if (diceInit.ok && diceInit.json?.data) pass('GET /api/dice-arena/init');
-else fail('GET /api/dice-arena/init', diceInit.json?.msg || diceInit.status);
+const diceInit = await get('/api/dice-duel/init');
+if (diceInit.ok && diceInit.json?.data) pass('GET /api/dice-duel/init');
+else fail('GET /api/dice-duel/init', diceInit.json?.msg || diceInit.status);
 
-const goalInit = await get('/api/goal-showdown/init');
-if (goalInit.ok && goalInit.json?.data) pass('GET /api/goal-showdown/init');
-else fail('GET /api/goal-showdown/init', goalInit.json?.msg || goalInit.status);
+const goalInit = await get('/api/goal-clash/init');
+if (goalInit.ok && goalInit.json?.data) pass('GET /api/goal-clash/init');
+else fail('GET /api/goal-clash/init', goalInit.json?.msg || goalInit.status);
 
-const feastPage = await get('/play/feast-spin');
-if (feastPage.ok && feastPage.text.includes('greedy.js')) pass('GET /play/feast-spin');
-else fail('GET /play/feast-spin', feastPage.status);
+const greedyPage = await get('/play/greedy-feast');
+if (greedyPage.ok && greedyPage.text.includes('greedy.js')) pass('GET /play/greedy-feast');
+else fail('GET /play/greedy-feast', greedyPage.status);
 
-const rooPage = await get('/play/throne-rush');
-if (rooPage.ok && (rooPage.text.includes('main.js') || rooPage.text.includes('Throne'))) {
-  pass('GET /play/throne-rush');
-} else fail('GET /play/throne-rush', rooPage.status);
+const rooPage = await get('/play/olympus-rise');
+if (rooPage.ok && (rooPage.text.includes('main.js') || rooPage.text.includes('Olympus'))) {
+  pass('GET /play/olympus-rise');
+} else fail('GET /play/olympus-rise', rooPage.status);
 
 console.log('');
 if (failed) {

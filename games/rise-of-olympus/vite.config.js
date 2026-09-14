@@ -6,7 +6,7 @@ const root = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   root,
-  base: '/play/throne-rush/',
+  base: '/play/olympus-rise/',
   assetsInclude: ['**/*.skel'],
   server: {
     port: 5180,

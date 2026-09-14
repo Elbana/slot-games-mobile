@@ -6,12 +6,12 @@ class GamesConfig {
   final String operatorToken;
 
   static const games = <String, String>{
-    'throne-rush': 'Throne Rush',
-    'feast-spin': 'Feast Spin',
-    'triple-harvest': 'Triple Harvest',
-    'dice-arena': 'Dice Arena',
-    'goal-showdown': 'Goal Showdown',
-    'sky-streak': 'Sky Streak',
+    'olympus-rise': 'Olympus Rise',
+    'greedy-feast': 'Greedy Feast',
+    'luck-77': 'Luck 77',
+    'dice-duel': 'Dice Duel',
+    'goal-clash': 'Goal Clash',
+    'rocket-rush': 'Rocket Rush',
   };
 
   /// Dev: direct WebView URL with token + player id from your auth.

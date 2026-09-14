@@ -40,19 +40,19 @@ describe('operator economy', () => {
 
 describe('prize pool ledger', () => {
   it('grows pool and house on net loss', () => {
-    recordRound({ operator, game: 'greedy', bet: 100, baseWin: 0 });
-    const stats = getPoolStats(operator, 'greedy');
+    recordRound({ operator, game: 'greedy-feast', bet: 100, baseWin: 0 });
+    const stats = getPoolStats(operator, 'greedy-feast');
     assert.equal(stats.houseTaken, 10);
     assert.equal(stats.poolBalance, 50);
     assert.equal(stats.totalBet, 100);
   });
 
   it('pays pool win and debits pool balance', () => {
-    const before = loadPool(operator.id, 'greedy').poolBalance;
+    const before = loadPool(operator.id, 'greedy-feast').poolBalance;
     assert.ok(before >= 50);
     const { poolWin, poolBalance } = tryPoolWin({
       operator,
-      game: 'greedy',
+      game: 'greedy-feast',
       bet: 1000,
       baseWin: 0,
       playerId: 'p1',
@@ -62,10 +62,10 @@ describe('prize pool ledger', () => {
   });
 
   it('does not pool-win when baseWin covers bet', () => {
-    recordRound({ operator, game: 'rise-of-olympus', bet: 50, baseWin: 50 });
+    recordRound({ operator, game: 'olympus-rise', bet: 50, baseWin: 50 });
     const { poolWin } = tryPoolWin({
       operator,
-      game: 'rise-of-olympus',
+      game: 'olympus-rise',
       bet: 50,
       baseWin: 50,
     });

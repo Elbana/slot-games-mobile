@@ -46,8 +46,8 @@ export const GREEDY_SYMBOLS = [
 ];
 
 export const GREEDY_GAME = {
-  id: 'feast-spin',
-  name: 'Feast Spin',
+  id: 'greedy-feast',
+  name: 'Greedy Feast',
   typCode: GREEDY_TYP,
   lotteryCode: GREEDY_LOTTERY,
   bettingSeconds: 30,

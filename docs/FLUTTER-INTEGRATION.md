@@ -2,16 +2,16 @@
 
 Your Flutter app already manages user balance. Embed games in a WebView and sync balance when the host bridge fires events.
 
-## Game catalog (original names — license-safe)
+## Game catalog
 
 | Slug | Display name | WebView path |
 |------|--------------|--------------|
-| `throne-rush` | Throne Rush | `/play/throne-rush` |
-| `feast-spin` | Feast Spin | `/play/feast-spin` |
-| `triple-harvest` | Triple Harvest | `/play/triple-harvest` |
-| `dice-arena` | Dice Arena | `/play/dice-arena` |
-| `goal-showdown` | Goal Showdown | `/play/goal-showdown` |
-| `sky-streak` | Sky Streak | `/play/sky-streak` |
+| `olympus-rise` | Olympus Rise | `/play/olympus-rise` |
+| `greedy-feast` | Greedy Feast | `/play/greedy-feast` |
+| `luck-77` | Luck 77 | `/play/luck-77` |
+| `dice-duel` | Dice Duel | `/play/dice-duel` |
+| `goal-clash` | Goal Clash | `/play/goal-clash` |
+| `rocket-rush` | Rocket Rush | `/play/rocket-rush` |
 
 ## Recommended launch flow
 
@@ -21,16 +21,16 @@ Your Flutter app already manages user balance. Embed games in a WebView and sync
 ### Signed launch URL (production)
 
 ```
-GET /api/v1/launch?token=YOUR_OPERATOR_TOKEN&player=USER_ID&game=sky-streak
+GET /api/v1/launch?token=YOUR_OPERATOR_TOKEN&player=USER_ID&game=rocket-rush
 ```
 
 Response:
 
 ```json
 {
-  "game": "sky-streak",
-  "name": "Sky Streak",
-  "launchUrl": "https://games.example.com/play/sky-streak?launch=eyJ...",
+  "game": "rocket-rush",
+  "name": "Rocket Rush",
+  "launchUrl": "https://games.example.com/play/rocket-rush?launch=eyJ...",
   "expiresAt": "2026-09-15T02:00:00.000Z",
   "playerId": "USER_ID"
 }
@@ -41,7 +41,7 @@ Load `launchUrl` in WebView. Token expires in 1 hour.
 ### Dev / direct URL
 
 ```
-https://games.example.com/play/sky-streak?token=op_demo_all&player=USER_ID
+https://games.example.com/play/rocket-rush?token=op_demo_all&player=USER_ID
 ```
 
 ## Flutter WebView (minimal)
@@ -93,7 +93,7 @@ Games post JSON to `GMHost` channel:
 {
   "source": "games-mobile",
   "type": "bet",
-  "game": "sky-streak",
+  "game": "rocket-rush",
   "amount": 5000,
   "balance": 995000,
   "delta": -5000,

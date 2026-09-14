@@ -5,8 +5,8 @@ import { PAYOUT_LIMITS } from '../../economy/payout-limits.mjs';
 const limits = PAYOUT_LIMITS.rocket;
 
 export const ROCKET_GAME = {
-  id: 'sky-streak',
-  name: 'Sky Streak',
+  id: 'rocket-rush',
+  name: 'Rocket Rush',
   bettingSeconds: 6,
   resultSeconds: 3,
   /** Exponential curve: mult = exp(MULT_K * elapsedSec) until crash. */

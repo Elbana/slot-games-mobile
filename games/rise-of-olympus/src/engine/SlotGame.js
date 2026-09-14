@@ -12,8 +12,8 @@ import { TIMING, ANIM_SPEED } from '../game/config.js';
 import { unlockAudio } from '../game/ThronesSound.js';
 
 const GAME = {
-  slug: 'throne-rush',
-  title: 'Rise of Olympus',
+  slug: 'olympus-rise',
+  title: 'Olympus Rise',
   cols: 6,
   rows: 5,
   symbolCount: 15,

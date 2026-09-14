@@ -106,23 +106,23 @@ function sendPlayPage(res, htmlPath, req) {
   res.type('html').send(html);
 }
 
-app.get('/play/feast-spin', (req, res) => {
+app.get('/play/greedy-feast', (req, res) => {
   sendPlayPage(res, path.join(GAMES_ROOT, 'greedy', 'play.html'), req);
 });
 
-app.get('/play/triple-harvest', (req, res) => {
+app.get('/play/luck-77', (req, res) => {
   sendPlayPage(res, path.join(GAMES_ROOT, 'lucky77', 'play.html'), req);
 });
 
-app.get('/play/dice-arena', (req, res) => {
+app.get('/play/dice-duel', (req, res) => {
   sendPlayPage(res, path.join(GAMES_ROOT, 'dice-dual', 'play.html'), req);
 });
 
-app.get('/play/goal-showdown', (req, res) => {
+app.get('/play/goal-clash', (req, res) => {
   sendPlayPage(res, path.join(GAMES_ROOT, 'football-clash', 'play.html'), req);
 });
 
-app.get('/play/sky-streak', (req, res) => {
+app.get('/play/rocket-rush', (req, res) => {
   sendPlayPage(res, path.join(GAMES_ROOT, 'rocket', 'play.html'), req);
 });
 
@@ -137,7 +137,7 @@ let rooVite = null;
 
 function fixMobileShellLinks(html) {
   return html.replace(
-    /href="\/play\/throne-rush\/shared\/mobile-shell\.css"/g,
+    /href="\/play\/olympus-rise\/shared\/mobile-shell\.css"/g,
     'href="/shared/mobile-shell.css"',
   );
 }

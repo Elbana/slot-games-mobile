@@ -6,9 +6,12 @@ games-mobile serves slot and lottery games from one host. Mobile apps embed game
 
 | Game | WebView URL |
 |------|-------------|
-| Rise of Olympus | `/play/rise-of-olympus?token=YOUR_OP_TOKEN&player=PLAYER_ID` |
-| Greedy | `/play/greedy?token=YOUR_OP_TOKEN&player=PLAYER_ID` |
-| Pets & Beasts | `/play/pets-beasts?token=YOUR_OP_TOKEN&player=PLAYER_ID` |
+| Olympus Rise | `/play/olympus-rise?token=YOUR_OP_TOKEN&player=PLAYER_ID` |
+| Greedy Feast | `/play/greedy-feast?token=YOUR_OP_TOKEN&player=PLAYER_ID` |
+| Luck 77 | `/play/luck-77?token=YOUR_OP_TOKEN&player=PLAYER_ID` |
+| Dice Duel | `/play/dice-duel?token=YOUR_OP_TOKEN&player=PLAYER_ID` |
+| Goal Clash | `/play/goal-clash?token=YOUR_OP_TOKEN&player=PLAYER_ID` |
+| Rocket Rush | `/play/rocket-rush?token=YOUR_OP_TOKEN&player=PLAYER_ID` |
 
 ## Operator tokens
 
@@ -17,8 +20,8 @@ Configured in [`server/config/operators.json`](server/config/operators.json):
 | Token | Enabled games |
 |-------|----------------|
 | `op_demo_all` | All games |
-| `op_lottery_only` | Greedy, Pets & Beasts |
-| `op_slots_only` | Rise of Olympus |
+| `op_lottery_only` | Greedy Feast, Luck 77 |
+| `op_slots_only` | Olympus Rise |
 | `op_voice_chat` | All games (voice chat economy tuning) |
 
 ## Catalog API
@@ -43,7 +46,7 @@ The game server treats all amounts as **integer units** — it does not know you
 Per-operator tuning (house edge, prize pool, slot math profile) lives in `server/config/operators.json` under `economy`.
 
 ```
-GET /api/v1/economy?token=YOUR_OP_TOKEN&game=rise-of-olympus
+GET /api/v1/economy?token=YOUR_OP_TOKEN&game=olympus-rise
 ```
 
 Details: [ECONOMY-AND-PRIZE-POOL.md](ECONOMY-AND-PRIZE-POOL.md). AI agents: start with [AGENTS.md](../AGENTS.md).
