@@ -58,10 +58,25 @@ function renderHistory(history) {
   }).join('');
 }
 
+const CHIP_TIER = {
+  5000: '5k',
+  25000: '25k',
+  50000: '50k',
+  250000: '250k',
+};
+
+function chipTier(v) {
+  return CHIP_TIER[v] || '5k';
+}
+
+function fuelCanSrc(v) {
+  return `${ASSET}/fuel-can-${chipTier(v)}.svg`;
+}
+
 function buildChips() {
   $('chips').innerHTML = chips.map((v) => `
-    <button type="button" class="rk-chip${v === selectedChip ? ' active' : ''}" data-chip="${v}">
-      <img src="${ASSET}/fuel-can.svg" alt="" />
+    <button type="button" class="rk-chip rk-chip--${chipTier(v)}${v === selectedChip ? ' active' : ''}" data-chip="${v}">
+      <img class="rk-chip__can" src="${fuelCanSrc(v)}" alt="" />
       <span>${fmtChip(v)}</span>
     </button>`).join('');
   $('chips').querySelectorAll('.rk-chip').forEach((btn) => {

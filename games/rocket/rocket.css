@@ -283,10 +283,12 @@
   font-weight: 800;
 }
 
-.rk-chip img {
+.rk-chip__can {
+  display: block;
   width: clamp(36px, 11cqw, 44px);
   height: auto;
-  opacity: 0.85;
+  opacity: 0.9;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
 }
 
 .rk-chip.active {
@@ -294,7 +296,10 @@
   box-shadow: 0 0 12px rgba(255, 255, 255, 0.15);
 }
 
-.rk-chip.active img { opacity: 1; }
+.rk-chip.active .rk-chip__can {
+  opacity: 1;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.45));
+}
 
 .rk-action-wrap {
   display: flex;
