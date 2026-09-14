@@ -702,15 +702,19 @@
 }
 
 .l77-rebet {
-  width: 44px;
   height: 44px;
   min-width: 44px;
+  padding: 0 14px;
   border-radius: 12px;
   border: 1px solid var(--l77-gold-dim);
   background: rgba(0, 0, 0, 0.35);
   color: var(--l77-gold);
-  font-size: 20px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .l77-settings {
