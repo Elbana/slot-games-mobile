@@ -17,6 +17,7 @@ import { handleGetSession, handleV2Spin } from './routes/slot-v2.mjs';
 import { mountLotteryRoutes } from './routes/lottery.mjs';
 import { mountDiceDualRoutes } from './routes/dice-dual.mjs';
 import { mountFootballClashRoutes } from './routes/football-clash.mjs';
+import { mountRocketRoutes } from './routes/rocket.mjs';
 import { listGames } from './registry/games.mjs';
 import { describeMathProfile } from './math-profile.mjs';
 
@@ -59,6 +60,7 @@ app.post('/api/v2/spin', handleV2Spin);
 mountLotteryRoutes(app);
 mountDiceDualRoutes(app);
 mountFootballClashRoutes(app);
+mountRocketRoutes(app);
 
 app.use('/launcher', express.static(path.join(ROOT, 'public', 'launcher')));
 
@@ -70,6 +72,7 @@ app.use('/lottery/petsbeasts', express.static(path.join(GAMES_ROOT, 'pets-beasts
 app.use('/lottery/lucky77', express.static(path.join(GAMES_ROOT, 'lucky77')));
 app.use('/dice-dual', express.static(path.join(GAMES_ROOT, 'dice-dual')));
 app.use('/football-clash', express.static(path.join(GAMES_ROOT, 'football-clash')));
+app.use('/rocket', express.static(path.join(GAMES_ROOT, 'rocket')));
 app.use('/bet-advisor', express.static(path.join(GAMES_ROOT, 'bet-advisor')));
 
 function sendPlayPage(res, htmlPath, token, player) {
@@ -103,6 +106,10 @@ app.get('/play/dice-dual', (req, res) => {
 
 app.get('/play/football-clash', (req, res) => {
   sendPlayPage(res, path.join(GAMES_ROOT, 'football-clash', 'play.html'), req.query.token, req.query.player);
+});
+
+app.get('/play/rocket', (req, res) => {
+  sendPlayPage(res, path.join(GAMES_ROOT, 'rocket', 'play.html'), req.query.token, req.query.player);
 });
 
 app.get('/play/bet-advisor', (req, res) => {

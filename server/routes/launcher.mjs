@@ -44,6 +44,12 @@ const DISPLAY = {
     theme: 'football-clash',
     icon: '⚽',
   },
+  rocket: {
+    tagline: 'Ride the rocket — cash out before it crashes',
+    badge: 'Crash',
+    theme: 'rocket',
+    icon: '🚀',
+  },
 };
 
 function escapeHtml(s) {
