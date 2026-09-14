@@ -17,7 +17,9 @@ import {
 } from './assets.mjs';
 
 const GAME_ID = 'lucky77';
-const CHIPS = [100, 1000, 10000, 100000];
+const CHIP_STYLE_CLASSES = ['100', '1k', '10k', '100k', '100k', '100k'];
+/** @type {number[]} */
+let CHIPS = [200, 1000, 5000, 10000, 50000, 100000];
 const SEGMENTS = LUCK77_WHEEL_STOPS.length;
 const SEG_ANGLE = (Math.PI * 2) / SEGMENTS;
 
@@ -33,10 +35,15 @@ let selectedChip = CHIPS[0];
 let odds = {};
 let wheelRotation = 0;
 let spinAnim = null;
+let spinGen = 0;
 let glowAnim = null;
 let glowStopTimer = null;
 let lastSpinKey = '';
 let lastSpinPeriod = '';
+/** Period id we already started (or finished) a spin animation for. */
+let spinStartedForPeriod = '';
+/** @type {Promise<void> | null} */
+let pollInFlight = null;
 let winningSegmentIndex = -1;
 let winnerPulseActive = false;
 let glowPhase = 0;
@@ -519,9 +526,27 @@ function scheduleGlowEnd() {
   }, GLOW_DURATION_MS);
 }
 
+function finishSpinAt(index, endRot) {
+  wheelRotation = endRot;
+  winningSegmentIndex = index;
+  winnerPulseActive = true;
+  drawWheel(wheelRotation, 0);
+  startGlowLoop();
+  scheduleGlowEnd();
+}
+
+function cancelSpinAnimation() {
+  spinGen += 1;
+  if (spinAnim) {
+    cancelAnimationFrame(spinAnim);
+    spinAnim = null;
+  }
+}
+
 function animateWheelToStop(index, durationMs = 4200) {
-  if (spinAnim) cancelAnimationFrame(spinAnim);
+  cancelSpinAnimation();
   clearWinnerHighlight();
+  const token = spinGen;
   const startRot = wheelRotation;
   const endRot = rotationForStop(index, startRot);
   const delta = endRot - startRot;
@@ -530,6 +555,10 @@ function animateWheelToStop(index, durationMs = 4200) {
 
   return new Promise((resolve) => {
     function frame(now) {
+      if (token !== spinGen) {
+        resolve();
+        return;
+      }
       const t = Math.min(1, (now - start) / durationMs);
       const ease = spinEase(t);
       wheelRotation = startRot + delta * ease;
@@ -540,18 +569,18 @@ function animateWheelToStop(index, durationMs = 4200) {
       if (t < 1) {
         spinAnim = requestAnimationFrame(frame);
       } else {
-        wheelRotation = endRot;
-        winningSegmentIndex = index;
-        winnerPulseActive = true;
-        drawWheel(wheelRotation, 0);
-        startGlowLoop();
-        scheduleGlowEnd();
         spinAnim = null;
+        finishSpinAt(index, endRot);
         resolve();
       }
     }
     spinAnim = requestAnimationFrame(frame);
   });
+}
+
+function abortSpinAndSnap(index) {
+  cancelSpinAnimation();
+  snapWheelToStop(index);
 }
 
 function snapRotationForStop(index) {
@@ -573,11 +602,28 @@ function snapWheelToStop(index) {
   scheduleGlowEnd();
 }
 
+function chipLabel(v) {
+  if (v >= 1000 && v % 1000 === 0) return `${v / 1000}k`;
+  return String(v);
+}
+
+function chipStyleClass(v) {
+  const idx = CHIPS.indexOf(v);
+  return CHIP_STYLE_CLASSES[Math.max(0, Math.min(idx, CHIP_STYLE_CLASSES.length - 1))];
+}
+
+function applyBettingConfig(betting) {
+  if (!betting?.chipUnits?.length) return;
+  CHIPS = betting.chipUnits.map((v) => Math.floor(Number(v))).filter((v) => v > 0);
+  if (!CHIPS.length) return;
+  const preferred = Math.floor(Number(betting.defaultChip));
+  selectedChip = CHIPS.includes(preferred) ? preferred : CHIPS[0];
+}
+
 function buildChips() {
   $('chips').innerHTML = CHIPS.map((v) => {
-    const cls = v === 100 ? '100' : v === 1000 ? '1k' : v === 10000 ? '10k' : '100k';
-    const label = v >= 1000 ? `${v / 1000}k` : String(v);
-    return `<button type="button" class="l77-chip l77-chip--${cls}${v === selectedChip ? ' active' : ''}" data-chip="${v}">${label}</button>`;
+    const cls = chipStyleClass(v);
+    return `<button type="button" class="l77-chip l77-chip--${cls}${v === selectedChip ? ' active' : ''}" data-chip="${v}">${chipLabel(v)}</button>`;
   }).join('');
   $('chips').querySelectorAll('.l77-chip').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -596,19 +642,96 @@ function updatePendingUI() {
   });
 }
 
+function flyChipToBet(code, amount) {
+  const chipBtn = document.querySelector(`.l77-chip[data-chip="${amount}"]`)
+    || document.querySelector('.l77-chip.active');
+  const betBtn = document.querySelector(`.l77-bet[data-code="${code}"]`);
+  const layer = $('l77-fx');
+  if (!chipBtn || !betBtn || !layer) return;
+
+  const from = chipBtn.getBoundingClientRect();
+  const to = betBtn.getBoundingClientRect();
+  const chip = document.createElement('div');
+  chip.className = `l77-chip-fly l77-chip-fly--${chipStyleClass(amount)}`;
+  chip.textContent = chipLabel(amount);
+  chip.style.setProperty('--from-x', `${from.left + from.width / 2}px`);
+  chip.style.setProperty('--from-y', `${from.top + from.height / 2}px`);
+  chip.style.setProperty('--to-x', `${to.left + to.width / 2}px`);
+  chip.style.setProperty('--to-y', `${to.top + to.height / 2}px`);
+  layer.appendChild(chip);
+  chip.addEventListener('animationend', () => chip.remove(), { once: true });
+}
+
 async function doBet(code) {
-  const state = await betState(config, sessionId);
+  const chip = selectedChip;
+  let state;
+  try {
+    state = await betState(config, sessionId);
+  } catch (err) {
+    toast(err instanceof LotteryApiError ? err.message : 'Cannot place bet');
+    throw err;
+  }
   if (state.Stage !== 1) {
     toast('Betting closed — wait for next round');
     throw new Error('closed');
   }
-  const data = await placeBet(config, sessionId, code, selectedChip);
+
+  pending[code] = (pending[code] || 0) + chip;
+  updatePendingUI();
+  flyChipToBet(code, chip);
+
+  let data;
+  try {
+    data = await placeBet(config, sessionId, code, chip);
+  } catch (err) {
+    pending[code] = Math.max(0, (pending[code] || 0) - chip);
+    updatePendingUI();
+    toast(err instanceof Error ? err.message : 'Bet failed');
+    throw err;
+  }
+
   if (data.SessionId) {
     sessionId = data.SessionId;
     localStorage.setItem(`lottery-session-${GAME_ID}`, sessionId);
   }
-  pending[code] = (pending[code] || 0) + selectedChip;
-  updatePendingUI();
+  if (data.Balance != null) {
+    $('balance').textContent = Number(data.Balance).toLocaleString();
+  }
+}
+
+function spinDurationMs(state) {
+  if (state.Stage === 2) {
+    return Math.max(2200, Number(state.CloseDuration || 5) * 900);
+  }
+  return Math.max(1800, Number(state.CountDown || 3) * 900);
+}
+
+function tryStartWheelSpin(state, idx) {
+  if (state.Stage !== 2 || idx < 0 || spinAnim) return false;
+  if (spinStartedForPeriod === state.Period) return false;
+
+  spinStartedForPeriod = state.Period;
+  lastSpinKey = `${state.Period}:${idx}`;
+  lastSpinPeriod = state.Period;
+  animateWheelToStop(idx, spinDurationMs(state));
+  return true;
+}
+
+function ensureWheelResult(state, idx) {
+  if (idx < 0) return;
+  if (spinAnim) {
+    abortSpinAndSnap(idx);
+    spinStartedForPeriod = state.Period;
+    lastSpinKey = `${state.Period}:${idx}`;
+    lastSpinPeriod = state.Period;
+    return;
+  }
+  if (winningSegmentIndex !== idx) {
+    snapWheelToStop(idx);
+    spinStartedForPeriod = state.Period;
+    lastSpinKey = `${state.Period}:${idx}`;
+    lastSpinPeriod = state.Period;
+  }
 }
 
 function clearPending() {
@@ -716,48 +839,39 @@ async function tick() {
   updateCenterCountdown(state);
 
   const idx = resolveWheelIndex(state);
-  const spinKey = `${state.Period}:${idx}`;
   const periodChanged = state.Period !== lastSpinPeriod;
+
+  if (state.Stage === 1 && periodChanged) {
+    spinStartedForPeriod = '';
+    lastSpinKey = '';
+    lastSpinPeriod = state.Period;
+    clearWinnerHighlight();
+    drawWheel(wheelRotation);
+  }
 
   if (spinning) {
     document.querySelectorAll('.l77-bet').forEach((b) => { b.disabled = true; });
-    if (idx >= 0 && (periodChanged || spinKey !== lastSpinKey) && !spinAnim) {
-      lastSpinKey = spinKey;
-      lastSpinPeriod = state.Period;
-      const spinMs = Math.max(1600, Number(state.CloseDuration || 5) * 700);
-      animateWheelToStop(idx, spinMs);
-    }
+    tryStartWheelSpin(state, idx);
   } else if (state.Stage === 4 && idx >= 0) {
     document.querySelectorAll('.l77-bet').forEach((b) => { b.disabled = true; });
-    if (!spinAnim && winningSegmentIndex !== idx && (periodChanged || spinKey !== lastSpinKey)) {
-      snapWheelToStop(idx);
-      lastSpinKey = spinKey;
-      lastSpinPeriod = state.Period;
-    }
+    ensureWheelResult(state, idx);
   } else {
-    if (state.Stage === 1) {
-      if (periodChanged) {
-        lastSpinKey = '';
-        lastSpinPeriod = state.Period;
-        clearWinnerHighlight();
-      }
-      drawWheel(wheelRotation);
-    }
     document.querySelectorAll('.l77-bet').forEach((b) => { b.disabled = !betting; });
   }
 
   const spinJustEnded = prevStage === 2 && state.Stage !== 2;
   const key = resultKey(state);
 
+  if (spinJustEnded && idx >= 0 && spinAnim) {
+    ensureWheelResult(state, idx);
+  }
+
   if (isFirstTick) {
     lastSpinPeriod = state.Period;
-    if (state.Stage === 2 && idx >= 0 && !spinAnim) {
-      lastSpinKey = spinKey;
-      const spinMs = Math.max(1200, Number(state.CountDown || 3) * 700);
-      animateWheelToStop(idx, spinMs);
+    if (state.Stage === 2 && idx >= 0) {
+      tryStartWheelSpin(state, idx);
     } else if (state.Stage === 4 && idx >= 0) {
-      snapWheelToStop(idx);
-      lastSpinKey = spinKey;
+      ensureWheelResult(state, idx);
       if (state.WinAmount > 0) showWin(state);
       lastShownResultKey = key;
     } else if (key) {
@@ -803,6 +917,7 @@ async function init() {
   }
 
   config = res.data.game;
+  applyBettingConfig(res.data.betting);
   if (res.data.sessionId) {
     sessionId = res.data.sessionId;
     localStorage.setItem(`lottery-session-${GAME_ID}`, sessionId);
@@ -821,7 +936,9 @@ async function init() {
     const code = btn.dataset.code;
     const oddEl = btn.querySelector('.l77-bet__odd');
     if (oddEl) oddEl.textContent = `×${odds[code] || ZONE_META[code]?.odd || '?'}`;
-    btn.addEventListener('click', () => doBet(code).catch(() => {}));
+    btn.addEventListener('click', () => {
+      doBet(code).catch(() => {});
+    });
   });
 
   await loadAssetManifest();
@@ -860,12 +977,18 @@ async function init() {
   await tick();
   await loadHistory();
 
-  async function poll() {
-    try {
-      await tick();
-    } catch (err) {
+  async function pollOnce() {
+    if (pollInFlight) return pollInFlight;
+    pollInFlight = tick().catch((err) => {
       if (err instanceof LotteryApiError && err.offline) toast(err.message);
-    }
+    }).finally(() => {
+      pollInFlight = null;
+    });
+    return pollInFlight;
+  }
+
+  async function poll() {
+    await pollOnce();
     setTimeout(poll, prevStage === 2 ? 300 : 800);
   }
   poll();

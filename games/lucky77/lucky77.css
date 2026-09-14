@@ -431,7 +431,7 @@
   cursor: pointer;
   color: inherit;
   font: inherit;
-  transition: filter 0.12s, transform 0.1s, box-shadow 0.12s;
+  transition: filter 0.12s, box-shadow 0.12s;
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
 }
@@ -451,12 +451,7 @@
 }
 
 .l77-bet:active:not(:disabled) {
-  transform: scale(0.97) translateY(1px);
-  filter: brightness(1.05);
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.35),
-    inset 0 2px 8px rgba(255, 255, 255, 0.1),
-    inset 0 -4px 10px rgba(0, 0, 0, 0.4);
+  filter: brightness(1.06);
 }
 
 .l77-bet.has-bet {
@@ -572,6 +567,57 @@
 .l77-chip--1k { background: linear-gradient(145deg, #3b82f6, #1d4ed8); }
 .l77-chip--10k { background: linear-gradient(145deg, #ec4899, #9d174d); }
 .l77-chip--100k { background: linear-gradient(145deg, #f97316, #c2410c); }
+
+.l77-fx {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 120;
+  overflow: hidden;
+}
+
+.l77-chip-fly {
+  position: fixed;
+  left: var(--from-x);
+  top: var(--from-y);
+  width: clamp(40px, 11cqw, 48px);
+  height: clamp(40px, 11cqw, 48px);
+  margin-left: calc(clamp(40px, 11cqw, 48px) / -2);
+  margin-top: calc(clamp(40px, 11cqw, 48px) / -2);
+  border-radius: 50%;
+  border: 2px dashed rgba(255, 255, 255, 0.4);
+  display: grid;
+  place-items: center;
+  font-size: clamp(9px, 2.6cqw, 11px);
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.75);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  animation: l77-chip-fly 0.58s cubic-bezier(0.22, 1.05, 0.36, 1) forwards;
+}
+
+.l77-chip-fly--100 { background: linear-gradient(145deg, #22c55e, #15803d); }
+.l77-chip-fly--1k { background: linear-gradient(145deg, #3b82f6, #1d4ed8); }
+.l77-chip-fly--10k { background: linear-gradient(145deg, #ec4899, #9d174d); }
+.l77-chip-fly--100k { background: linear-gradient(145deg, #f97316, #c2410c); }
+
+@keyframes l77-chip-fly {
+  0% {
+    left: var(--from-x);
+    top: var(--from-y);
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    left: var(--to-x);
+    top: var(--to-y);
+    transform: scale(0.82) rotate(18deg);
+    opacity: 0.15;
+  }
+}
 
 .l77-footer {
   display: flex;
