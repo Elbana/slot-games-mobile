@@ -305,12 +305,16 @@ function drawWheelLayer(rotation, alpha = 1) {
     drawSegmentIcon(code, ix, iy, iconR);
   }
 
-  ctx.beginPath();
-  ctx.arc(0, 0, inner, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(8, 12, 24, 0.5)';
-  ctx.fill();
   ctx.restore();
   return { cx, cy, outer, inner, w };
+}
+
+function goldFillGradient(x1, y1, x2, y2, highlight) {
+  const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+  grad.addColorStop(0, highlight ? '#fff6bf' : '#fde68a');
+  grad.addColorStop(0.45, highlight ? '#ffd54a' : '#f59e0b');
+  grad.addColorStop(1, '#b45309');
+  return grad;
 }
 
 function drawWheelSelector(cx, cy, outer, inner, w) {
@@ -320,7 +324,9 @@ function drawWheelSelector(cx, cy, outer, inner, w) {
   const right = top + half;
   const rimOuter = outer + w * 0.038;
   const rimInner = outer + w * 0.008;
-  const hubEdge = inner + w * 0.006;
+  const hubBand = w * 0.0135;
+  const hubPurpleR = inner;
+  const hubGoldOuter = hubPurpleR + hubBand;
   const highlight = showSegmentGlow && winningSegmentIndex >= 0;
 
   ctx.save();
@@ -341,44 +347,50 @@ function drawWheelSelector(cx, cy, outer, inner, w) {
   ctx.lineWidth = w * 0.0018;
   ctx.stroke();
 
+  // Hub gold ring — shared with selector rails so center feels connected
+  ctx.beginPath();
+  ctx.arc(cx, cy, hubGoldOuter, 0, Math.PI * 2);
+  ctx.arc(cx, cy, hubPurpleR, 0, Math.PI * 2, true);
+  ctx.closePath();
+  ctx.fillStyle = goldFillGradient(cx, cy - hubGoldOuter, cx, cy, highlight);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(cx, cy, hubGoldOuter, 0, Math.PI * 2);
+  ctx.strokeStyle = '#78350f';
+  ctx.lineWidth = w * 0.0015;
+  ctx.stroke();
+
   // Golden cap band on outer rim over the top segment
   ctx.beginPath();
   ctx.arc(cx, cy, rimOuter + w * 0.001, left, right);
   ctx.arc(cx, cy, rimInner - w * 0.001, right, left, true);
   ctx.closePath();
-  const capGrad = ctx.createLinearGradient(cx, cy - rimOuter, cx, cy - outer);
-  capGrad.addColorStop(0, highlight ? '#fff6bf' : '#ffeaa0');
-  capGrad.addColorStop(0.45, highlight ? '#ffd54a' : '#f5cc4d');
-  capGrad.addColorStop(1, '#b45309');
-  ctx.fillStyle = capGrad;
+  ctx.fillStyle = goldFillGradient(cx, cy - rimOuter, cx, cy - outer, highlight);
   ctx.fill();
   ctx.strokeStyle = '#78350f';
   ctx.lineWidth = w * 0.002;
   ctx.stroke();
 
-  // Downward golden rails along segment edges (reference bracket style)
+  // Rails merge into hub ring at the bottom
   const drawRail = (angle) => {
     const cos = Math.cos(angle);
     const sin = Math.sin(angle);
     const perpX = -sin;
     const perpY = cos;
-    const halfW = w * 0.011;
+    const halfWOut = w * 0.011;
+    const halfWIn = w * 0.013;
     const xOut = cx + cos * rimOuter;
     const yOut = cy + sin * rimOuter;
-    const xIn = cx + cos * hubEdge;
-    const yIn = cy + sin * hubEdge;
+    const xIn = cx + cos * hubGoldOuter;
+    const yIn = cy + sin * hubGoldOuter;
 
     ctx.beginPath();
-    ctx.moveTo(xOut + perpX * halfW, yOut + perpY * halfW);
-    ctx.lineTo(xIn + perpX * halfW, yIn + perpY * halfW);
-    ctx.lineTo(xIn - perpX * halfW, yIn - perpY * halfW);
-    ctx.lineTo(xOut - perpX * halfW, yOut - perpY * halfW);
+    ctx.moveTo(xOut + perpX * halfWOut, yOut + perpY * halfWOut);
+    ctx.lineTo(xIn + perpX * halfWIn, yIn + perpY * halfWIn);
+    ctx.lineTo(xIn - perpX * halfWIn, yIn - perpY * halfWIn);
+    ctx.lineTo(xOut - perpX * halfWOut, yOut - perpY * halfWOut);
     ctx.closePath();
-    const railGrad = ctx.createLinearGradient(xOut, yOut, xIn, yIn);
-    railGrad.addColorStop(0, highlight ? '#fff3b0' : '#fde68a');
-    railGrad.addColorStop(0.5, '#f59e0b');
-    railGrad.addColorStop(1, '#92400e');
-    ctx.fillStyle = railGrad;
+    ctx.fillStyle = goldFillGradient(xOut, yOut, xIn, yIn, highlight);
     ctx.fill();
     ctx.strokeStyle = '#78350f';
     ctx.lineWidth = w * 0.0015;
@@ -388,33 +400,26 @@ function drawWheelSelector(cx, cy, outer, inner, w) {
   drawRail(left);
   drawRail(right);
 
-  // Inner cap on hub — closes the frame at the center circle
+  // Apex notch on top of rim — points down into the wheel
+  const apexY = cy - rimOuter;
+  const apexHalfW = w * 0.038;
+  const apexDrop = w * 0.03;
+  const apexLift = w * 0.01;
+  ctx.save();
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+  ctx.shadowBlur = w * 0.006;
+  ctx.shadowOffsetY = w * 0.002;
   ctx.beginPath();
-  ctx.arc(cx, cy, hubEdge + w * 0.001, left, right);
-  ctx.arc(cx, cy, hubEdge - w * 0.003, right, left, true);
+  ctx.moveTo(cx - apexHalfW, apexY - apexLift);
+  ctx.lineTo(cx, apexY + apexDrop);
+  ctx.lineTo(cx + apexHalfW, apexY - apexLift);
   ctx.closePath();
-  const hubCapGrad = ctx.createLinearGradient(cx, cy - hubEdge, cx, cy);
-  hubCapGrad.addColorStop(0, highlight ? '#ffd54a' : '#f5cc4d');
-  hubCapGrad.addColorStop(1, '#b45309');
-  ctx.fillStyle = hubCapGrad;
+  ctx.fillStyle = highlight ? '#fff8c8' : '#ffe566';
   ctx.fill();
   ctx.strokeStyle = '#78350f';
-  ctx.lineWidth = w * 0.0015;
+  ctx.lineWidth = w * 0.0025;
   ctx.stroke();
-
-  // Apex notch on top of rim
-  const apexX = cx;
-  const apexY = cy - rimOuter;
-  ctx.beginPath();
-  ctx.moveTo(apexX - w * 0.024, apexY - w * 0.004);
-  ctx.lineTo(apexX, apexY + w * 0.016);
-  ctx.lineTo(apexX + w * 0.024, apexY - w * 0.004);
-  ctx.closePath();
-  ctx.fillStyle = highlight ? '#fff8c8' : '#f5cc4d';
-  ctx.fill();
-  ctx.strokeStyle = '#92400e';
-  ctx.lineWidth = w * 0.0015;
-  ctx.stroke();
+  ctx.restore();
 
   ctx.restore();
 }
