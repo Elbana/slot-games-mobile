@@ -9,8 +9,11 @@
   <link rel="stylesheet" href="/lottery/lucky77/lucky77.css" />
 </head>
 <body>
-  <div class="gm-shell gm-shell--lucky77">
-    <div class="l77" id="app">
+  <div class="gm-shell gm-shell--lucky77 gm-shell--embed">
+    <div class="gm-backdrop" aria-hidden="true"></div>
+    <div class="gm-sheet">
+      <div class="gm-handle" aria-hidden="true"></div>
+      <div class="l77" id="app">
       <header class="l77-top">
         <div class="l77-top__info">
           <span class="l77-title">Lucky 77</span>
@@ -33,6 +36,10 @@
       </main>
 
       <div class="l77-controls">
+        <div class="l77-toolbar">
+          <button type="button" class="l77-rebet" id="btn-rebet" title="Repeat last round bets" aria-label="Repeat">Repeat</button>
+        </div>
+
         <button type="button" class="l77-history" id="btn-history" aria-label="View recent results">
           <span class="l77-history__new">NEW</span>
           <div class="l77-history__dots" id="history"></div>
@@ -65,8 +72,6 @@
           </div>
         </section>
 
-        <section class="l77-chips" id="chips"></section>
-
         <footer class="l77-footer">
           <div class="l77-footer__user">
             <span class="l77-footer__name" id="player-name">Player</span>
@@ -76,7 +81,7 @@
               <button type="button" class="l77-plus" id="btn-topup" title="Top up">+</button>
             </div>
           </div>
-          <button type="button" class="l77-rebet" id="btn-rebet" title="Repeat last round bets" aria-label="Repeat">Repeat</button>
+          <section class="l77-chips" id="chips"></section>
         </footer>
       </div>
 
@@ -152,6 +157,7 @@
             </li>
           </ul>
         </div>
+      </div>
       </div>
     </div>
   </div>

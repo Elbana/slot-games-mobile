@@ -1,15 +1,14 @@
 /* Lucky 77 — mobile WebView layout (embed-ready) */
 
-.gm-shell--lucky77 {
+.gm-shell--lucky77 .gm-sheet {
   container-type: inline-size;
   --l77-bg: #070b18;
   --l77-panel: rgba(14, 20, 40, 0.94);
   --l77-gold: #f5cc4d;
   --l77-gold-dim: rgba(245, 204, 77, 0.35);
   --l77-purple: #9333ea;
-  --l77-safe-top: env(safe-area-inset-top, 0px);
+  --l77-safe-top: 0px;
   --l77-safe-bottom: env(safe-area-inset-bottom, 0px);
-  --l77-wheel-size: min(88cqw, 46cqh, 360px);
   --l77-stage-bg: none;
   background:
     radial-gradient(ellipse 90% 60% at 50% 0%, rgba(88, 60, 180, 0.22), transparent 55%),
@@ -22,15 +21,15 @@
 .l77 {
   width: 100%;
   height: 100%;
-  min-height: 100%;
-  max-height: 100dvh;
+  min-height: 0;
+  max-height: 100%;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   padding:
-    calc(8px + var(--l77-safe-top))
-    max(12px, env(safe-area-inset-right, 0px))
-    calc(6px + var(--l77-safe-bottom))
-    max(12px, env(safe-area-inset-left, 0px));
+    calc(4px + var(--l77-safe-top))
+    max(10px, env(safe-area-inset-right, 0px))
+    calc(4px + var(--l77-safe-bottom))
+    max(10px, env(safe-area-inset-left, 0px));
   box-sizing: border-box;
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
@@ -105,7 +104,7 @@
   justify-content: center;
   min-height: 0;
   overflow: hidden;
-  padding: 4px 0;
+  padding: 2px 0;
 }
 
 .l77-statue {
@@ -124,9 +123,12 @@
 
 .l77-wheel-wrap {
   position: relative;
-  width: var(--l77-wheel-size);
-  height: var(--l77-wheel-size);
-  flex-shrink: 0;
+  aspect-ratio: 1;
+  width: min(88%, 240px);
+  max-width: 100%;
+  max-height: 100%;
+  height: auto;
+  flex-shrink: 1;
 }
 
 #wheel-canvas {
@@ -179,8 +181,134 @@
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
+  gap: 5px;
+  padding-top: 2px;
+}
+
+.gm-shell--lucky77 .l77 {
+  padding:
+    calc(2px + var(--l77-safe-top))
+    max(8px, env(safe-area-inset-right, 0px))
+    calc(2px + var(--l77-safe-bottom))
+    max(8px, env(safe-area-inset-left, 0px));
+}
+
+.gm-shell--lucky77 .l77-top {
+  padding: 2px 2px 0;
+}
+
+.gm-shell--lucky77 .l77-statue {
+  display: none;
+}
+
+.gm-shell--lucky77 .l77-stage {
+  padding: 0;
+  align-items: stretch;
+}
+
+.gm-shell--lucky77 .l77-wheel-wrap {
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  margin-inline: auto;
+  align-self: center;
+}
+
+.gm-shell--lucky77 .l77-wheel-hub {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.gm-shell--lucky77 .l77-controls {
+  gap: 3px;
+}
+
+.gm-shell--lucky77 .l77-settings-btn {
+  width: 38px;
+  height: 38px;
+}
+
+.gm-shell--lucky77 .l77-toolbar {
+  margin-bottom: -2px;
+}
+
+.gm-shell--lucky77 .l77-history {
+  padding: 5px 8px;
+  border-radius: 10px;
+}
+
+.l77-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  min-height: 0;
+}
+
+.gm-shell--lucky77 .l77-rebet {
+  height: 34px;
+  min-width: 34px;
+  padding: 0 12px;
+  font-size: 11px;
+}
+
+.gm-shell--lucky77 .l77-bets__frame {
+  gap: 4px;
+  padding: 5px;
+  border-radius: 12px;
+}
+
+.gm-shell--lucky77 .l77-bet {
+  min-height: clamp(58px, 18cqw, 72px);
+  border-radius: 8px;
+}
+
+.gm-shell--lucky77 .l77-bet__face {
+  gap: 4px;
+  padding: 6px 5px 3px;
+}
+
+.gm-shell--lucky77 .l77-bet__icon {
+  width: clamp(32px, 10cqw, 42px);
+  height: clamp(32px, 10cqw, 42px);
+}
+
+.gm-shell--lucky77 .l77-bet__odd {
+  font-size: clamp(17px, 5.5cqw, 22px);
+}
+
+.gm-shell--lucky77 .l77-bet__amt {
+  padding: 4px 5px 5px;
+  font-size: 10px;
+}
+
+.gm-shell--lucky77 .l77-footer {
+  padding: 6px 8px 6px 10px;
+  border-radius: 10px;
   gap: 8px;
-  padding-top: 4px;
+}
+
+.gm-shell--lucky77 .l77-footer__user {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.gm-shell--lucky77 .l77-footer__balance {
+  font-size: clamp(14px, 4cqw, 16px);
+}
+
+.gm-shell--lucky77 .l77-footer .l77-chips {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  gap: 5px;
+  padding: 0;
+}
+
+.gm-shell--lucky77 .l77-footer .l77-chip {
+  width: clamp(30px, 8.5cqw, 36px);
+  height: clamp(30px, 8.5cqw, 36px);
+  min-width: 30px;
+  min-height: 30px;
+  font-size: clamp(7px, 2cqw, 8px);
+  border-width: 1.5px;
 }
 
 .l77-history {
@@ -660,10 +788,17 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
   padding: 10px 12px;
   background: var(--l77-panel);
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.l77-footer .l77-chips {
+  flex-shrink: 0;
+  justify-content: flex-end;
+  padding: 0;
 }
 
 .l77-footer__name {
@@ -922,15 +1057,14 @@
 }
 
 @media (max-height: 700px) {
-  .gm-shell--lucky77 {
-    --l77-wheel-size: min(82vw, 38vh, 280px);
+  .gm-shell--lucky77 .l77-bet {
+    min-height: clamp(52px, 16cqw, 64px);
   }
 
-  .l77-controls {
-    gap: 5px;
-  }
-
-  .l77-statue {
-    opacity: 0.18;
+  .gm-shell--lucky77 .l77-footer .l77-chip {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
   }
 }

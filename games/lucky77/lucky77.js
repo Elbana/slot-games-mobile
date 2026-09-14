@@ -95,7 +95,8 @@ function resolveWheelIndex(state) {
 
 function resizeCanvas() {
   const wrap = canvas.parentElement;
-  const size = Math.floor(wrap.clientWidth * dpr);
+  const side = Math.max(1, Math.min(wrap.clientWidth, wrap.clientHeight || wrap.clientWidth));
+  const size = Math.floor(side * dpr);
   canvas.width = size;
   canvas.height = size;
   drawWheel(wheelRotation);
@@ -950,6 +951,10 @@ async function init() {
   buildChips();
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
+  if (typeof ResizeObserver !== 'undefined') {
+    const ro = new ResizeObserver(() => resizeCanvas());
+    ro.observe(canvas.parentElement);
+  }
   drawWheel(0);
 
   $('btn-rebet').addEventListener('click', async () => {

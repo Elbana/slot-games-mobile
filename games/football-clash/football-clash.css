@@ -2,44 +2,13 @@
   --fc-green: #22c55e;
   --fc-gold: #fbbf24;
   --fc-panel: rgba(8, 24, 14, 0.96);
-  --fc-sheet-h: min(65dvh, 560px);
   --fc-stadium-h: 176px;
-  background: transparent !important;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  overflow-x: hidden;
 }
 
 .gm-shell--football-clash::before { content: none; }
 
-.fc-backdrop {
-  flex: 1 1 auto;
-  min-height: 35%;
-  background: rgba(0, 0, 0, 0.42);
-}
-
-.fc-sheet {
-  flex: 0 0 var(--fc-sheet-h);
-  height: var(--fc-sheet-h);
-  max-height: var(--fc-sheet-h);
-  width: 100%;
-  display: flex;
-  flex-direction: column;
+.gm-shell--football-clash .gm-sheet {
   background: linear-gradient(180deg, #0f2a1a 0%, #071810 45%, #040d08 100%);
-  border-radius: 20px 20px 0 0;
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.55);
-  overflow: hidden;
-  overscroll-behavior: none;
-}
-
-.fc-handle {
-  flex-shrink: 0;
-  width: 40px;
-  height: 4px;
-  margin: 8px auto 2px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.32);
 }
 
 .fc {

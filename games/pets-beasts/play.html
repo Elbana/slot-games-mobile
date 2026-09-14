@@ -2,14 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>Pets & Beasts — Local Clone</title>
   <link rel="stylesheet" href="/shared/mobile-shell.css" />
   <link rel="stylesheet" href="/lottery/pets-beasts/pets-beasts.css" />
 </head>
 <body>
-  <div class="gm-shell gm-shell--pets">
-    <div class="pets-game" id="app">
+  <div class="gm-shell gm-shell--pets gm-shell--embed">
+    <div class="gm-backdrop" aria-hidden="true"></div>
+    <div class="gm-sheet">
+      <div class="gm-handle" aria-hidden="true"></div>
+      <div class="pets-game" id="app">
         <div class="popup-content">
           <div class="header">
             <div class="left-icons">
@@ -67,7 +70,9 @@
           </div>
         </div>
       </div>
-    <div class="toast" id="toast"></div>
+      <div class="toast" id="toast"></div>
+      </div>
+    </div>
   </div>
   <script type="module" src="/lottery/pets-beasts/pets-beasts.js"></script>
 </body>

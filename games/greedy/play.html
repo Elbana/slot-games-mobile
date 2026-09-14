@@ -2,14 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>Greedy — Local Clone</title>
   <link rel="stylesheet" href="/shared/mobile-shell.css" />
   <link rel="stylesheet" href="/lottery/greedy/greedy.css" />
 </head>
 <body>
-  <div class="gm-shell gm-shell--greedy">
-    <div class="greedy-game" id="app">
+  <div class="gm-shell gm-shell--greedy gm-shell--embed">
+    <div class="gm-backdrop" aria-hidden="true"></div>
+    <div class="gm-sheet">
+      <div class="gm-handle" aria-hidden="true"></div>
+      <div class="greedy-game" id="app">
         <div class="popup-content">
           <div class="header">
             <div class="left-icons">
@@ -118,7 +121,9 @@
           </div>
         </div>
       </div>
-    <div class="toast" id="toast"></div>
+      <div class="toast" id="toast"></div>
+      </div>
+    </div>
   </div>
   <script type="module" src="/lottery/greedy/greedy.js"></script>
 </body>

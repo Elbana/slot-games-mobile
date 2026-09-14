@@ -7,6 +7,7 @@
   --gm-phone-width: 390px;
   --gm-phone-height: 844px;
   --gm-bg: #050510;
+  --gm-sheet-h: min(65dvh, 560px);
 }
 
 *,
@@ -42,25 +43,74 @@ body {
   flex: 0 0 auto;
 }
 
-.gm-shell > #app,
-.gm-shell > .greedy-game,
-.gm-shell > .pets-game,
-.gm-shell > .l77,
 .gm-shell > .launcher {
   width: 100%;
   height: 100%;
   min-height: 100%;
 }
 
-/* Lottery games — responsive scale from shell width (750 design px) */
-.gm-shell--greedy {
+/* Bottom-sheet embed — game UI in lower ~65% (host app visible above) */
+.gm-shell--embed {
+  background: transparent !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow-x: hidden;
+}
+
+.gm-backdrop {
+  flex: 1 1 auto;
+  min-height: 35%;
+  background: rgba(0, 0, 0, 0.42);
+  pointer-events: none;
+}
+
+.gm-sheet {
+  flex: 0 0 var(--gm-sheet-h);
+  height: var(--gm-sheet-h);
+  max-height: var(--gm-sheet-h);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+  overscroll-behavior: none;
+  position: relative;
+}
+
+.gm-handle {
+  flex-shrink: 0;
+  width: 40px;
+  height: 4px;
+  margin: 8px auto 2px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.gm-sheet > #app,
+.gm-sheet > .greedy-game,
+.gm-sheet > .pets-game,
+.gm-sheet > .l77,
+.gm-sheet > .fc,
+.gm-sheet > .dd,
+.gm-sheet > .ba-app {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  height: auto;
+  max-height: 100%;
+}
+
+/* Lottery games — responsive scale from sheet width (750 design px) */
+.gm-shell--greedy .gm-sheet {
   container-type: inline-size;
   background: #3d2060;
   --r: calc(100cqw / 750 * 0.93);
   --result-r: calc(100cqw / 750 * 1.28);
 }
 
-.gm-shell--pets {
+.gm-shell--pets .gm-sheet {
   container-type: inline-size;
   background: #1e3a5f;
   --r: calc(100cqw / 750);
@@ -77,21 +127,20 @@ body {
 }
 
 .gm-shell--lucky77 {
-  background: #070b18;
   overflow: hidden;
 }
 
-.gm-shell--lucky77 > .l77 {
-  width: 100%;
-  height: 100%;
-}
-
 .gm-shell--olympus {
-  background: transparent;
   width: 100%;
   max-width: 100%;
-  min-height: 100dvh;
-  height: 100dvh;
+}
+
+.gm-shell--olympus .gm-sheet {
+  background: #0a1028;
+}
+
+.gm-shell--bet-advisor .gm-sheet {
+  background: #0f0a1a;
 }
 
 /* Desktop preview: iPhone 13 Pro portrait frame (390×844) */

@@ -7,11 +7,16 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="theme-color" content="#0f0a1a" />
   <title>Bet Advisor</title>
+  <link rel="stylesheet" href="/shared/mobile-shell.css" />
   <link rel="stylesheet" href="/bet-advisor/advisor.css" />
   <link rel="manifest" href="/bet-advisor/manifest.webmanifest" />
 </head>
 <body>
-  <div class="ba-app">
+  <div class="gm-shell gm-shell--bet-advisor gm-shell--embed">
+    <div class="gm-backdrop" aria-hidden="true"></div>
+    <div class="gm-sheet">
+      <div class="gm-handle" aria-hidden="true"></div>
+      <div class="ba-app">
     <header class="ba-header">
       <h1>🎯 Bet Advisor</h1>
       <p>Watermelon ×2 · Fig ×2 · 77 ×8</p>
@@ -148,6 +153,8 @@
     <p class="ba-footer-note">
       Advisor uses rolling EV from your history. Gambling involves risk — this tool does not guarantee profit.
     </p>
+      </div>
+    </div>
   </div>
 
   <script type="module" src="/bet-advisor/advisor.js"></script>

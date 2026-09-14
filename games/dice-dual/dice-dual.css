@@ -3,46 +3,15 @@
   --dd-blue: #3b82f6;
   --dd-gold: #fbbf24;
   --dd-panel: rgba(18, 12, 32, 0.96);
-  --dd-sheet-h: min(65dvh, 560px);
   --dd-arena-h: 128px;
-  background: transparent !important;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  overflow-x: hidden;
 }
 
 .gm-shell--dice-dual::before {
   content: none;
 }
 
-.dd-backdrop {
-  flex: 1 1 auto;
-  min-height: 35%;
-  background: rgba(0, 0, 0, 0.42);
-}
-
-.dd-sheet {
-  flex: 0 0 var(--dd-sheet-h);
-  height: var(--dd-sheet-h);
-  max-height: var(--dd-sheet-h);
-  width: 100%;
-  display: flex;
-  flex-direction: column;
+.gm-shell--dice-dual .gm-sheet {
   background: linear-gradient(180deg, #1e1435 0%, #0c0818 45%, #07040f 100%);
-  border-radius: 20px 20px 0 0;
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.55);
-  overflow: hidden;
-  overscroll-behavior: none;
-}
-
-.dd-handle {
-  flex-shrink: 0;
-  width: 40px;
-  height: 4px;
-  margin: 8px auto 2px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.32);
 }
 
 .dd {

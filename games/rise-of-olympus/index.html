@@ -13,8 +13,12 @@
     <title>Rise of Olympus — PixiJS</title>
   </head>
   <body>
-    <div class="gm-shell gm-shell--olympus">
-      <div id="app"></div>
+    <div class="gm-shell gm-shell--olympus gm-shell--embed">
+      <div class="gm-backdrop" aria-hidden="true"></div>
+      <div class="gm-sheet">
+        <div class="gm-handle" aria-hidden="true"></div>
+        <div id="app"></div>
+      </div>
     </div>
     <script type="module" src="./src/main.js"></script>
   </body>

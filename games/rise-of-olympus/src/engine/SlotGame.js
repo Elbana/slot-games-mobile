@@ -43,14 +43,14 @@ export async function mountRiseOfOlympus(mount) {
   const paytableMount = document.createElement('div');
   mount.append(stageWrap, hudMount, paytableMount);
 
-  const shell = mount.closest('.gm-shell') ?? mount;
+  const overlayHost = mount.closest('.gm-sheet') ?? mount.closest('.gm-shell') ?? mount;
   const coinFxWrap = document.createElement('div');
   coinFxWrap.className = 'gc-game__coin-fx gc-game__coin-fx--viewport';
   coinFxWrap.setAttribute('aria-hidden', 'true');
   document.body.appendChild(coinFxWrap);
 
   function syncViewportOverlays() {
-    const r = shell.getBoundingClientRect();
+    const r = overlayHost.getBoundingClientRect();
     coinFxWrap.style.left = `${r.left}px`;
     coinFxWrap.style.top = `${r.top}px`;
     coinFxWrap.style.width = `${r.width}px`;
