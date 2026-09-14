@@ -115,8 +115,219 @@ function chipStyleClass(v) {
   return CHIP_STYLE_CLASSES[Math.max(0, Math.min(idx, CHIP_STYLE_CLASSES.length - 1))];
 }
 
+const CHIP_BALL_RPM = 14;
+const CHIP_BALL_TILT_X = 16;
+const CHIP_BALL_SIZE = 72;
+
+let chipBallRot = 0;
+let chipBallLastTs = 0;
+
+function vec3Add(a, b) { return [a[0] + b[0], a[1] + b[1], a[2] + b[2]]; }
+function vec3Scale(a, s) { return [a[0] * s, a[1] * s, a[2] * s]; }
+function vec3Cross(a, b) {
+  return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+}
+function vec3Normalize(v) {
+  const l = Math.hypot(v[0], v[1], v[2]) || 1;
+  return [v[0] / l, v[1] / l, v[2] / l];
+}
+function vec3LerpSphere(a, b, t) {
+  return vec3Normalize(vec3Add(vec3Scale(a, 1 - t), vec3Scale(b, t)));
+}
+
+const CHIP_BALL_PHI = (1 + Math.sqrt(5)) / 2;
+const CHIP_BALL_ICO_VERTS = [
+  [0, 1, CHIP_BALL_PHI], [0, 1, -CHIP_BALL_PHI], [0, -1, CHIP_BALL_PHI], [0, -1, -CHIP_BALL_PHI],
+  [1, CHIP_BALL_PHI, 0], [1, -CHIP_BALL_PHI, 0], [-1, CHIP_BALL_PHI, 0], [-1, -CHIP_BALL_PHI, 0],
+  [CHIP_BALL_PHI, 0, 1], [CHIP_BALL_PHI, 0, -1], [-CHIP_BALL_PHI, 0, 1], [-CHIP_BALL_PHI, 0, -1],
+].map(vec3Normalize);
+
+const CHIP_BALL_ICO_FACES = [
+  [0, 2, 8], [0, 8, 4], [0, 4, 6], [0, 6, 10], [0, 10, 2],
+  [2, 10, 7], [2, 7, 5], [2, 5, 8], [8, 5, 9], [8, 9, 4],
+  [4, 9, 1], [4, 1, 6], [6, 1, 11], [6, 11, 10], [10, 11, 3],
+  [10, 3, 7], [7, 3, 5], [5, 3, 9], [9, 3, 1], [9, 1, 11],
+];
+
+function chipBallIcoNeighbors(v) {
+  const set = new Set();
+  for (const [a, b, c] of CHIP_BALL_ICO_FACES) {
+    if (a === v) { set.add(b); set.add(c); }
+    if (b === v) { set.add(a); set.add(c); }
+    if (c === v) { set.add(a); set.add(b); }
+  }
+  const center = CHIP_BALL_ICO_VERTS[v];
+  const ref = Math.abs(center[1]) < 0.89 ? [0, 1, 0] : [1, 0, 0];
+  const tangent = vec3Normalize(vec3Cross(ref, center));
+  const bitangent = vec3Cross(center, tangent);
+  const angleOnSphere = (idx) => {
+    const dir = CHIP_BALL_ICO_VERTS[idx];
+    return Math.atan2(
+      dir[0] * bitangent[0] + dir[1] * bitangent[1] + dir[2] * bitangent[2],
+      dir[0] * tangent[0] + dir[1] * tangent[1] + dir[2] * tangent[2],
+    );
+  };
+  return [...set].sort((a, b) => angleOnSphere(a) - angleOnSphere(b));
+}
+
+function buildChipSoccerFaces() {
+  const faces = [];
+  for (let v = 0; v < CHIP_BALL_ICO_VERTS.length; v += 1) {
+    const neighbors = chipBallIcoNeighbors(v);
+    faces.push({
+      kind: 'pent',
+      verts: neighbors.map((n) => vec3LerpSphere(CHIP_BALL_ICO_VERTS[v], CHIP_BALL_ICO_VERTS[n], 1 / 3)),
+    });
+  }
+  for (const [a, b, c] of CHIP_BALL_ICO_FACES) {
+    faces.push({
+      kind: 'hex',
+      verts: [
+        vec3LerpSphere(CHIP_BALL_ICO_VERTS[a], CHIP_BALL_ICO_VERTS[b], 2 / 3),
+        vec3LerpSphere(CHIP_BALL_ICO_VERTS[b], CHIP_BALL_ICO_VERTS[c], 1 / 3),
+        vec3LerpSphere(CHIP_BALL_ICO_VERTS[b], CHIP_BALL_ICO_VERTS[c], 2 / 3),
+        vec3LerpSphere(CHIP_BALL_ICO_VERTS[c], CHIP_BALL_ICO_VERTS[a], 1 / 3),
+        vec3LerpSphere(CHIP_BALL_ICO_VERTS[c], CHIP_BALL_ICO_VERTS[a], 2 / 3),
+        vec3LerpSphere(CHIP_BALL_ICO_VERTS[a], CHIP_BALL_ICO_VERTS[b], 1 / 3),
+      ],
+    });
+  }
+  return faces;
+}
+
+const CHIP_BALL_FACES = buildChipSoccerFaces();
+
+function chipPatchRgba(color, alpha) {
+  const hex = color.trim();
+  if (hex.startsWith('#')) {
+    const h = hex.slice(1);
+    const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
+    const n = Number.parseInt(full, 16);
+    const r = (n >> 16) & 255;
+    const g = (n >> 8) & 255;
+    const b = n & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+  return color;
+}
+
+function setupChipBallCanvas(canvas) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = Math.round(CHIP_BALL_SIZE * dpr);
+  canvas.height = Math.round(CHIP_BALL_SIZE * dpr);
+  const ctx = canvas.getContext('2d');
+  if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function chipBallRotate(v, rotY, rotX) {
+  const ry = (rotY * Math.PI) / 180;
+  const rx = (rotX * Math.PI) / 180;
+  const x1 = v[0] * Math.cos(ry) + v[2] * Math.sin(ry);
+  const z1 = -v[0] * Math.sin(ry) + v[2] * Math.cos(ry);
+  const y1 = v[1];
+  const y2 = y1 * Math.cos(rx) - z1 * Math.sin(rx);
+  const z2 = y1 * Math.sin(rx) + z1 * Math.cos(rx);
+  return [x1, y2, z2];
+}
+
+function chipBallProject(v, radius, cx, cy) {
+  return { x: cx + v[0] * radius, y: cy - v[1] * radius, z: v[2] };
+}
+
+function drawChipFace(ctx, points, fill, stroke, lineW) {
+  if (points.length < 3) return;
+  ctx.beginPath();
+  points.forEach((p, i) => {
+    if (i === 0) ctx.moveTo(p.x, p.y);
+    else ctx.lineTo(p.x, p.y);
+  });
+  ctx.closePath();
+  ctx.fillStyle = fill;
+  ctx.fill();
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = lineW;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+}
+
+function drawChipSoccerBall(ctx, size, rotY, patchColor) {
+  const cx = size / 2;
+  const cy = size / 2;
+  const R = size * 0.44;
+  const rotX = CHIP_BALL_TILT_X;
+  ctx.clearRect(0, 0, size, size);
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, 0, Math.PI * 2);
+  ctx.clip();
+
+  const lightX = cx - R * 0.34;
+  const lightY = cy - R * 0.36;
+  const sphere = ctx.createRadialGradient(lightX, lightY, R * 0.05, cx + R * 0.04, cy + R * 0.06, R * 1.08);
+  sphere.addColorStop(0, '#ffffff');
+  sphere.addColorStop(0.34, '#f8fafc');
+  sphere.addColorStop(0.68, '#cbd5e1');
+  sphere.addColorStop(1, '#475569');
+  ctx.fillStyle = sphere;
+  ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
+
+  const faces = CHIP_BALL_FACES.map((face) => {
+    const projected = face.verts.map((v) => chipBallProject(chipBallRotate(v, rotY, rotX), R, cx, cy));
+    const avgZ = projected.reduce((sum, p) => sum + p.z, 0) / projected.length;
+    return { ...face, projected, avgZ };
+  }).filter((face) => face.avgZ > -0.12).sort((a, b) => a.avgZ - b.avgZ);
+
+  for (const face of faces) {
+    const alpha = 0.58 + 0.42 * ((face.avgZ + 1) / 2);
+    const fill = face.kind === 'pent'
+      ? chipPatchRgba(patchColor, alpha)
+      : chipPatchRgba('#f8fafc', Math.min(1, alpha + 0.06));
+    drawChipFace(
+      ctx,
+      face.projected,
+      fill,
+      `rgba(15, 23, 42, ${Math.min(0.92, 0.38 + alpha * 0.5).toFixed(3)})`,
+      Math.max(0.65, 1.05 * (0.65 + 0.35 * ((face.avgZ + 1) / 2))),
+    );
+  }
+
+  const hx = cx - R * 0.22 * Math.cos((rotY * Math.PI) / 180);
+  const hy = cy - R * 0.28;
+  const gloss = ctx.createRadialGradient(hx, hy, 0, hx, hy, R * 0.42);
+  gloss.addColorStop(0, 'rgba(255,255,255,0.72)');
+  gloss.addColorStop(0.45, 'rgba(255,255,255,0.12)');
+  gloss.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = gloss;
+  ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
+
+  ctx.restore();
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(15, 23, 42, 0.18)';
+  ctx.lineWidth = 0.75;
+  ctx.stroke();
+}
+
+function paintChipBallCanvas(canvas, rotY) {
+  const host = canvas.closest('.fc-chip, .fc-chip-fly');
+  if (!host) return;
+  const patch = getComputedStyle(host).getPropertyValue('--ball-patch').trim() || '#16a34a';
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  drawChipSoccerBall(ctx, CHIP_BALL_SIZE, rotY, patch);
+}
+
+function updateChipBalls(ts) {
+  if (!document.querySelector('.fc-chip__ball-canvas')) return;
+  if (!chipBallLastTs) chipBallLastTs = ts;
+  const dt = Math.min(32, Math.max(0, ts - chipBallLastTs));
+  chipBallLastTs = ts;
+  chipBallRot = (chipBallRot + (CHIP_BALL_RPM * 360 * dt) / 60000) % 360;
+  document.querySelectorAll('.fc-chip__ball-canvas').forEach((canvas) => paintChipBallCanvas(canvas, chipBallRot));
+}
+
 function chipInnerHtml(cls, label) {
-  return `<span class="fc-chip__ball-wrap" aria-hidden="true"><span class="fc-chip__ball fc-chip__ball--${cls}"></span></span><span class="fc-chip__label">${label}</span>`;
+  return `<span class="fc-chip__ball-wrap" aria-hidden="true"><canvas class="fc-chip__ball-canvas" width="${CHIP_BALL_SIZE}" height="${CHIP_BALL_SIZE}"></canvas></span><span class="fc-chip__label">${label}</span>`;
 }
 
 function playChipSound() {
@@ -557,6 +768,7 @@ function animLoop(t) {
     vis.ball.y = Math.max(0.1, Math.min(0.9, vis.ball.y));
   }
   drawStadium(t);
+  updateChipBalls(t);
   requestAnimationFrame(animLoop);
 }
 
@@ -661,6 +873,7 @@ function buildChips() {
     const cls = chipStyleClass(v);
     return `<button type="button" class="fc-chip fc-chip--${cls}${v === selectedChip ? ' active' : ''}" data-chip="${v}">${chipInnerHtml(cls, chipLabel(v))}</button>`;
   }).join('');
+  $('chips').querySelectorAll('.fc-chip__ball-canvas').forEach(setupChipBallCanvas);
   $('chips').querySelectorAll('.fc-chip').forEach((btn) => {
     btn.addEventListener('click', () => {
       selectedChip = Number(btn.dataset.chip);
@@ -682,6 +895,7 @@ function flyChipToPick(pred, amount) {
   const chip = document.createElement('div');
   chip.className = `fc-chip-fly fc-chip-fly--${cls}`;
   chip.innerHTML = chipInnerHtml(cls, chipLabel(amount));
+  chip.querySelectorAll('.fc-chip__ball-canvas').forEach(setupChipBallCanvas);
   chip.style.setProperty('--from-x', `${from.left + from.width / 2}px`);
   chip.style.setProperty('--from-y', `${from.top + from.height / 2}px`);
   chip.style.setProperty('--to-x', `${to.left + to.width / 2}px`);
