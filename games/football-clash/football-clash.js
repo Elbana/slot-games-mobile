@@ -36,12 +36,16 @@ const SFX = {
 };
 
 const SFX_VOL = { whistle: 0.9, kick: 0.88, shot: 0.68, goal: 0.85, chip: 0.72 };
+const SOUND_MUTE_KEY = 'fc-sound-muted';
 
 let audioUnlocked = false;
+let soundMuted = localStorage.getItem(SOUND_MUTE_KEY) === '1';
 /** @type {Record<string, HTMLAudioElement>} */
 const sfxPool = {};
 let kickTimer = null;
 let goalOverlayTimer = null;
+let resultPopupTimer = null;
+const RESULT_POPUP_MS = 6000;
 let pendingKickoffWhistle = false;
 /** @type {Map<string, HTMLImageElement>} */
 const flagImgs = new Map();
@@ -176,8 +180,40 @@ function unlockAudio() {
   flushPendingAudio();
 }
 
+function syncMuteButton() {
+  const btn = $('btn-mute');
+  if (!btn) return;
+  btn.classList.toggle('is-muted', soundMuted);
+  btn.setAttribute('aria-pressed', soundMuted ? 'true' : 'false');
+  btn.setAttribute('aria-label', soundMuted ? 'Unmute sound' : 'Mute sound');
+}
+
+function setSoundMuted(muted) {
+  soundMuted = !!muted;
+  localStorage.setItem(SOUND_MUTE_KEY, soundMuted ? '1' : '0');
+  syncMuteButton();
+  if (soundMuted) clearKickTimer();
+  else if (vis.phase === 'playing' && audioUnlocked) scheduleKickSounds();
+}
+
+function setupMuteButton() {
+  syncMuteButton();
+  $('btn-mute')?.addEventListener('click', () => {
+    unlockAudio();
+    setSoundMuted(!soundMuted);
+  });
+}
+
+function setupHelpModal() {
+  const modal = $('help-modal');
+  const close = () => { modal.hidden = true; };
+  $('btn-help')?.addEventListener('click', () => { modal.hidden = false; });
+  $('help-close')?.addEventListener('click', close);
+  $('help-backdrop')?.addEventListener('click', close);
+}
+
 function playSfxKey(key, volume) {
-  if (!audioUnlocked) return false;
+  if (!audioUnlocked || soundMuted) return false;
   const base = sfxPool[key];
   if (!base) return false;
   const vol = volume ?? SFX_VOL[key] ?? 0.5;
@@ -812,17 +848,31 @@ function setTimerRing(countdown, phase) {
 }
 
 function closeResultPopup() {
+  if (resultPopupTimer) {
+    clearTimeout(resultPopupTimer);
+    resultPopupTimer = null;
+  }
+  $('result-win-banner').hidden = true;
   $('result-popup').hidden = true;
+}
+
+function scheduleResultPopupClose() {
+  if (resultPopupTimer) clearTimeout(resultPopupTimer);
+  resultPopupTimer = setTimeout(() => {
+    resultPopupTimer = null;
+    closeResultPopup();
+    lastOverlayKey = '';
+  }, RESULT_POPUP_MS);
 }
 
 function showResultPopup() {
   const popup = $('result-popup');
+  if (resultPopupTimer) return;
+
   const match = state?.match;
   if (state?.phase !== 'results' || !match) {
-    if (state?.phase !== 'results') {
-      popup.hidden = true;
-      lastOverlayKey = '';
-    }
+    popup.hidden = true;
+    lastOverlayKey = '';
     return;
   }
 
@@ -844,10 +894,12 @@ function showResultPopup() {
   }
   if (winnerId === 'draw') {
     flagEl.src = DRAW_FLAG;
+    flagEl.alt = 'Draw';
     flagEl.onerror = null;
   } else {
     const winnerTeam = match.outcome === 'homeWin' ? match.homeTeam : match.awayTeam;
     flagEl.src = teamLogoSrc(winnerTeam) || teamLogoSrc(winnerId);
+    flagEl.alt = winnerTeam?.name || 'Winner';
     flagEl.onerror = () => {
       flagEl.onerror = null;
       const span = document.createElement('span');
@@ -861,6 +913,8 @@ function showResultPopup() {
   const myBet = state?.myBet;
   const betAmt = myBet?.amount ?? 0;
   const winAmt = myBet?.status === 'won' ? (myBet.winAmount ?? 0) : 0;
+  const won = myBet?.status === 'won';
+  const lost = betAmt > 0 && myBet?.status === 'lost';
 
   $('result-bet-amt').textContent = fmtNum(betAmt);
   $('result-win-amt').textContent = fmtNum(winAmt);
@@ -870,20 +924,18 @@ function showResultPopup() {
     $('result-title').textContent = 'Draw';
   } else {
     const winnerName = match.outcome === 'homeWin' ? match.homeTeam.name : match.awayTeam.name;
-    $('result-title').textContent = `${winnerName} wins!`;
+    $('result-title').textContent = `${winnerName} wins`;
   }
 
   const card = $('result-card');
-  const won = myBet?.status === 'won';
   card.className = 'fc-result__card';
-  if (won) {
-    card.classList.add('fc-result__card--win');
-    burstConfetti('#4ade80');
-  } else if (betAmt > 0) {
-    card.classList.add('fc-result__card--lose');
-  }
+  if (won) card.classList.add('fc-result__card--win');
+  else if (lost) card.classList.add('fc-result__card--lose');
+
+  $('result-win-banner').hidden = !won;
 
   popup.hidden = false;
+  scheduleResultPopupClose();
 }
 
 function applyState(next) {
@@ -894,8 +946,6 @@ function applyState(next) {
     lastActionEventCount = 0;
     if (next.phase === 'betting') {
       lastGoalEventKey = '';
-      lastOverlayKey = '';
-      closeResultPopup();
       cheerBits.length = 0;
     }
     syncMatchAudio(next.phase, prevPhase);
@@ -906,7 +956,6 @@ function applyState(next) {
   state = next;
 
   $('balance').textContent = fmtNum(next.balance ?? 0);
-  $('round-id').textContent = String(next.roundId ?? '—');
   $('countdown').textContent = String(next.countdown ?? 0);
   setTimerRing(next.countdown ?? 0, next.phase);
 
@@ -984,9 +1033,8 @@ async function init() {
   });
 
   setupHistoryModal();
-  $('result-ok').addEventListener('click', closeResultPopup);
-  $('result-backdrop').addEventListener('click', closeResultPopup);
-
+  setupMuteButton();
+  setupHelpModal();
   buildChips();
 
   document.querySelectorAll('.fc-pick__btn').forEach((btn) => {
