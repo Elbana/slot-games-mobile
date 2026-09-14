@@ -3,6 +3,8 @@
  * 9 physical stops: Lemon ×4, Watermelon ×4, Seven ×1 (no adjacent lemons).
  */
 
+import { validateLucky77PlaceBet } from '../../../games/lucky77/bet-rules.js';
+
 export const LUCK77_TYP = 'LUCK77_HALF';
 export const LUCK77_LOTTERY = 'luck77_2_half';
 
@@ -36,4 +38,5 @@ export const LUCK77_GAME = {
   resultSeconds: 2,
   symbols: LUCK77_SYMBOLS,
   wheelStops: LUCK77_WHEEL_STOPS,
+  validateBet: validateLucky77PlaceBet,
 };

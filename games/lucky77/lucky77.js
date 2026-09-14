@@ -8,6 +8,7 @@ import {
   LotteryApiError,
 } from '/shared/lottery/api.js';
 import { LUCK77_WHEEL_STOPS } from './wheel-stops.js';
+import { lucky77BetMessage } from './bet-rules.js';
 import {
   loadAssetManifest,
   symbolAssetUrl,
@@ -38,10 +39,6 @@ let spinAnim = null;
 let spinGen = 0;
 let glowAnim = null;
 let glowStopTimer = null;
-let lastSpinKey = '';
-let lastSpinPeriod = '';
-/** Period id we already started (or finished) a spin animation for. */
-let spinStartedForPeriod = '';
 /** @type {Promise<void> | null} */
 let pollInFlight = null;
 let winningSegmentIndex = -1;
@@ -158,8 +155,15 @@ function setupSettings() {
   $('settings-backdrop').addEventListener('click', close);
   $('setting-help').addEventListener('click', () => {
     close();
-    toast('Pick Lemon, Watermelon, or 77 — wheel has 9 wedges. 77 pays ×8!');
+    $('rules-modal').hidden = false;
   });
+}
+
+function setupRulesModal() {
+  const modal = $('rules-modal');
+  const close = () => { modal.hidden = true; };
+  $('rules-close').addEventListener('click', close);
+  $('rules-backdrop').addEventListener('click', close);
 }
 
 function normalizeAngle(angle) {
@@ -633,6 +637,12 @@ function buildChips() {
   });
 }
 
+function setBetButtonsEnabled(betting) {
+  document.querySelectorAll('.l77-bet').forEach((btn) => {
+    btn.disabled = !betting;
+  });
+}
+
 function updatePendingUI() {
   document.querySelectorAll('.l77-bet').forEach((btn) => {
     const code = btn.dataset.code;
@@ -676,6 +686,12 @@ async function doBet(code) {
     throw new Error('closed');
   }
 
+  const comboErr = lucky77BetMessage(pending, code);
+  if (comboErr) {
+    toast(comboErr);
+    throw new Error('combo');
+  }
+
   pending[code] = (pending[code] || 0) + chip;
   updatePendingUI();
   flyChipToBet(code, chip);
@@ -700,19 +716,19 @@ async function doBet(code) {
 }
 
 function spinDurationMs(state) {
-  if (state.Stage === 2) {
-    return Math.max(2200, Number(state.CloseDuration || 5) * 900);
-  }
-  return Math.max(1800, Number(state.CountDown || 3) * 900);
+  const spinSec = Number(state.CloseDuration || config?.spinSeconds || 5);
+  const cd = Math.max(1, Number(state.CountDown || spinSec));
+  return Math.max(2800, Math.max(spinSec, cd) * 1000);
 }
 
 function tryStartWheelSpin(state, idx) {
   if (state.Stage !== 2 || idx < 0 || spinAnim) return false;
-  if (spinStartedForPeriod === state.Period) return false;
 
-  spinStartedForPeriod = state.Period;
-  lastSpinKey = `${state.Period}:${idx}`;
-  lastSpinPeriod = state.Period;
+  const enteringSpinPhase = prevStage !== 2;
+  const needsCatchUp = winningSegmentIndex !== idx;
+
+  if (!enteringSpinPhase && !needsCatchUp) return false;
+
   animateWheelToStop(idx, spinDurationMs(state));
   return true;
 }
@@ -721,16 +737,10 @@ function ensureWheelResult(state, idx) {
   if (idx < 0) return;
   if (spinAnim) {
     abortSpinAndSnap(idx);
-    spinStartedForPeriod = state.Period;
-    lastSpinKey = `${state.Period}:${idx}`;
-    lastSpinPeriod = state.Period;
     return;
   }
   if (winningSegmentIndex !== idx) {
     snapWheelToStop(idx);
-    spinStartedForPeriod = state.Period;
-    lastSpinKey = `${state.Period}:${idx}`;
-    lastSpinPeriod = state.Period;
   }
 }
 
@@ -839,24 +849,20 @@ async function tick() {
   updateCenterCountdown(state);
 
   const idx = resolveWheelIndex(state);
-  const periodChanged = state.Period !== lastSpinPeriod;
 
-  if (state.Stage === 1 && periodChanged) {
-    spinStartedForPeriod = '';
-    lastSpinKey = '';
-    lastSpinPeriod = state.Period;
+  if (state.Stage === 1 && prevStage !== 1 && prevStage != null) {
     clearWinnerHighlight();
     drawWheel(wheelRotation);
   }
 
   if (spinning) {
-    document.querySelectorAll('.l77-bet').forEach((b) => { b.disabled = true; });
+    setBetButtonsEnabled(false);
     tryStartWheelSpin(state, idx);
   } else if (state.Stage === 4 && idx >= 0) {
-    document.querySelectorAll('.l77-bet').forEach((b) => { b.disabled = true; });
+    setBetButtonsEnabled(false);
     ensureWheelResult(state, idx);
   } else {
-    document.querySelectorAll('.l77-bet').forEach((b) => { b.disabled = !betting; });
+    setBetButtonsEnabled(betting);
   }
 
   const spinJustEnded = prevStage === 2 && state.Stage !== 2;
@@ -867,7 +873,6 @@ async function tick() {
   }
 
   if (isFirstTick) {
-    lastSpinPeriod = state.Period;
     if (state.Stage === 2 && idx >= 0) {
       tryStartWheelSpin(state, idx);
     } else if (state.Stage === 4 && idx >= 0) {
@@ -972,6 +977,7 @@ async function init() {
   $('btn-topup').addEventListener('click', () => toast('Demo wallet — use launcher token'));
   $('win-close').addEventListener('click', () => { $('win-overlay').hidden = true; });
   setupSettings();
+  setupRulesModal();
   setupHistoryModal();
 
   await tick();

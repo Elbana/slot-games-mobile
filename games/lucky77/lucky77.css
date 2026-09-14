@@ -237,7 +237,8 @@
   pointer-events: none;
 }
 
-.l77-history-modal {
+.l77-history-modal,
+.l77-rules-modal {
   position: fixed;
   inset: 0;
   z-index: 200;
@@ -245,11 +246,13 @@
   place-items: end center;
 }
 
-.l77-history-modal[hidden] {
+.l77-history-modal[hidden],
+.l77-rules-modal[hidden] {
   display: none;
 }
 
-.l77-history-modal__backdrop {
+.l77-history-modal__backdrop,
+.l77-rules-modal__backdrop {
   position: absolute;
   inset: 0;
   border: 0;
@@ -257,7 +260,8 @@
   cursor: pointer;
 }
 
-.l77-history-modal__sheet {
+.l77-history-modal__sheet,
+.l77-rules-modal__sheet {
   position: relative;
   width: min(100%, 420px);
   max-height: min(70dvh, 480px);
@@ -277,7 +281,8 @@
   to { transform: translateY(0); opacity: 1; }
 }
 
-.l77-history-modal__head {
+.l77-history-modal__head,
+.l77-rules-modal__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -285,14 +290,16 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.l77-history-modal__title {
+.l77-history-modal__title,
+.l77-rules-modal__title {
   margin: 0;
   font-size: 15px;
   font-weight: 800;
   letter-spacing: 0.02em;
 }
 
-.l77-history-modal__close {
+.l77-history-modal__close,
+.l77-rules-modal__close {
   width: 32px;
   height: 32px;
   border: 0;
@@ -307,6 +314,37 @@
   overflow-y: auto;
   padding: 4px 0 12px;
   -webkit-overflow-scrolling: touch;
+}
+
+.l77-rules-modal__body {
+  overflow-y: auto;
+  padding: 14px 16px 18px;
+  -webkit-overflow-scrolling: touch;
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.l77-rules-modal__body p {
+  margin: 0 0 12px;
+}
+
+.l77-rules-modal__body ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.l77-rules-modal__body li {
+  margin-bottom: 8px;
+}
+
+.l77-rules-modal__body li:last-child {
+  margin-bottom: 0;
+}
+
+.l77-rules-modal__body strong {
+  color: var(--l77-gold);
+  font-weight: 700;
 }
 
 .l77-history-table {
@@ -375,24 +413,19 @@
 .l77-dot {
   width: 24px;
   height: 24px;
-  border-radius: 50%;
   flex-shrink: 0;
-  border: 1.5px solid rgba(255, 255, 255, 0.2);
   display: grid;
   place-items: center;
-  overflow: hidden;
-  background: rgba(0, 0, 0, 0.35);
+  background: none;
+  border: none;
 }
 
 .l77-dot img {
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   object-fit: contain;
+  display: block;
 }
-
-.l77-dot--lemon { background: radial-gradient(circle at 30% 30%, #fde68a, #92400e); }
-.l77-dot--melon { background: radial-gradient(circle at 30% 30%, #86efac, #166534); }
-.l77-dot--seven { background: radial-gradient(circle at 30% 30%, #d8b4fe, #6b21a8); }
 
 .l77-bets {
   padding: 0 2px;

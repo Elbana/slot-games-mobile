@@ -13,6 +13,7 @@
  *   spinSeconds?: number,
  *   resultSeconds?: number,
  *   symbols: LotterySymbol[],
+ *   validateBet?: (sessionId: string, playCode: string, periodBets: Map<string, number>, betKey: (sessionId: string, playCode: string) => string) => { ok: boolean, message?: string },
  * }} config
  */
 export function createLotteryEngine(config) {
@@ -31,6 +32,7 @@ export function createLotteryEngine(config) {
   let currentPeriod = nextPeriodId();
   let lastPeriod = '';
   let resultDrawnForCurrentPeriod = false;
+  let resultDrawnCycle = -1;
   /** @type {string[]} */
   let lastNum = [];
   /** Wheel stop index (0-based) when config.wheelStops is set. */
@@ -48,24 +50,30 @@ export function createLotteryEngine(config) {
     return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}${pad(periodSeq, 6)}`;
   }
 
-  function elapsedInPeriod() {
-    return ((Date.now() - periodStartMs) / 1000) % totalSeconds;
+  function rawElapsedSec() {
+    return (Date.now() - periodStartMs) / 1000;
   }
 
-  function ensureResultDrawn() {
-    if (resultDrawnForCurrentPeriod) return;
+  function elapsedInPeriod() {
+    return rawElapsedSec() % totalSeconds;
+  }
+
+  function ensureResultDrawn(cycle) {
+    if (resultDrawnForCurrentPeriod && resultDrawnCycle === cycle) return;
     drawResult(currentPeriod);
     lastPeriod = currentPeriod;
     settledPeriodBets = new Map(periodBets);
     resultDrawnForCurrentPeriod = true;
+    resultDrawnCycle = cycle;
   }
 
   function getPhase() {
+    const cycle = Math.floor(rawElapsedSec() / totalSeconds);
     const elapsed = elapsedInPeriod();
     if (elapsed < bettingSeconds) {
       return { stage: 1, countdown: Math.ceil(bettingSeconds - elapsed), closeDuration: spinSeconds };
     }
-    ensureResultDrawn();
+    ensureResultDrawn(cycle);
     if (elapsed < bettingSeconds + spinSeconds) {
       return { stage: 2, countdown: Math.ceil(bettingSeconds + spinSeconds - elapsed), closeDuration: spinSeconds };
     }
@@ -77,14 +85,17 @@ export function createLotteryEngine(config) {
   }
 
   function maybeAdvancePeriod() {
-    const elapsed = elapsedInPeriod();
-    if (elapsed >= totalSeconds - 0.05) {
-      periodBets.clear();
-      periodStartMs = Date.now();
+    const raw = rawElapsedSec();
+    if (raw < totalSeconds) return;
+    const cycles = Math.floor(raw / totalSeconds);
+    periodBets.clear();
+    periodStartMs += cycles * totalSeconds * 1000;
+    for (let i = 0; i < cycles; i++) {
       currentPeriod = nextPeriodId();
-      resultDrawnForCurrentPeriod = false;
-      lastWheelIndex = -1;
     }
+    resultDrawnForCurrentPeriod = false;
+    resultDrawnCycle = -1;
+    lastWheelIndex = -1;
   }
 
   function drawResult(periodNo) {
@@ -178,6 +189,11 @@ export function createLotteryEngine(config) {
     }
     const balance = getBalance();
     if (balance < amt) return { ok: false, code: 400, message: 'Insufficient balance' };
+
+    if (config.validateBet) {
+      const combo = config.validateBet(sessionId, playCode, periodBets, betKey);
+      if (!combo.ok) return { ok: false, code: 400, message: combo.message || 'Invalid bet combination' };
+    }
 
     setBalance(balance - amt);
     const key = betKey(sessionId, playCode);
