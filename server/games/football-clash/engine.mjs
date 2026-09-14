@@ -4,6 +4,7 @@
 
 import crypto from 'crypto';
 import { FOOTBALL_CLASH_GAME, FOOTBALL_TEAMS } from './config.mjs';
+import { PAYOUT_LIMITS, capWinByBet } from '../../economy/payout-limits.mjs';
 
 /** @typedef {'betting' | 'playing' | 'results'} FootballPhase */
 /** @typedef {'home' | 'away' | 'draw'} FootballPrediction */
@@ -91,7 +92,12 @@ function calculateWinnings(prediction, outcome, betAmount, config) {
   const actual = outcome === 'homeWin' ? 'home' : outcome === 'awayWin' ? 'away' : 'draw';
   if (prediction !== actual) return { winAmount: 0, isWinner: false };
   const mult = prediction === 'draw' ? config.drawMultiplier : config.winMultiplier;
-  return { winAmount: Math.floor(betAmount * mult), isWinner: true };
+  const winAmount = capWinByBet(
+    betAmount,
+    Math.floor(betAmount * mult),
+    PAYOUT_LIMITS.pvp.maxWinBetMultiple,
+  );
+  return { winAmount, isWinner: true };
 }
 
 export function createFootballClashEngine(config = FOOTBALL_CLASH_GAME) {

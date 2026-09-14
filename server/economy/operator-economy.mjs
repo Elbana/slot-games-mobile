@@ -15,7 +15,7 @@ export const DEFAULT_ECONOMY = {
   houseEdgePercent: 3,
   poolContributionPercent: 35,
   poolWinTriggerChance: 0.06,
-  maxPoolWinMultiplier: 25,
+  maxPoolWinMultiplier: 15,
   slotMathProfile: 'voice_social',
   lotteryHouseEdgePercent: 5,
 };

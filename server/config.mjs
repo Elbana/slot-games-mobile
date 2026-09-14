@@ -30,6 +30,9 @@ export const REQUIRE_AUTH = process.env.REQUIRE_AUTH === '1';
 export const WALLET_MOCK = process.env.WALLET_MOCK === '1' || !IS_PRODUCTION;
 export const WALLET_TIMEOUT_MS = parseInt(process.env.WALLET_TIMEOUT_MS || '8000', 10);
 export const IDEMPOTENCY_CACHE_SIZE = 32;
+export const LAUNCH_SECRET =
+  process.env.LAUNCH_SECRET || 'dev-launch-secret-change-in-production';
+
 export const CORS_ORIGINS = (process.env.CORS_ORIGINS || '')
   .split(',')
   .map((s) => s.trim())

@@ -5,6 +5,7 @@
 
 import crypto from 'crypto';
 import { DICE_DUAL_GAME } from './config.mjs';
+import { PAYOUT_LIMITS, capWinByBet } from '../../economy/payout-limits.mjs';
 
 /** @typedef {'betting' | 'battling' | 'results'} DiceDualPhase */
 /** @typedef {'red' | 'blue' | 'draw'} DicePrediction */
@@ -67,7 +68,12 @@ function calculateWinnings(prediction, outcome, betAmount, config) {
     return { winAmount: 0, isWinner: false };
   }
   const mult = prediction === 'draw' ? config.drawBetMultiplier : config.teamWinMultiplier;
-  return { winAmount: Math.floor(betAmount * mult), isWinner: true };
+  const winAmount = capWinByBet(
+    betAmount,
+    Math.floor(betAmount * mult),
+    PAYOUT_LIMITS.pvp.maxWinBetMultiple,
+  );
+  return { winAmount, isWinner: true };
 }
 
 export function createDiceDualEngine(config = DICE_DUAL_GAME) {

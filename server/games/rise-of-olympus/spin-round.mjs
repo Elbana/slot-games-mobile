@@ -1,4 +1,5 @@
-import { DEFAULT_BET, DEFAULT_LINES, DEFAULT_DENOM } from './config.mjs';
+import { DEFAULT_BET, DEFAULT_LINES, DEFAULT_DENOM, MAX_FS_ACCUMULATOR, MAX_SPIN_WIN_BET_MULTIPLE } from './config.mjs';
+import { capWinByBet } from '../../economy/payout-limits.mjs';
 import { runCascadeRound } from './cascade.mjs';
 import { extractGridMultipliers, sumMultipliers, dominantGodId } from './grid.mjs';
 import { countScatters } from './freespin.mjs';
@@ -37,12 +38,13 @@ export function spinRooRound(bet, opts = {}) {
     const fsTotalMulti = Math.max(1, fsMultiIn + (sumMulti > 0 ? sumMulti : 0));
     winAmount = baseWin * fsTotalMulti;
   }
+  winAmount = capWinByBet(bet, winAmount, MAX_SPIN_WIN_BET_MULTIPLE);
 
   let fsMulti = fsMultiIn;
   if (inFreeSpins && baseWin > 0 && sumMulti > 0) {
-    fsMulti = fsMultiIn + sumMulti;
+    fsMulti = Math.min(MAX_FS_ACCUMULATOR, fsMultiIn + sumMulti);
   } else if (inFreeSpins && baseWin > 0 && fsMultiIn > 0) {
-    fsMulti = fsMultiIn;
+    fsMulti = Math.min(MAX_FS_ACCUMULATOR, fsMultiIn);
   }
 
   return {

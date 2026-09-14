@@ -8,6 +8,7 @@ import {
   randomInitialGridSymbol,
   randomPaySymbolOrMultiplier,
   randomWinSymbol,
+  MAX_GRID_MULTIPLIER_SUM,
 } from './config.mjs';
 
 /** Column-major cell index (matches client TOP_TO_BOTTOM grid: col * rows + row). */
@@ -229,7 +230,8 @@ export function cloneGrid(grid) {
 }
 
 export function sumMultipliers(multipliers) {
-  return multipliers.reduce((a, b) => a + b, 0);
+  const sum = multipliers.reduce((a, b) => a + b, 0);
+  return Math.min(MAX_GRID_MULTIPLIER_SUM, sum);
 }
 
 /** Client dk enum: Hades=0, Poseidon=1, Zeus=2. */

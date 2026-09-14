@@ -31,7 +31,11 @@ export const PAY_SYMBOL_MIN = SYMBOL.LP1;
 export const PAY_SYMBOL_MAX = SYMBOL.HP3;
 
 /** Client bronze / silver / gold thresholds (GameSymbol in bundle). */
-export const MULTIPLIER_STAGES = [2, 3, 4, 5, 7, 8, 10, 12, 15, 20, 25, 50, 100, 500, 1000];
+/** Per-cell multiplier tiers — capped for social casino (no 500×/1000× cells). */
+export const MULTIPLIER_STAGES = [2, 3, 4, 5, 7, 8, 10, 12, 15, 20, 25, 35, 50];
+export const MAX_SPIN_WIN_BET_MULTIPLE = 100;
+export const MAX_GRID_MULTIPLIER_SUM = 50;
+export const MAX_FS_ACCUMULATOR = 25;
 export const BRONZE_MULTIPLIER_STAGES = MULTIPLIER_STAGES.slice(0, 4);
 export const SILVER_MULTIPLIER_STAGES = MULTIPLIER_STAGES.slice(4, 10);
 export const GOLD_MULTIPLIER_STAGES = MULTIPLIER_STAGES.slice(10);

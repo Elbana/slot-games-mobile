@@ -1,7 +1,9 @@
 /**
- * Shared period engine for BooAn-style lottery games (Greedy, Pets & Beasts).
+ * Shared period engine for BooAn-style lottery games (Greedy, Lucky 77).
  * Lifecycle: betting (stage 1) → spin (2) → result (4) → repeat.
  */
+
+import { PAYOUT_LIMITS, capWinByBet } from '../../economy/payout-limits.mjs';
 
 /** @typedef {{ playCode: string, label: string, emoji: string, odd: number, group?: string[] }} LotterySymbol */
 
@@ -241,7 +243,7 @@ export function createLotteryEngine(config) {
       }
       if (won) {
         const payout = staked * sym.odd;
-        winAmount += payout;
+        winAmount += capWinByBet(staked, payout, PAYOUT_LIMITS.lottery.maxWinBetMultiple);
         winCodes.push(sym.playCode);
       }
     }
