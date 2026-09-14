@@ -767,23 +767,21 @@ function renderHistoryBar() {
   }).join('');
 }
 
-function renderHistoryTable(rows) {
-  const body = $('history-table-body');
+function renderHistoryGrid(rows) {
+  const grid = $('history-grid');
   if (!rows.length) {
-    body.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:rgba(255,255,255,0.45)">No results yet</td></tr>';
+    grid.innerHTML = '<p class="l77-history-grid__empty">No results yet</p>';
     return;
   }
-  body.innerHTML = rows.map((row) => {
+  grid.innerHTML = rows.map((row, i) => {
     const meta = ZONE_META[row.code];
     const kind = zoneKind(row.code);
     const src = symbolAssetUrl(kind);
-    const odd = meta?.odd || 2;
     const label = meta?.label || row.code;
-    return `<tr>
-      <td>${periodShort(row.period)}</td>
-      <td><span class="l77-history-table__choice"><span class="l77-history-table__icon"><img src="${src}" alt="" /></span>${label}</span></td>
-      <td class="l77-history-table__mult">×${odd}</td>
-    </tr>`;
+    const latest = i === 0 ? ' l77-history-cell--latest' : '';
+    return `<div class="l77-history-cell l77-history-cell--${kind}${latest}" role="listitem" title="Round ${periodShort(row.period)} — ${label}">
+      <img src="${src}" alt="${label}" loading="lazy" />
+    </div>`;
   }).join('');
 }
 
@@ -792,12 +790,12 @@ function setupHistoryModal() {
   const close = () => { modal.hidden = true; };
   $('btn-history').addEventListener('click', async () => {
     modal.hidden = false;
-    renderHistoryTable(cachedHistory.slice(0, HISTORY_MODAL_COUNT));
+    renderHistoryGrid(cachedHistory.slice(0, HISTORY_MODAL_COUNT));
     try {
       const { periods } = await periodList(config, { Idx: 1, Size: HISTORY_MODAL_COUNT });
       cachedHistory = periods.map(historyRowMeta).filter(Boolean);
       renderHistoryBar();
-      renderHistoryTable(cachedHistory);
+      renderHistoryGrid(cachedHistory.slice(0, HISTORY_MODAL_COUNT));
     } catch (err) {
       if (!(err instanceof LotteryApiError && err.offline)) {
         console.warn('[lucky77] history modal', err);
