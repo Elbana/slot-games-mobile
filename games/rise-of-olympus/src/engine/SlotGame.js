@@ -151,6 +151,8 @@ export async function mountRiseOfOlympus(mount) {
     return turbo ? 70 : 160;
   }
 
+  const sessionPromise = fetchSession(GAME.slug);
+
   const hud = createThronesHUD(hudMount, {
     betLevels,
     onTurboToggle: (on) => {
@@ -180,7 +182,7 @@ export async function mountRiseOfOlympus(mount) {
   });
 
   try {
-    const session = await fetchSession(GAME.slug);
+    const session = await sessionPromise;
     balance = session.balance;
     betLevels = session.betLevels ?? betLevels;
     gameState = session.state ?? {};

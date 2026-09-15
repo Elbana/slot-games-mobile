@@ -137,18 +137,11 @@ export function mountLotteryRoutes(app) {
       lotterySession.lastSettledPeriod = state.LastPeriod;
     }
 
-    let balance;
-    try {
-      balance = await lotteryBalanceFromWallet(ctx);
-    } catch {
-      balance = 0;
-    }
-
     respond(
       res,
       {
         ...state,
-        Balance: balance,
+        ...(settlement?.balance != null ? { Balance: settlement.balance } : {}),
         SessionId: lotterySession.id,
         Items: state.poolItems ?? [],
         LastTop: [],
@@ -177,14 +170,15 @@ export function mountLotteryRoutes(app) {
     const result = await placeBetWithWallet(engine, lotterySession, ctx, playCode, amount);
     if (!result.ok) return res.json(fail(result.message, result.code));
 
-    let balance;
-    try {
-      balance = await lotteryBalanceFromWallet(ctx);
-    } catch {
-      balance = 0;
-    }
-
-    respond(res, { ...result.data, Balance: balance, SessionId: lotterySession.id }, req);
+    respond(
+      res,
+      {
+        ...result.data,
+        ...(result.balance != null ? { Balance: result.balance } : {}),
+        SessionId: lotterySession.id,
+      },
+      req
+    );
   }));
 }
 
@@ -206,14 +200,16 @@ async function placeBetWithWallet(engine, lotterySession, ctx, playCode, amount)
   if (balance < amt) return { ok: false, code: 400, message: 'Insufficient balance' };
 
   const txId = `lottery-${lotterySession.id}-${Date.now()}`;
+  let newBalance = balance;
   try {
-    await lotteryDebit(ctx, {
+    const debited = await lotteryDebit(ctx, {
       amount: amt,
       game: ctx.slug,
       roundId: phase.Period,
       transactionId: txId,
       reason: 'lottery_bet',
     });
+    newBalance = debited.balance;
     auditWallet({ operatorId: ctx.operator.id, playerId: ctx.playerId, type: 'debit', amount: amt, txId, game: ctx.slug });
   } catch (err) {
     return { ok: false, code: 400, message: err.message || 'Debit failed' };
@@ -223,8 +219,10 @@ async function placeBetWithWallet(engine, lotterySession, ctx, playCode, amount)
     lotterySession.id,
     playCode,
     amt,
-    () => balance - amt,
-    () => {}
+    () => newBalance,
+    (n) => {
+      newBalance = n;
+    }
   );
 
   if (!engineResult.ok) {
@@ -244,15 +242,16 @@ async function placeBetWithWallet(engine, lotterySession, ctx, playCode, amount)
     playerId: ctx.playerId,
   });
 
-  return engineResult;
+  return { ...engineResult, balance: newBalance };
 }
 
 async function settleWithWallet(engine, lotterySession, ctx) {
   let runningBalance;
   try {
     runningBalance = await lotteryBalanceFromWallet(ctx);
-  } catch {
-    runningBalance = 0;
+  } catch (err) {
+    console.warn('[lottery] settle balance unavailable', err.message || err);
+    return null;
   }
 
   const settlement = engine.settleSession(
@@ -288,13 +287,14 @@ async function settleWithWallet(engine, lotterySession, ctx) {
   if (totalWin > 0) {
     const txId = `lottery-win-${lotterySession.id}-${Date.now()}`;
     try {
-      await lotteryCredit(ctx, {
+      const credited = await lotteryCredit(ctx, {
         amount: totalWin,
         game: ctx.slug,
         roundId: engine.getBetState().LastPeriod,
         transactionId: txId,
         reason: poolWin > 0 ? 'lottery_win_with_pool' : 'lottery_win',
       });
+      runningBalance = credited.balance;
       auditWallet({
         operatorId: ctx.operator.id,
         playerId: ctx.playerId,
@@ -312,6 +312,7 @@ async function settleWithWallet(engine, lotterySession, ctx) {
     if (poolWin > 0) settlement.poolWin = poolWin;
   }
 
+  settlement.balance = runningBalance;
   return settlement;
 }
 

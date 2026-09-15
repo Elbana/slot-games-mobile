@@ -2,6 +2,11 @@
  * Shared mobile WebView shell — same width/height on phone and desktop preview.
  */
 
+.gm-balance--pending {
+  opacity: 0.55;
+  letter-spacing: 0.08em;
+}
+
 :root {
   --gm-max-width: 430px;
   --gm-phone-width: 390px;

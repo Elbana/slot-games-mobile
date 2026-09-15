@@ -46,6 +46,8 @@ let winnerPulseActive = false;
 let glowPhase = 0;
 const GLOW_DURATION_MS = 1200;
 let prevStage = null;
+/** Latest poll snapshot — avoids an extra bet_state round-trip before each bet. */
+let currentState = null;
 let isFirstTick = true;
 let lastShownResultKey = '';
 /** @type {Record<string, number>} */
@@ -675,16 +677,15 @@ function flyChipToBet(code, amount) {
 
 async function doBet(code) {
   const chip = selectedChip;
-  let state;
-  try {
-    state = await betState(config, sessionId);
-  } catch (err) {
-    toast(err instanceof LotteryApiError ? err.message : 'Cannot place bet');
-    throw err;
-  }
-  if (state.Stage !== 1) {
+  const state = currentState;
+  if (!state || state.Stage !== 1) {
     toast('Betting closed — wait for next round');
     throw new Error('closed');
+  }
+  const playable = window.gmGetBalance?.() ?? state.Balance;
+  if (playable != null && playable < chip) {
+    toast('Insufficient balance');
+    throw new Error('balance');
   }
 
   const comboErr = lucky77BetMessage(pending, code);
@@ -712,7 +713,8 @@ async function doBet(code) {
     localStorage.setItem(`lottery-session-${GAME_ID}`, sessionId);
   }
   if (data.Balance != null) {
-    $('balance').textContent = Number(data.Balance).toLocaleString();
+    if (window.gmSetBalance) window.gmSetBalance(data.Balance, (n) => Number(n).toLocaleString());
+    else $('balance').textContent = Number(data.Balance).toLocaleString();
   }
 }
 
@@ -846,7 +848,8 @@ async function tick() {
 
   $('round-label').textContent = `Round ${periodShort(state.Period)}`;
   if (state.Balance != null) {
-    $('balance').textContent = Number(state.Balance).toLocaleString();
+    if (window.gmSetBalance) window.gmSetBalance(state.Balance, (n) => Number(n).toLocaleString());
+    else $('balance').textContent = Number(state.Balance).toLocaleString();
   }
 
   const betting = state.Stage === 1;
@@ -896,6 +899,7 @@ async function tick() {
   }
 
   prevStage = state.Stage;
+  currentState = state;
   return state;
 }
 
@@ -912,12 +916,13 @@ async function loadHistory() {
 }
 
 async function init() {
+  const initPromise = lotteryInit(GAME_ID);
   const params = new URLSearchParams(window.location.search);
   $('player-name').textContent = params.get('player') || 'Player';
 
   let res;
   try {
-    res = await lotteryInit(GAME_ID);
+    res = await initPromise;
   } catch (err) {
     toast(err instanceof LotteryApiError ? err.message : 'Cannot reach server');
     return;
@@ -934,7 +939,9 @@ async function init() {
     localStorage.setItem(`lottery-session-${GAME_ID}`, sessionId);
   }
   if (res.data.balance != null) {
-    $('balance').textContent = Number(res.data.balance).toLocaleString();
+    const fmt = (n) => Number(n).toLocaleString();
+    if (window.gmSetBalance) window.gmSetBalance(res.data.balance, fmt);
+    else $('balance').textContent = fmt(res.data.balance);
   }
 
   try {

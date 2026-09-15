@@ -60,14 +60,22 @@ function renderHistory(history) {
 }
 
 const CHIP_TIER = {
+  200: '5k',
+  1000: '5k',
   5000: '5k',
+  10000: '25k',
   25000: '25k',
   50000: '50k',
+  100000: '250k',
   250000: '250k',
 };
 
 function chipTier(v) {
-  return CHIP_TIER[v] || '5k';
+  if (CHIP_TIER[v]) return CHIP_TIER[v];
+  if (v >= 100000) return '250k';
+  if (v >= 50000) return '50k';
+  if (v >= 10000) return '25k';
+  return '5k';
 }
 
 function fuelCanSrc(v) {
@@ -139,7 +147,9 @@ function applyState(data) {
     serverClockSkew = performance.now() - data.serverTime;
   }
   if (data.balance != null) {
-    $('balance').textContent = Number(data.balance).toLocaleString();
+    const fmt = (n) => Number(n).toLocaleString();
+    if (window.gmSetBalance) window.gmSetBalance(data.balance, fmt);
+    else $('balance').textContent = fmt(data.balance);
   }
   $('players-count').textContent = `${data.playerCount || 3}/${data.maxPlayers || 13}`;
   renderHistory(data.history);
@@ -524,14 +534,20 @@ function setupAutoCashout() {
 }
 
 async function init() {
+  buildChips();
+  updateActionAmt();
+
+  const sessionPromise = rocketInit();
   rocketImg = new Image();
   rocketImg.src = `${ASSET}/rocket.svg`;
 
   try {
-    const data = await rocketInit();
+    const data = await sessionPromise;
     if (data.betting?.chipPresets?.length) {
       chips = data.betting.chipPresets;
-      selectedChip = data.betting.defaultChip || chips[0];
+      selectedChip = chips.includes(data.betting.defaultChip)
+        ? data.betting.defaultChip
+        : chips[0];
     }
     buildChips();
     updateActionAmt();

@@ -120,17 +120,9 @@ export function mountDiceDualRoutes(app) {
       /* ignore */
     }
 
-    let balance;
-    try {
-      balance = await balanceFromWallet(ctx);
-    } catch {
-      balance = null;
-    }
-
     res.json(
       ok({
         ...engine.getPublicState(),
-        balance,
         myBet: engine.serializePlayer(ctx.sessionKey),
       }),
     );
@@ -159,8 +151,9 @@ export function mountDiceDualRoutes(app) {
     if (!['red', 'blue', 'draw'].includes(prediction)) {
       return res.json(fail('Pick red, blue, or draw'));
     }
-    if (engine.serializePlayer(ctx.sessionKey)) {
-      return res.json(fail('Already bet this round'));
+    const existingBet = engine.serializePlayer(ctx.sessionKey);
+    if (existingBet && existingBet.prediction !== prediction) {
+      return res.json(fail('You can only bet on one side per round'));
     }
 
     const txId = `dice-dual-${ctx.sessionKey}-${Date.now()}`;

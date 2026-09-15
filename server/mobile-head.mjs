@@ -3,6 +3,7 @@
  */
 
 export const MOBILE_SHELL_LINK = '<link rel="stylesheet" href="/shared/mobile-shell.css" />';
+export const BALANCE_HUD_SCRIPT = '<script src="/shared/balance-hud.js"></script>';
 export const HOST_BRIDGE_SCRIPT = '<script src="/shared/host-bridge.js"></script>';
 export const REALTIME_SCRIPT = '<script src="/shared/realtime-client.js"></script>';
 export const STANDALONE_SCRIPT = '<script src="/shared/standalone-mode.js"></script>';
@@ -33,6 +34,7 @@ export function injectMobilePlayHead(html, platformScript = '') {
   if (!out.includes('name="viewport"')) parts.push(MOBILE_META);
   parts.push(STANDALONE_BOOT);
   if (!out.includes('standalone-mode.js')) parts.push(STANDALONE_SCRIPT);
+  if (!out.includes('balance-hud.js')) parts.push(BALANCE_HUD_SCRIPT);
   if (!out.includes('host-bridge.js')) parts.push(HOST_BRIDGE_SCRIPT);
   if (!out.includes('realtime-client.js')) parts.push(REALTIME_SCRIPT);
   if (platformScript) parts.push(platformScript);

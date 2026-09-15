@@ -78,6 +78,11 @@ function chipStyleClass(v) {
 
 function fmtNum(n) { return Number(n || 0).toLocaleString(); }
 
+function playableBalance() {
+  if (state?.balance != null) return Number(state.balance);
+  return window.gmGetBalance?.() ?? 0;
+}
+
 function applyBettingConfig(betting) {
   if (!betting?.chipUnits?.length) return;
   chips = betting.chipUnits.map((v) => Math.floor(Number(v))).filter((v) => v > 0);
@@ -521,29 +526,32 @@ function flyChipToTeam(pred, amount) {
 }
 
 function updatePickButtons() {
-  const betting = state?.phase === 'betting' && !state?.myBet;
+  const betting = state?.phase === 'betting';
+  const myBet = state?.myBet;
   document.querySelectorAll('.dd-pick__btn').forEach((btn) => {
-    btn.disabled = !betting;
     const pred = btn.dataset.pred;
-    const myBet = state?.myBet;
-    const amt = myBet?.prediction === pred ? myBet.amount : 0;
+    const isMyPick = myBet?.prediction === pred;
+    btn.disabled = Boolean(betting && myBet && !isMyPick);
+    const amt = isMyPick ? myBet.amount : 0;
     btn.querySelector('[data-amt]').textContent = amt > 0 ? fmtNum(amt) : '0';
     btn.classList.toggle('has-bet', amt > 0);
+    btn.classList.toggle('is-pick', betting && isMyPick);
   });
 }
 
 async function doBet(pred) {
   if (betLock) return;
-  if (state?.myBet) {
-    toast('Already bet this round');
-    return;
-  }
   if (state?.phase !== 'betting') {
     toast('Betting closed — wait for next round');
     return;
   }
+  const myBet = state?.myBet;
+  if (myBet && myBet.prediction !== pred) {
+    toast('You can only bet on one side per round');
+    return;
+  }
   const amount = selectedChip;
-  if ((state?.balance ?? 0) < amount) {
+  if (playableBalance() < amount) {
     toast('Insufficient balance');
     return;
   }
@@ -551,9 +559,13 @@ async function doBet(pred) {
   betLock = true;
   flyChipToTeam(pred, amount);
   try {
+    const prevAmt = myBet?.prediction === pred ? myBet.amount : 0;
     const data = await diceDualBet(pred, amount);
     lastBet = { pred, amount };
     applyState({ ...data.state, balance: data.balance, myBet: data.myBet });
+    if (data.myBet?.amount > prevAmt) {
+      toast(`Bet ${fmtNum(data.myBet.amount)} (+${fmtNum(amount)})`);
+    }
   } catch (err) {
     toast(err.message || 'Bet failed');
   } finally {
@@ -656,9 +668,22 @@ function syncVis(next) {
 
 function applyState(next) {
   prevPhase = state?.phase ?? null;
-  state = next;
+  const prevBalance = state?.balance;
+  const prevMyBet = state?.myBet;
+  const prevRoundId = state?.roundId;
+  const sameRound = prevMyBet && next.roundId === prevRoundId;
+  state = {
+    ...next,
+    balance: next.balance != null ? next.balance : prevBalance,
+    myBet: Object.prototype.hasOwnProperty.call(next, 'myBet')
+      ? next.myBet
+      : (sameRound ? prevMyBet : null),
+  };
 
-  $('balance').textContent = fmtNum(next.balance ?? 0);
+  if (next.balance != null) {
+    if (window.gmSetBalance) window.gmSetBalance(next.balance, fmtNum);
+    else $('balance').textContent = fmtNum(next.balance);
+  }
   $('round-id').textContent = String(next.roundId ?? '—');
   $('countdown').textContent = String(next.countdown ?? 0);
   setTimerRing(next.countdown ?? 0, next.phase);
@@ -684,6 +709,7 @@ async function poll() {
 }
 
 async function init() {
+  const sessionPromise = diceDualInit();
   loadAssets();
   resize();
   window.addEventListener('resize', resize);
@@ -708,8 +734,8 @@ async function init() {
       toast('No previous bet');
       return;
     }
-    if (state?.myBet) {
-      toast('Already bet this round');
+    if (state?.myBet && state.myBet.prediction !== lastBet.pred) {
+      toast('You can only bet on one side per round');
       return;
     }
     if (state?.phase !== 'betting') {
@@ -726,7 +752,7 @@ async function init() {
   });
 
   try {
-    const data = await diceDualInit();
+    const data = await sessionPromise;
     applyBettingConfig(data.betting);
     buildChips();
     applyState({ ...data.state, balance: data.balance, myBet: data.state.myBet });

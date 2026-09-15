@@ -282,15 +282,25 @@ async function betGroup(group) {
 }
 
 async function doBet(playCode) {
-  const state = await betState(config, sessionId);
-  if (state.Stage !== 1) {
+  const state = currentState;
+  if (!state || state.Stage !== 1) {
     toast('Betting closed — wait for next round');
     throw new Error('closed');
+  }
+  const playable = window.gmGetBalance?.() ?? state.Balance;
+  if (playable != null && playable < selectedChip) {
+    toast('Insufficient balance');
+    throw new Error('balance');
   }
   const data = await placeBet(config, sessionId, playCode, selectedChip, GAME_ID);
   if (data.SessionId) {
     sessionId = data.SessionId;
     localStorage.setItem(`lottery-session-${GAME_ID}`, sessionId);
+  }
+  if (data.Balance != null) {
+    if (window.gmSetBalance) window.gmSetBalance(data.Balance, (n) => Number(n).toLocaleString());
+    else if ($('balance')) $('balance').textContent = Number(data.Balance).toLocaleString();
+    syncGreedyBalanceDisplay();
   }
 }
 
@@ -410,6 +420,8 @@ function updateOdds() {
 let pollOffline = false;
 /** @type {Promise<void> | null} */
 let pollInFlight = null;
+/** Latest poll snapshot — avoids an extra bet_state round-trip before each bet. */
+let currentState = null;
 
 async function pollOnce() {
   if (pollInFlight) return pollInFlight;
@@ -442,7 +454,8 @@ async function tick() {
     const cd = Math.max(0, Number(state.CountDown || 0));
 
     if (state.Balance != null) {
-      $('balance').textContent = Number(state.Balance).toLocaleString();
+      if (window.gmSetBalance) window.gmSetBalance(state.Balance, (n) => Number(n).toLocaleString());
+      else $('balance').textContent = Number(state.Balance).toLocaleString();
       syncGreedyBalanceDisplay();
     }
 
@@ -488,6 +501,7 @@ async function tick() {
     }
 
     prevStage = state.Stage;
+    currentState = state;
   } catch (err) {
     if (err instanceof LotteryApiError && err.offline) {
       if (!pollOffline) {
@@ -540,9 +554,10 @@ async function loadRankings() {
 }
 
 async function init() {
+  const initPromise = lotteryInit(GAME_ID);
   let res;
   try {
-    res = await lotteryInit(GAME_ID);
+    res = await initPromise;
   } catch (err) {
     toast(err instanceof LotteryApiError ? err.message : 'Cannot reach server');
     return;
@@ -557,7 +572,9 @@ async function init() {
     localStorage.setItem(`lottery-session-${GAME_ID}`, sessionId);
   }
   if (res.data.balance != null) {
-    $('balance').textContent = Number(res.data.balance).toLocaleString();
+    const fmt = (n) => Number(n).toLocaleString();
+    if (window.gmSetBalance) window.gmSetBalance(res.data.balance, fmt);
+    else $('balance').textContent = fmt(res.data.balance);
     syncGreedyBalanceDisplay();
   }
 

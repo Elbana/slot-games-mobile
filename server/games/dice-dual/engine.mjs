@@ -187,7 +187,8 @@ export function createDiceDualEngine(config = DICE_DUAL_GAME) {
     else if (phase === 'results' && now >= phaseEndsMs) startBettingRound(now);
   }
 
-  setInterval(tick, 50);
+  const timer = setInterval(tick, 50);
+  if (typeof timer.unref === 'function') timer.unref();
 
   function getPublicState() {
     tick();
@@ -228,14 +229,21 @@ export function createDiceDualEngine(config = DICE_DUAL_GAME) {
     if (!['red', 'blue', 'draw'].includes(prediction)) {
       return { ok: false, message: 'Pick red, blue, or draw' };
     }
-    const existing = bets.get(platformKey);
-    if (existing && existing.roundId === roundSeq) {
-      return { ok: false, message: 'Already bet this round' };
-    }
     const amt = Math.floor(Number(amount));
     if (!Number.isFinite(amt) || amt <= 0) {
       return { ok: false, message: 'Invalid bet amount' };
     }
+
+    const existing = bets.get(platformKey);
+    if (existing && existing.roundId === roundSeq) {
+      if (existing.prediction !== prediction) {
+        return { ok: false, message: 'You can only bet on one side per round' };
+      }
+      existing.amount += amt;
+      if (meta.operator && !existing.operator) existing.operator = meta.operator;
+      return { ok: true, data: { prediction, amount: existing.amount, added: amt, roundId: roundSeq } };
+    }
+
     bets.set(platformKey, {
       roundId: roundSeq,
       prediction,
@@ -243,7 +251,7 @@ export function createDiceDualEngine(config = DICE_DUAL_GAME) {
       status: 'pending',
       operator: meta.operator ?? null,
     });
-    return { ok: true, data: { prediction, amount: amt, roundId: roundSeq } };
+    return { ok: true, data: { prediction, amount: amt, added: amt, roundId: roundSeq } };
   }
 
   function serializePlayer(platformKey) {

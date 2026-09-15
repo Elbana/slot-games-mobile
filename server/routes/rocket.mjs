@@ -123,20 +123,12 @@ export function mountRocketRoutes(app) {
       /* ignore settle errors during poll */
     }
 
-    let balance;
-    try {
-      balance = await balanceFromWallet(ctx);
-    } catch {
-      balance = null;
-    }
-
     const pub = engine.getPublicState();
     const myBet = engine.serializePlayer(ctx.sessionKey);
 
     res.json(
       ok({
         ...pub,
-        balance,
         myBet,
       }),
     );

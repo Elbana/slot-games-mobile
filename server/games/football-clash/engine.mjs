@@ -244,7 +244,8 @@ export function createFootballClashEngine(config = FOOTBALL_CLASH_GAME) {
     else if (phase === 'results' && now >= phaseEndsMs) startBettingRound(now);
   }
 
-  setInterval(tick, 50);
+  const timer = setInterval(tick, 50);
+  if (typeof timer.unref === 'function') timer.unref();
 
   function liveScore(now) {
     if (!match || phase === 'betting') return { home: 0, away: 0 };

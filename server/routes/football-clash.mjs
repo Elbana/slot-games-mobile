@@ -120,17 +120,9 @@ export function mountFootballClashRoutes(app) {
       /* ignore */
     }
 
-    let balance;
-    try {
-      balance = await balanceFromWallet(ctx);
-    } catch {
-      balance = null;
-    }
-
     res.json(
       ok({
         ...engine.getPublicState(),
-        balance,
         myBet: engine.serializePlayer(ctx.sessionKey),
       }),
     );
@@ -159,8 +151,9 @@ export function mountFootballClashRoutes(app) {
     if (!['home', 'away', 'draw'].includes(prediction)) {
       return res.json(fail('Pick home, away, or draw'));
     }
-    if (engine.serializePlayer(ctx.sessionKey)) {
-      return res.json(fail('Already bet this round'));
+    const existingBet = engine.serializePlayer(ctx.sessionKey);
+    if (existingBet && existingBet.prediction !== prediction) {
+      return res.json(fail('You can only bet on one team per match'));
     }
 
     const txId = `football-clash-${ctx.sessionKey}-${Date.now()}`;

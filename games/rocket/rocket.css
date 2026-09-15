@@ -213,16 +213,15 @@
   position: relative;
   z-index: 10;
   flex-shrink: 0;
-  margin: 0 12px calc(6px + env(safe-area-inset-bottom));
+  margin: 0 8px calc(6px + env(safe-area-inset-bottom, 0px));
   padding: 8px 10px 10px;
   background: rgba(18, 18, 22, 0.92);
   border-radius: 16px 16px 14px 14px;
   border: 1px solid rgba(255, 255, 255, 0.06);
-  width: calc(100% - 24px);
-  max-width: calc(100% - 24px);
+  width: auto;
+  max-width: none;
   min-width: 0;
   box-sizing: border-box;
-  overflow: hidden;
 }
 
 .rk-auto {
@@ -445,13 +444,33 @@
   transform: translateX(-50%) translateY(0);
 }
 
-/* Half-screen embed — slightly taller sheet for canvas + bet panel */
+/* Half-screen embed — keep bet panel pinned below the canvas */
 .gm-shell--rocket.gm-shell--embed {
   --gm-sheet-h: min(68dvh, 580px);
 }
 
+html[data-gm-host-embed='1'] .gm-shell--rocket .rk,
+.gm-shell--rocket.gm-shell--embed .rk {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+html[data-gm-host-embed='1'] .gm-shell--rocket .rk-stage,
+.gm-shell--rocket.gm-shell--embed .rk-stage {
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+html[data-gm-host-embed='1'] .gm-shell--rocket .rk-panel,
+.gm-shell--rocket.gm-shell--embed .rk-panel {
+  grid-row: 4;
+  margin: 0 6px calc(4px + env(safe-area-inset-bottom, 0px));
+}
+
 .gm-shell--rocket.gm-shell--embed .gm-sheet {
-  container-type: size;
+  container-type: inline-size;
   container-name: rocket-sheet;
 }
 

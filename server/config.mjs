@@ -24,7 +24,7 @@ export const DEFAULT_CHIP = 200;
 export const MIN_BALANCE_TO_PLAY = 200;
 /** @deprecated Use CHIP_UNITS — kept for backward-compatible imports */
 export const BET_LEVELS = CHIP_UNITS;
-export const RATE_LIMIT_SPIN_MS = parseInt(process.env.RATE_LIMIT_SPIN_MS || '400', 10);
+export const RATE_LIMIT_SPIN_MS = parseInt(process.env.RATE_LIMIT_SPIN_MS || '900', 10);
 export const RATE_LIMIT_LOTTERY_MS = parseInt(process.env.RATE_LIMIT_LOTTERY_MS || '200', 10);
 export const REQUIRE_AUTH = process.env.REQUIRE_AUTH === '1';
 export const WALLET_MOCK = process.env.WALLET_MOCK === '1' || !IS_PRODUCTION;

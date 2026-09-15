@@ -130,6 +130,11 @@ function playChipSound() {
 
 function fmtNum(n) { return Number(n || 0).toLocaleString(); }
 
+function playableBalance() {
+  if (state?.balance != null) return Number(state.balance);
+  return window.gmGetBalance?.() ?? 0;
+}
+
 function applyBettingConfig(betting) {
   if (!betting?.chipUnits?.length) return;
   chips = betting.chipUnits.map((v) => Math.floor(Number(v))).filter((v) => v > 0);
@@ -797,12 +802,16 @@ function updatePickButtons() {
   const betting = state?.phase === 'betting';
   const myBet = state?.myBet;
   document.querySelectorAll('.fc-pick__btn').forEach((btn) => {
-    btn.disabled = false;
     const pred = btn.dataset.pred;
-    const amt = myBet?.prediction === pred ? myBet.amount : 0;
+    const isMyPick = myBet?.prediction === pred;
+    btn.disabled = Boolean(betting && myBet && !isMyPick);
+    const amt = isMyPick ? myBet.amount : 0;
     btn.querySelector('[data-amt]').textContent = amt > 0 ? fmtNum(amt) : '0';
     btn.classList.toggle('has-bet', amt > 0);
-    btn.classList.toggle('is-pick', betting && myBet?.prediction === pred);
+    btn.classList.toggle('is-pick', betting && isMyPick);
+    btn.setAttribute('aria-label', isMyPick && betting
+      ? `Add ${chipLabel(selectedChip)} to ${pred} bet`
+      : `${pred} pick`);
   });
 }
 
@@ -824,7 +833,7 @@ async function doBet(pred) {
     return;
   }
   const amount = selectedChip;
-  if ((state?.balance ?? 0) < amount) {
+  if (playableBalance() < amount) {
     toast('Insufficient balance');
     return;
   }
@@ -832,9 +841,13 @@ async function doBet(pred) {
   betLock = true;
   flyChipToPick(pred, amount);
   try {
+    const prevAmt = state?.myBet?.prediction === pred ? state.myBet.amount : 0;
     const data = await footballClashBet(pred, amount);
     lastBet = { pred, amount };
     applyState({ ...data.state, balance: data.balance, myBet: data.myBet });
+    if (data.myBet?.amount > prevAmt) {
+      toast(`Bet ${fmtNum(data.myBet.amount)} (+${fmtNum(amount)})`);
+    }
   } catch (err) {
     toast(err.message || 'Bet failed');
   } finally {
@@ -962,9 +975,22 @@ function applyState(next) {
     scheduleKickSounds();
   }
   prevPhase = next.phase;
-  state = next;
+  const prevBalance = state?.balance;
+  const prevMyBet = state?.myBet;
+  const prevRoundId = state?.roundId;
+  const sameRound = prevMyBet && next.roundId === prevRoundId;
+  state = {
+    ...next,
+    balance: next.balance != null ? next.balance : prevBalance,
+    myBet: Object.prototype.hasOwnProperty.call(next, 'myBet')
+      ? next.myBet
+      : (sameRound ? prevMyBet : null),
+  };
 
-  $('balance').textContent = fmtNum(next.balance ?? 0);
+  if (next.balance != null) {
+    if (window.gmSetBalance) window.gmSetBalance(next.balance, fmtNum);
+    else $('balance').textContent = fmtNum(next.balance);
+  }
   $('countdown').textContent = String(next.countdown ?? 0);
   setTimerRing(next.countdown ?? 0, next.phase);
 
@@ -1016,6 +1042,7 @@ async function poll() {
 }
 
 async function init() {
+  const sessionPromise = footballClashInit();
   initAudio();
   const unlockOnce = () => {
     unlockAudio();
@@ -1079,7 +1106,7 @@ async function init() {
   });
 
   try {
-    const data = await footballClashInit();
+    const data = await sessionPromise;
     buildTeamLogoMap(data.game?.teams);
     applyBettingConfig(data.betting);
     buildChips();
