@@ -9,6 +9,8 @@ import { extractPlayerId, sessionKey } from '../auth/player-context.mjs';
 import { createWalletForOperator } from '../wallet/wallet-adapter.mjs';
 import { auditWallet } from '../audit.mjs';
 import { bettingPayload, getBetConfig, validateBetAmount } from '../betting/bet-config.mjs';
+import { recordRound } from '../economy/prize-pool.mjs';
+import { touchActiveOperator } from '../economy/pool-guard.mjs';
 
 const SLUG = ROCKET_GAME.id;
 const API = `/api/${SLUG}`;
@@ -42,21 +44,34 @@ async function balanceFromWallet(ctx) {
 async function settlePlayer(engine, ctx) {
   const pending = engine.pullSettlement(ctx.sessionKey);
   if (!pending) return;
-  const txId = `rocket-win-${ctx.sessionKey}-${Date.now()}`;
-  await ctx.wallet.credit(ctx, {
-    amount: pending.winAmount,
+
+  touchActiveOperator(SLUG, ctx.operator);
+
+  if (pending.winAmount > 0) {
+    const txId = `rocket-win-${ctx.sessionKey}-${Date.now()}`;
+    await ctx.wallet.credit(ctx, {
+      amount: pending.winAmount,
+      game: SLUG,
+      roundId: String(engine.getPublicState().roundId),
+      transactionId: txId,
+      reason: 'rocket_cashout',
+    });
+    auditWallet({
+      operatorId: ctx.operator.id,
+      playerId: ctx.playerId,
+      type: 'credit',
+      amount: pending.winAmount,
+      txId,
+      game: SLUG,
+    });
+  }
+
+  recordRound({
+    operator: ctx.operator,
     game: SLUG,
-    roundId: String(engine.getPublicState().roundId),
-    transactionId: txId,
-    reason: 'rocket_cashout',
-  });
-  auditWallet({
-    operatorId: ctx.operator.id,
+    bet: pending.betAmount,
+    baseWin: pending.winAmount,
     playerId: ctx.playerId,
-    type: 'credit',
-    amount: pending.winAmount,
-    txId,
-    game: SLUG,
   });
 }
 
@@ -149,7 +164,8 @@ export function mountRocketRoutes(app) {
     }
     if (balance < betCheck.amount) return res.json(fail('Insufficient balance'));
 
-    const result = engine.placeBet(ctx.sessionKey, betCheck.amount, autoCashout);
+    touchActiveOperator(SLUG, ctx.operator);
+    const result = engine.placeBet(ctx.sessionKey, betCheck.amount, autoCashout, { operator: ctx.operator });
     if (!result.ok) return res.json(fail(result.message));
 
     const txId = `rocket-${ctx.sessionKey}-${Date.now()}`;
@@ -198,6 +214,7 @@ export function mountRocketRoutes(app) {
     if (!result.ok) return res.json(fail(result.message));
 
     const winAmount = result.data.winAmount;
+    const bet = engine.serializePlayer(ctx.sessionKey);
     const txId = `rocket-win-${ctx.sessionKey}-${Date.now()}`;
     try {
       await ctx.wallet.credit(ctx, {
@@ -214,6 +231,13 @@ export function mountRocketRoutes(app) {
         amount: winAmount,
         txId,
         game: SLUG,
+      });
+      recordRound({
+        operator: ctx.operator,
+        game: SLUG,
+        bet: bet?.amount ?? winAmount,
+        baseWin: winAmount,
+        playerId: ctx.playerId,
       });
     } catch (err) {
       return res.json(fail(err.message || 'Credit failed'));

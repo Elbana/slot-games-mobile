@@ -28,6 +28,7 @@ import {
 import { resolveEngineFromBody, resolveEngineForGameId } from '../games/lottery/routes.mjs';
 import { getOperatorEconomy } from '../economy/operator-economy.mjs';
 import { recordRound, tryPoolWin } from '../economy/prize-pool.mjs';
+import { touchActiveOperator } from '../economy/pool-guard.mjs';
 import { bettingPayload, getBetConfig, validateBetAmount } from '../betting/bet-config.mjs';
 
 const GAME_DEFS = [GREEDY_GAME, LUCK77_GAME];
@@ -89,6 +90,8 @@ export function mountLotteryRoutes(app) {
     } catch (err) {
       return res.status(502).json(fail(err.message || 'Wallet unavailable', 502));
     }
+
+    touchActiveOperator(slug, ctx.operator);
 
     const def = GAME_DEFS.find((g) => g.id === slug);
     res.json(
@@ -186,6 +189,7 @@ export function mountLotteryRoutes(app) {
 }
 
 async function placeBetWithWallet(engine, lotterySession, ctx, playCode, amount) {
+  touchActiveOperator(ctx.slug, ctx.operator);
   const phase = engine.getBetState();
   if (phase.Stage !== 1) return { ok: false, code: 400, message: 'Betting closed' };
 

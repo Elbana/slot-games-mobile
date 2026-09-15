@@ -4,6 +4,13 @@
  */
 
 import { PAYOUT_LIMITS, capWinByBet } from '../../economy/payout-limits.mjs';
+import { secureRandom, secureRandomInt } from '../../economy/secure-rng.mjs';
+import {
+  getActiveOperator,
+  poolAllowsJackpot,
+  filterSymbolsByPool,
+} from '../../economy/pool-guard.mjs';
+import { getGameEconomy } from '../../economy/game-economy.mjs';
 
 /** @typedef {{ playCode: string, label: string, emoji: string, odd: number, group?: string[] }} LotterySymbol */
 
@@ -101,13 +108,27 @@ export function createLotteryEngine(config) {
   }
 
   function drawResult(periodNo) {
+    const gameSlug = config.id ?? '';
+    const operator = getActiveOperator(gameSlug);
     const stops = config.wheelStops;
     if (Array.isArray(stops) && stops.length > 0) {
-      lastWheelIndex = Math.floor(Math.random() * stops.length);
+      const econ = getGameEconomy(gameSlug);
+      const highCode = config.symbols.find((s) => s.odd >= (econ.highOutcomeOdd ?? 8))?.playCode;
+      let eligible = stops.map((_, i) => i);
+      if (operator && highCode && !poolAllowsJackpot(operator, gameSlug, econ.highOutcomeMinPool)) {
+        eligible = eligible.filter((i) => stops[i] !== highCode);
+      }
+      if (!eligible.length) eligible = stops.map((_, i) => i);
+      lastWheelIndex = eligible[secureRandomInt(0, eligible.length - 1)];
       lastNum = [stops[lastWheelIndex]];
     } else {
       lastWheelIndex = -1;
-      const code = weightedPick(weights);
+      let drawWeights = weights;
+      if (operator) {
+        const allowed = filterSymbolsByPool(config.symbols, operator, gameSlug);
+        drawWeights = buildWeights(allowed);
+      }
+      const code = weightedPick(drawWeights);
       lastNum = [code];
     }
     history.unshift({
@@ -305,7 +326,7 @@ function buildWeights(symbols) {
 
 /** @param {{ playCode: string, weight: number }[]} weights */
 function weightedPick(weights) {
-  let r = Math.random();
+  let r = secureRandom();
   for (const w of weights) {
     r -= w.weight;
     if (r <= 0) return w.playCode;

@@ -5,6 +5,8 @@
 import { ROCKET_GAME } from './config.mjs';
 import { capMultiplier, capWinByBet } from '../../economy/payout-limits.mjs';
 import { withRealtimeSync } from '../../realtime/sync.mjs';
+import { secureRandom } from '../../economy/secure-rng.mjs';
+import { capRocketCrash } from '../../economy/pool-guard.mjs';
 
 /** @typedef {'betting' | 'flying' | 'ended'} RocketPhase */
 
@@ -17,10 +19,42 @@ export function generateCrashPoint(
   houseEdge = ROCKET_GAME.houseEdge,
   maxMultiplier = ROCKET_GAME.maxMultiplier,
 ) {
-  const r = Math.random();
-  if (r < houseEdge) return 1 + Math.random() * 0.35;
+  const r = secureRandom();
+  if (r < houseEdge) return 1 + secureRandom() * 0.35;
   const raw = (1 - houseEdge) / (1 - r);
   return capMultiplier(raw, maxMultiplier);
+}
+
+/**
+ * Raw crash point before pool cap (secure RNG).
+ * @param {number} houseEdge
+ * @param {number} maxMultiplier
+ */
+export function generateRawCrashPoint(
+  houseEdge = ROCKET_GAME.houseEdge,
+  maxMultiplier = ROCKET_GAME.maxMultiplier,
+) {
+  return generateCrashPoint(houseEdge, maxMultiplier);
+}
+
+/** @param {object[]} roundBets bets with `.operator` and `.amount` */
+function poolCapCrashForRound(roundBets, rawCrash) {
+  const operators = [...new Map(
+    roundBets.filter((b) => b.operator?.id).map((b) => [b.operator.id, b.operator]),
+  ).values()];
+  if (!operators.length) return rawCrash;
+
+  let crash = rawCrash;
+  for (const operator of operators) {
+    const opTotal = roundBets
+      .filter((b) => b.operator?.id === operator.id)
+      .reduce((s, b) => s + b.amount, 0);
+    crash = Math.min(
+      crash,
+      capRocketCrash({ operator, totalRoundBets: opTotal, rawCrash: crash }),
+    );
+  }
+  return crash;
 }
 
 function rocketWinAmount(betAmount, multiplier, config = ROCKET_GAME) {
@@ -50,7 +84,7 @@ export function createRocketEngine(config = ROCKET_GAME) {
   /** @type {number[]} */
   let history = [2.55, 7.75, 1.83, 3.6, 1.1, 4.2];
 
-  /** @type {Map<string, { roundId: number, amount: number, status: string, cashoutMult?: number, autoCashout?: number, settled?: boolean }>} */
+  /** @type {Map<string, { roundId: number, amount: number, status: string, cashoutMult?: number, autoCashout?: number, settled?: boolean, operator?: object }>} */
   const bets = new Map();
 
   function tick() {
@@ -87,9 +121,11 @@ export function createRocketEngine(config = ROCKET_GAME) {
   function startFlight(now) {
     phase = 'flying';
     flyStartMs = now;
-    crashAt = generateCrashPoint(config.houseEdge, config.maxMultiplier);
-    for (const bet of bets.values()) {
-      if (bet.roundId === roundSeq && bet.status === 'pending') bet.status = 'active';
+    const roundBets = [...bets.values()].filter((b) => b.roundId === roundSeq);
+    const rawCrash = generateRawCrashPoint(config.houseEdge, config.maxMultiplier);
+    crashAt = poolCapCrashForRound(roundBets, rawCrash);
+    for (const bet of roundBets) {
+      if (bet.status === 'pending') bet.status = 'active';
     }
   }
 
@@ -135,14 +171,18 @@ export function createRocketEngine(config = ROCKET_GAME) {
     const playerCount = activeBets.length;
     const maxPlayers = 999;
     const phaseEndsAt =
-      phase === 'betting' ? bettingEndsMs : phase === 'flying' ? flyStartMs + flightDurationSec(crashAt) * 1000 : endedAtMs + config.resultSeconds * 1000;
+      phase === 'betting'
+        ? bettingEndsMs
+        : phase === 'ended'
+          ? endedAtMs + config.resultSeconds * 1000
+          : undefined;
 
     return withRealtimeSync({
       roundId: roundSeq,
       phase,
       countdown,
       multiplier,
-      crashAt: phase === 'ended' ? crashAt : phase === 'flying' ? crashAt : undefined,
+      crashAt: phase === 'ended' ? crashAt : undefined,
       history: [...history],
       playerCount,
       maxPlayers,
@@ -161,7 +201,7 @@ export function createRocketEngine(config = ROCKET_GAME) {
     return bets.get(playerBetKey(platformKey)) ?? null;
   }
 
-  function placeBet(platformKey, amount, autoCashout = 0) {
+  function placeBet(platformKey, amount, autoCashout = 0, meta = {}) {
     tick();
     if (phase !== 'betting') {
       return { ok: false, message: 'Betting closed — wait for next round' };
@@ -183,6 +223,7 @@ export function createRocketEngine(config = ROCKET_GAME) {
       amount: amt,
       status: 'pending',
       autoCashout: autoTarget,
+      operator: meta.operator ?? null,
     });
     return { ok: true, data: { amount: amt, roundId: roundSeq } };
   }
@@ -224,11 +265,13 @@ export function createRocketEngine(config = ROCKET_GAME) {
       bet.settled = true;
       return {
         winAmount: rocketWinAmount(bet.amount, bet.cashoutMult, config),
+        betAmount: bet.amount,
         multiplier: capMultiplier(bet.cashoutMult, config.maxMultiplier),
       };
     }
     if (bet.status === 'lost' && phase === 'ended') {
       bet.settled = true;
+      return { winAmount: 0, betAmount: bet.amount, lost: true };
     }
     return null;
   }
