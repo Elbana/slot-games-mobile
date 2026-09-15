@@ -263,6 +263,8 @@ async function settleWithWallet(engine, lotterySession, ctx) {
     }
   );
 
+  const totalStaked = settlement.totalStaked ?? 0;
+
   if (settlement.winAmount > 0) {
     recordRound({
       operator: ctx.operator,
@@ -271,17 +273,19 @@ async function settleWithWallet(engine, lotterySession, ctx) {
       baseWin: settlement.winAmount,
       playerId: ctx.playerId,
     });
+  }
 
-    const { poolWin } = tryPoolWin({
-      operator: ctx.operator,
-      game: ctx.slug,
-      bet: settlement.winAmount,
-      baseWin: settlement.winAmount,
-      playerId: ctx.playerId,
-    });
+  const { poolWin } = tryPoolWin({
+    operator: ctx.operator,
+    game: ctx.slug,
+    bet: totalStaked,
+    baseWin: settlement.winAmount,
+    playerId: ctx.playerId,
+  });
 
-    const totalWin = settlement.winAmount + poolWin;
+  const totalWin = settlement.winAmount + poolWin;
 
+  if (totalWin > 0) {
     const txId = `lottery-win-${lotterySession.id}-${Date.now()}`;
     try {
       await lotteryCredit(ctx, {

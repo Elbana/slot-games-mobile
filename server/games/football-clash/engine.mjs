@@ -2,10 +2,11 @@
  * Shared-room Football Clash engine.
  */
 
-import crypto from 'crypto';
 import { FOOTBALL_CLASH_GAME, FOOTBALL_TEAMS } from './config.mjs';
 import { PAYOUT_LIMITS, capWinByBet } from '../../economy/payout-limits.mjs';
 import { withRealtimeSync } from '../../realtime/sync.mjs';
+import { secureRandom } from '../../economy/secure-rng.mjs';
+import { gateJackpotOutcomes, pickPoolAwareOutcome } from '../../economy/pool-guard.mjs';
 
 /** @typedef {'betting' | 'playing' | 'results'} FootballPhase */
 /** @typedef {'home' | 'away' | 'draw'} FootballPrediction */
@@ -14,18 +15,13 @@ import { withRealtimeSync } from '../../realtime/sync.mjs';
 const FIRST_NAMES = ['David', 'Mohamed', 'Kevin', 'Cristiano', 'Lionel', 'Erling', 'Kylian', 'Harry', 'Bruno'];
 const LAST_NAMES = ['Silva', 'Salah', 'De Bruyne', 'Ronaldo', 'Messi', 'Haaland', 'Mbappé', 'Kane', 'Fernandes'];
 
-function secureRandom() {
-  const buffer = crypto.randomBytes(4);
-  return buffer.readUInt32BE(0) / 0xffffffff;
-}
-
 function pickTeams() {
   const shuffled = [...FOOTBALL_TEAMS].sort(() => secureRandom() - 0.5);
   return { homeTeam: shuffled[0], awayTeam: shuffled[1] };
 }
 
-/** @param {{ rating: number }} home @param {{ rating: number }} away */
-function determineOutcome(home, away, config) {
+/** @param {{ rating: number }} home @param {{ rating: number }} away @param {object[]} roundBets @param {object} config */
+function determineOutcome(home, away, roundBets, config) {
   const adjustment = (home.rating - away.rating) * 0.005;
   let homeWinProb = config.homeWinProbability + adjustment;
   let awayWinProb = config.awayWinProbability - adjustment;
@@ -33,10 +29,33 @@ function determineOutcome(home, away, config) {
   const total = homeWinProb + awayWinProb + drawProb;
   homeWinProb /= total;
   awayWinProb /= total;
-  const rand = secureRandom();
-  if (rand < homeWinProb) return 'homeWin';
-  if (rand < homeWinProb + awayWinProb) return 'awayWin';
-  return 'draw';
+  const drawWeight = drawProb / total;
+
+  const gameSlug = config.id ?? 'goal-clash';
+  let candidates = [
+    { key: 'homeWin', weight: homeWinProb, highPayout: false },
+    { key: 'awayWin', weight: awayWinProb, highPayout: false },
+    { key: 'draw', weight: drawWeight, highPayout: true },
+  ];
+  candidates = gateJackpotOutcomes(candidates, roundBets, gameSlug);
+
+  return /** @type {FootballOutcome} */ (pickPoolAwareOutcome({
+    candidates,
+    roundBets,
+    gameSlug,
+    calcPayout: (outcomeKey, bets) => {
+      let sum = 0;
+      for (const bet of bets) {
+        sum += calculateWinnings(
+          bet.prediction,
+          /** @type {FootballOutcome} */ (outcomeKey),
+          bet.amount,
+          config,
+        ).winAmount;
+      }
+      return sum;
+    },
+  }));
 }
 
 /** @param {FootballOutcome} outcome */
@@ -146,7 +165,8 @@ export function createFootballClashEngine(config = FOOTBALL_CLASH_GAME) {
   function finalizeMatch() {
     const homeTeam = match.homeTeam;
     const awayTeam = match.awayTeam;
-    const outcome = determineOutcome(homeTeam, awayTeam, config);
+    const roundBets = [...bets.values()].filter((b) => b.roundId === roundSeq);
+    const outcome = determineOutcome(homeTeam, awayTeam, roundBets, config);
     const { homeScore, awayScore } = generateScore(outcome);
     const events = buildMatchEvents(outcome, homeScore, awayScore, config.matchSeconds * 1000);
     match.homeScore = homeScore;
@@ -160,7 +180,8 @@ export function createFootballClashEngine(config = FOOTBALL_CLASH_GAME) {
 
   function prepareMatch() {
     const { homeTeam, awayTeam } = pickTeams();
-    const outcome = determineOutcome(homeTeam, awayTeam, config);
+    const roundBets = [...bets.values()].filter((b) => b.roundId === roundSeq);
+    const outcome = determineOutcome(homeTeam, awayTeam, roundBets, config);
     const { homeScore, awayScore } = generateScore(outcome);
     const events = buildMatchEvents(outcome, homeScore, awayScore, config.matchSeconds * 1000);
     match = {
@@ -279,7 +300,7 @@ export function createFootballClashEngine(config = FOOTBALL_CLASH_GAME) {
     });
   }
 
-  function placeBet(platformKey, prediction, amount) {
+  function placeBet(platformKey, prediction, amount, meta = {}) {
     tick();
     if (phase !== 'betting') return { ok: false, message: 'Betting closed — wait for next match' };
     if (!['home', 'away', 'draw'].includes(prediction)) {
@@ -294,10 +315,17 @@ export function createFootballClashEngine(config = FOOTBALL_CLASH_GAME) {
         return { ok: false, message: 'You can only bet on one team per match' };
       }
       existing.amount += amt;
+      if (meta.operator && !existing.operator) existing.operator = meta.operator;
       return { ok: true, data: { prediction, amount: existing.amount, added: amt, roundId: roundSeq } };
     }
 
-    bets.set(platformKey, { roundId: roundSeq, prediction, amount: amt, status: 'pending' });
+    bets.set(platformKey, {
+      roundId: roundSeq,
+      prediction,
+      amount: amt,
+      status: 'pending',
+      operator: meta.operator ?? null,
+    });
     return { ok: true, data: { prediction, amount: amt, added: amt, roundId: roundSeq } };
   }
 
@@ -317,9 +345,12 @@ export function createFootballClashEngine(config = FOOTBALL_CLASH_GAME) {
     if (!bet || bet.settled) return null;
     if (bet.status === 'won' && bet.winAmount != null && phase === 'results') {
       bet.settled = true;
-      return { winAmount: bet.winAmount, prediction: bet.prediction };
+      return { winAmount: bet.winAmount, betAmount: bet.amount, prediction: bet.prediction };
     }
-    if (bet.status === 'lost' && phase === 'results') bet.settled = true;
+    if (bet.status === 'lost' && phase === 'results') {
+      bet.settled = true;
+      return { winAmount: 0, betAmount: bet.amount, lost: true };
+    }
     return null;
   }
 

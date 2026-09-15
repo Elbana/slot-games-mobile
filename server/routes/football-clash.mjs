@@ -9,6 +9,8 @@ import { extractPlayerId, sessionKey } from '../auth/player-context.mjs';
 import { createWalletForOperator } from '../wallet/wallet-adapter.mjs';
 import { auditWallet } from '../audit.mjs';
 import { bettingPayload, getBetConfig, validateBetAmount } from '../betting/bet-config.mjs';
+import { recordRound } from '../economy/prize-pool.mjs';
+import { touchActiveOperator } from '../economy/pool-guard.mjs';
 
 const SLUG = FOOTBALL_CLASH_GAME.id;
 const API = `/api/${SLUG}`;
@@ -42,21 +44,34 @@ async function balanceFromWallet(ctx) {
 async function settlePlayer(engine, ctx) {
   const pending = engine.pullSettlement(ctx.sessionKey);
   if (!pending) return;
-  const txId = `football-clash-win-${ctx.sessionKey}-${Date.now()}`;
-  await ctx.wallet.credit(ctx, {
-    amount: pending.winAmount,
+
+  touchActiveOperator(SLUG, ctx.operator);
+
+  if (pending.winAmount > 0) {
+    const txId = `football-clash-win-${ctx.sessionKey}-${Date.now()}`;
+    await ctx.wallet.credit(ctx, {
+      amount: pending.winAmount,
+      game: SLUG,
+      roundId: String(engine.getPublicState().roundId),
+      transactionId: txId,
+      reason: 'football_clash_win',
+    });
+    auditWallet({
+      operatorId: ctx.operator.id,
+      playerId: ctx.playerId,
+      type: 'credit',
+      amount: pending.winAmount,
+      txId,
+      game: SLUG,
+    });
+  }
+
+  recordRound({
+    operator: ctx.operator,
     game: SLUG,
-    roundId: String(engine.getPublicState().roundId),
-    transactionId: txId,
-    reason: 'football_clash_win',
-  });
-  auditWallet({
-    operatorId: ctx.operator.id,
+    bet: pending.betAmount,
+    baseWin: pending.winAmount,
     playerId: ctx.playerId,
-    type: 'credit',
-    amount: pending.winAmount,
-    txId,
-    game: SLUG,
   });
 }
 
@@ -72,6 +87,8 @@ export function mountFootballClashRoutes(app) {
     } catch {
       /* optional */
     }
+
+    touchActiveOperator(SLUG, ctx.operator);
 
     let balance;
     try {
@@ -125,7 +142,6 @@ export function mountFootballClashRoutes(app) {
 
     const prediction = String(req.body?.prediction || '').toLowerCase();
     const amount = req.body?.amount ?? req.body?.BetAmount;
-    const amt = Math.floor(Number(amount));
     const betCheck = validateBetAmount(amount, ctx.betting);
     if (!betCheck.ok) return res.json(fail(betCheck.error));
 
@@ -137,7 +153,8 @@ export function mountFootballClashRoutes(app) {
     }
     if (balance < betCheck.amount) return res.json(fail('Insufficient balance'));
 
-    const result = engine.placeBet(ctx.sessionKey, prediction, betCheck.amount);
+    touchActiveOperator(SLUG, ctx.operator);
+    const result = engine.placeBet(ctx.sessionKey, prediction, betCheck.amount, { operator: ctx.operator });
     if (!result.ok) return res.json(fail(result.message));
 
     const txId = `football-clash-${ctx.sessionKey}-${Date.now()}`;

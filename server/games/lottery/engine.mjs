@@ -260,10 +260,10 @@ export function createLotteryEngine(config) {
    * @param {string} sessionId
    * @param {() => number} getBalance
    * @param {(n: number) => void} setBalance
-   * @returns {{ winAmount: number, winCodes: string[] }}
+   * @returns {{ winAmount: number, winCodes: string[], totalStaked: number }}
    */
   function settleSession(sessionId, getBalance, setBalance) {
-    if (!lastNum.length) return { winAmount: 0, winCodes: [] };
+    if (!lastNum.length) return { winAmount: 0, winCodes: [], totalStaked: 0 };
     const winning = new Set(lastNum);
     for (const sym of config.symbols) {
       if (sym.group) {
@@ -272,6 +272,7 @@ export function createLotteryEngine(config) {
     }
 
     let winAmount = 0;
+    let totalStaked = 0;
     /** @type {string[]} */
     const winCodes = [];
 
@@ -279,6 +280,7 @@ export function createLotteryEngine(config) {
       const key = betKey(sessionId, sym.playCode);
       const staked = settledPeriodBets.get(key);
       if (!staked) continue;
+      totalStaked += staked;
 
       let won = winning.has(sym.playCode);
       if (!won && sym.group) {
@@ -292,7 +294,7 @@ export function createLotteryEngine(config) {
     }
 
     if (winAmount > 0) setBalance(getBalance() + winAmount);
-    return { winAmount, winCodes };
+    return { winAmount, winCodes, totalStaked };
   }
 
   function getSymbol(playCode) {

@@ -8,6 +8,7 @@ import path from 'path';
 import { POOLS_DIR } from '../config.mjs';
 import { getOperatorEconomy } from './operator-economy.mjs';
 import { auditLog } from '../audit.mjs';
+import { secureRandom, secureRandomInt } from './secure-rng.mjs';
 
 /** @type {Map<string, object>} */
 const cache = new Map();
@@ -119,12 +120,12 @@ export function tryPoolWin({ operator, game, bet, baseWin, playerId }) {
 
   if (ledger.poolBalance <= 0) return { poolWin: 0, poolBalance: ledger.poolBalance };
   if (baseWin >= bet) return { poolWin: 0, poolBalance: ledger.poolBalance };
-  if (Math.random() >= economy.poolWinTriggerChance) {
+  if (secureRandom() >= economy.poolWinTriggerChance) {
     return { poolWin: 0, poolBalance: ledger.poolBalance };
   }
 
   const b = Math.max(1, Math.floor(bet));
-  const mult = 1 + Math.floor(Math.random() * economy.maxPoolWinMultiplier);
+  const mult = secureRandomInt(1, economy.maxPoolWinMultiplier);
   let poolWin = Math.min(ledger.poolBalance, b * mult);
   poolWin = Math.max(0, Math.floor(poolWin));
   if (poolWin <= 0) return { poolWin: 0, poolBalance: ledger.poolBalance };

@@ -21,12 +21,14 @@ export function spinRooRound(bet, opts = {}) {
       ? Math.max(1, Math.round(bet / (opts.lines * opts.denom)))
       : Math.max(1, Math.round(bet / (DEFAULT_LINES * DEFAULT_DENOM))));
 
+  const tightPool = opts.tightPool === true;
   const { initialGrid, initialMultValues, initialLandedMultipliers, steps, totalWin: roundTotalWin, baseWin, multipliers, sumMulti, grid, scatterSeed, scatterTease, primaryWinSymbol } =
     runCascadeRound(bet, {
       forceWin,
-      goUltra,
+      goUltra: tightPool ? false : goUltra,
       coins,
       lastWinSymbol: opts.lastWinSymbol ?? null,
+      tightPool,
     });
 
   const initialMultipliers = extractGridMultipliers(initialGrid, initialMultValues);

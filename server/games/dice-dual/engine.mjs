@@ -3,19 +3,15 @@
  * Bet red, blue, or draw (no refund hedge — wrong call loses).
  */
 
-import crypto from 'crypto';
 import { DICE_DUAL_GAME } from './config.mjs';
 import { PAYOUT_LIMITS, capWinByBet } from '../../economy/payout-limits.mjs';
 import { withRealtimeSync } from '../../realtime/sync.mjs';
+import { secureRandom } from '../../economy/secure-rng.mjs';
+import { gateJackpotOutcomes, pickPoolAwareOutcome } from '../../economy/pool-guard.mjs';
 
 /** @typedef {'betting' | 'battling' | 'results'} DiceDualPhase */
 /** @typedef {'red' | 'blue' | 'draw'} DicePrediction */
 /** @typedef {'redWins' | 'blueWins' | 'draw'} DiceOutcome */
-
-function secureRandom() {
-  const buffer = crypto.randomBytes(4);
-  return buffer.readUInt32BE(0) / 0xffffffff;
-}
 
 function rollDice(numDice) {
   const dice = [];
@@ -25,12 +21,28 @@ function rollDice(numDice) {
   return dice;
 }
 
-/** @param {DiceOutcome} outcome */
-function determineOutcome(config) {
-  const rand = secureRandom();
-  if (rand < config.redWinProbability) return 'redWins';
-  if (rand < config.redWinProbability + config.blueWinProbability) return 'blueWins';
-  return 'draw';
+/** @param {object[]} roundBets @param {object} config */
+function determineOutcome(roundBets, config) {
+  const gameSlug = config.id ?? 'dice-duel';
+  let candidates = [
+    { key: 'redWins', weight: config.redWinProbability, highPayout: false },
+    { key: 'blueWins', weight: config.blueWinProbability, highPayout: false },
+    { key: 'draw', weight: config.drawProbability, highPayout: true },
+  ];
+  candidates = gateJackpotOutcomes(candidates, roundBets, gameSlug);
+
+  return pickPoolAwareOutcome({
+    candidates,
+    roundBets,
+    gameSlug,
+    calcPayout: (outcomeKey, bets) => {
+      let total = 0;
+      for (const bet of bets) {
+        total += calculateWinnings(bet.prediction, /** @type {DiceOutcome} */ (outcomeKey), bet.amount, config).winAmount;
+      }
+      return total;
+    },
+  });
 }
 
 /** @param {number[]} redDice @param {number[]} blueDice @param {DiceOutcome} outcome */
@@ -119,7 +131,8 @@ export function createDiceDualEngine(config = DICE_DUAL_GAME) {
   }
 
   function executeBattle() {
-    const outcome = determineOutcome(config);
+    const roundBets = [...bets.values()].filter((b) => b.roundId === roundSeq);
+    const outcome = /** @type {DiceOutcome} */ (determineOutcome(roundBets, config));
     const redDice = rollDice(config.numDicePerTeam);
     const blueDice = rollDice(config.numDicePerTeam);
     const { redScore, blueScore } = adjustScoresToMatchOutcome(
@@ -207,7 +220,7 @@ export function createDiceDualEngine(config = DICE_DUAL_GAME) {
     });
   }
 
-  function placeBet(platformKey, prediction, amount) {
+  function placeBet(platformKey, prediction, amount, meta = {}) {
     tick();
     if (phase !== 'betting') {
       return { ok: false, message: 'Betting closed — wait for next round' };
@@ -228,6 +241,7 @@ export function createDiceDualEngine(config = DICE_DUAL_GAME) {
       prediction,
       amount: amt,
       status: 'pending',
+      operator: meta.operator ?? null,
     });
     return { ok: true, data: { prediction, amount: amt, roundId: roundSeq } };
   }
@@ -248,10 +262,16 @@ export function createDiceDualEngine(config = DICE_DUAL_GAME) {
     if (!bet || bet.settled) return null;
     if (bet.status === 'won' && bet.winAmount != null && phase === 'results') {
       bet.settled = true;
-      return { winAmount: bet.winAmount, prediction: bet.prediction, outcome: battle?.outcome ?? null };
+      return {
+        winAmount: bet.winAmount,
+        betAmount: bet.amount,
+        prediction: bet.prediction,
+        outcome: battle?.outcome ?? null,
+      };
     }
     if (bet.status === 'lost' && phase === 'results') {
       bet.settled = true;
+      return { winAmount: 0, betAmount: bet.amount, lost: true };
     }
     return null;
   }

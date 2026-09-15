@@ -141,6 +141,7 @@ export function spinThronesOfOlympus(session, bet, opts = {}) {
     inFreeSpins,
     fsMulti: fs.freeSpinMultiplier ?? 0,
     lastWinSymbol: session.thronesLastWin ?? null,
+    tightPool: opts.tightPool === true,
   });
   round.inFreeSpins = inFreeSpins;
 

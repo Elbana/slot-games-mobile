@@ -57,6 +57,19 @@ Players can win and feel lucky, but big wins come from **prior player losses in 
 | Wallet debit before play, credit after server settlement | routes + wallet adapter |
 | Audit log | `audit.mjs` |
 
+## PvP / crash pool gating
+
+**Dice Duel** and **Goal Clash** pick the round outcome on the server after betting closes. The engine:
+
+1. Computes payout liability for each possible outcome (red/blue/draw or home/away/draw).
+2. Removes outcomes the prize pool cannot afford.
+3. Blocks **draw** (high multiplier) until `poolBalance >= minPoolForJackpot`.
+4. If nothing is affordable, picks the **lowest-liability** outcome.
+
+**Rocket Rush** caps the crash multiplier from the same pool rules (see `pool-guard.mjs`).
+
+**Olympus Rise** uses `tightPool` mode when the jackpot pool is unfunded (no planted wins, no ultra multipliers) and `capWinByPool()` as a final payout clamp before wallet credit.
+
 ## Pool ledger files
 
 Per operator + game: `data/pools/{operatorId}_{gameSlug}.json`

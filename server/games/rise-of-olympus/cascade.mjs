@@ -166,8 +166,10 @@ function applyInitialScatterLayout(grid, multValues, plantedCells) {
  */
 export function runCascadeRound(
   bet,
-  { forceWin = false, goUltra = false, coins = 1, lastWinSymbol = null } = {}
+  { forceWin = false, goUltra = false, coins = 1, lastWinSymbol = null, tightPool = false } = {}
 ) {
+  const allowPlanted = !tightPool;
+  const effectiveGoUltra = tightPool ? false : goUltra;
   const { grid: initialGridRaw, multValues: initialMultRaw } = randomGrid();
   let grid = cloneGrid(initialGridRaw);
   let multValues = cloneMultValueGrid(initialMultRaw);
@@ -177,7 +179,7 @@ export function runCascadeRound(
   let plantedWinSymbol = null;
   if (forceWin) {
     ({ grid, multValues } = buildForceWinGrid({ withMultipliers: true, lastWinSymbol }));
-  } else if (isDemoWinBoostEnabled() && Math.random() < plantedWinRate()) {
+  } else if (allowPlanted && isDemoWinBoostEnabled() && Math.random() < plantedWinRate()) {
     const sym = randomWinSymbol(lastWinSymbol);
     plantedWinSymbol = sym;
     plantedCells = new Set(
@@ -187,7 +189,7 @@ export function runCascadeRound(
     if (secondary) {
       for (const k of secondary) plantedCells.add(k);
     }
-  } else if (Math.random() < naturalWinRate()) {
+  } else if (allowPlanted && Math.random() < naturalWinRate()) {
     const sym = randomWinSymbol(lastWinSymbol);
     plantedWinSymbol = sym;
     plantedCells = new Set(
@@ -235,7 +237,7 @@ export function runCascadeRound(
     multValues = syncMultValuesFromGrid(grid, tumbled.multValues);
     upgradeFlags = markFreshMultiplierLands(grid, gridBeforeTumble, upgradeFlags);
     const upgradeResult = applyCascadeMultiplierUpgrades(grid, multValues, upgradeFlags, {
-      goUltra,
+      goUltra: effectiveGoUltra,
     });
     multValues = upgradeResult.multValues;
     upgradeFlags = upgradeResult.upgradeFlags;

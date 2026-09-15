@@ -12,6 +12,8 @@ import { extractPlayerId, sessionKey } from '../auth/player-context.mjs';
 import { createWalletForOperator } from '../wallet/wallet-adapter.mjs';
 import { getOperatorEconomy } from '../economy/operator-economy.mjs';
 import { recordRound, tryPoolWin } from '../economy/prize-pool.mjs';
+import { capWinByPool, poolAllowsJackpot } from '../economy/pool-guard.mjs';
+import { POOL_RULES } from '../economy/game-economy.mjs';
 import { runWithMathProfileAsync } from '../math-profile.mjs';
 import { bettingPayload, getBetConfig, validateBetAmount } from '../betting/bet-config.mjs';
 
@@ -160,12 +162,28 @@ export async function handleV2Spin(req, res) {
   lastSpinAt.set(rateKey, now);
   session.balance = balance;
 
+  const jackpotFunded = poolAllowsJackpot(ctx.operator, slug, POOL_RULES.minPoolForJackpot);
+
   const result = await runWithMathProfileAsync(ctx.economy.slotMathProfile, () =>
-    spinThronesOfOlympus(session, bet, { spinId: txId, skipBalanceUpdate: true })
+    spinThronesOfOlympus(session, bet, {
+      spinId: txId,
+      skipBalanceUpdate: true,
+      tightPool: !jackpotFunded,
+    })
   );
 
-  const baseWin = result.win ?? 0;
   const roundBet = charge > 0 ? charge : bet;
+  let baseWin = result.win ?? 0;
+  const poolCappedWin = capWinByPool({
+    operator: ctx.operator,
+    gameSlug: slug,
+    bet: roundBet,
+    win: baseWin,
+  });
+  if (poolCappedWin < baseWin) {
+    baseWin = poolCappedWin;
+    result.win = poolCappedWin;
+  }
 
   recordRound({
     operator: ctx.operator,

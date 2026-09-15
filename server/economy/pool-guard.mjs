@@ -4,7 +4,7 @@
 
 import { loadPool } from './prize-pool.mjs';
 import { getGameEconomy, POOL_RULES } from './game-economy.mjs';
-import { capMultiplier } from './payout-limits.mjs';
+import { capMultiplier, capWinByBet } from './payout-limits.mjs';
 import { secureRandom } from './secure-rng.mjs';
 
 /**
@@ -113,4 +113,99 @@ export function filterSymbolsByPool(symbols, operator, gameSlug) {
   const minPool = econ.highOutcomeMinPool ?? POOL_RULES.minPoolForJackpot;
   if (poolAllowsJackpot(operator, gameSlug, minPool)) return symbols;
   return symbols.filter((s) => (s.odd ?? 1) < threshold);
+}
+
+/** @param {object[]} roundBets */
+function uniqueOperators(roundBets) {
+  return [...new Map(
+    roundBets.filter((b) => b.operator?.id).map((b) => [b.operator.id, b.operator]),
+  ).values()];
+}
+
+/**
+ * Pick a shared-room outcome weighted by base odds but constrained by prize pool.
+ * Falls back to the lowest-liability outcome when the pool cannot fund winners.
+ *
+ * @param {{
+ *   candidates: { key: string, weight: number }[],
+ *   roundBets: object[],
+ *   gameSlug: string,
+ *   calcPayout: (outcomeKey: string, bets: object[]) => number,
+ * }} opts
+ * @returns {string}
+ */
+export function pickPoolAwareOutcome({ candidates, roundBets, gameSlug, calcPayout }) {
+  if (!candidates.length) return 'draw';
+
+  const payoutTotal = (key) => calcPayout(key, roundBets);
+
+  const isAffordable = (key) => {
+    const operators = uniqueOperators(roundBets);
+    if (!operators.length) return true;
+    return operators.every((op) => {
+      const opBets = roundBets.filter((b) => b.operator?.id === op.id);
+      const payout = calcPayout(key, opBets);
+      return payout <= maxAffordablePayout(op, gameSlug);
+    });
+  };
+
+  let pool = candidates.filter((c) => isAffordable(c.key));
+  if (!pool.length) {
+    const minPayout = Math.min(...candidates.map((c) => payoutTotal(c.key)));
+    pool = candidates.filter((c) => payoutTotal(c.key) === minPayout);
+  }
+
+  const weightSum = pool.reduce((s, c) => s + Math.max(0, c.weight), 0);
+  if (weightSum <= 0) return pool[0].key;
+
+  let r = secureRandom() * weightSum;
+  for (const c of pool) {
+    r -= Math.max(0, c.weight);
+    if (r <= 0) return c.key;
+  }
+  return pool.at(-1).key;
+}
+
+/**
+ * Drop high-payout outcomes (e.g. draw) when jackpot pool is not funded.
+ * @param {{ key: string, weight: number, highPayout?: boolean }[]} candidates
+ * @param {object[]} roundBets
+ * @param {string} gameSlug
+ */
+/**
+ * Cap slot / lottery wins so payout never exceeds affordable pool share.
+ * When the jackpot pool is unfunded, big wins are clamped to `bigWinBetMultiple`.
+ *
+ * @param {{ operator: object, gameSlug: string, bet: number, win: number }} opts
+ */
+export function capWinByPool({ operator, gameSlug, bet, win }) {
+  const econ = getGameEconomy(gameSlug);
+  const stake = Math.max(0, Math.floor(Number(bet)) || 0);
+  let capped = Math.max(0, Math.floor(Number(win)) || 0);
+  if (capped <= 0 || stake <= 0) return capped;
+
+  const minPool = econ.bigWinMinPool ?? POOL_RULES.minPoolForJackpot;
+  if (!poolAllowsJackpot(operator, gameSlug, minPool)) {
+    const bigCap = econ.bigWinBetMultiple ?? 20;
+    capped = capWinByBet(stake, capped, bigCap);
+  }
+
+  const affordable = maxAffordablePayout(operator, gameSlug);
+  if (affordable >= 0 && capped > affordable) {
+    capped = Math.min(capped, affordable);
+  }
+
+  return Math.max(0, Math.floor(capped));
+}
+
+export function gateJackpotOutcomes(candidates, roundBets, gameSlug) {
+  const operators = uniqueOperators(roundBets);
+  if (!operators.length) return candidates;
+
+  const minPool = getGameEconomy(gameSlug).highOutcomeMinPool ?? POOL_RULES.minPoolForJackpot;
+  const jackpotOk = operators.every((op) => poolAllowsJackpot(op, gameSlug, minPool));
+  if (jackpotOk) return candidates;
+
+  const filtered = candidates.filter((c) => !c.highPayout);
+  return filtered.length ? filtered : candidates;
 }
