@@ -18,6 +18,8 @@
   position: relative;
   flex: 1;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   container-type: inline-size;
   display: flex;
   flex-direction: column;
@@ -27,6 +29,7 @@
   overflow: hidden;
   overscroll-behavior: none;
   touch-action: manipulation;
+  box-sizing: border-box;
 }
 
 .dd-top {
@@ -35,6 +38,10 @@
   justify-content: space-between;
   padding: 4px 12px 4px;
   flex-shrink: 0;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .dd-round {
@@ -69,8 +76,11 @@
   align-items: center;
   gap: 8px;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   margin: 0;
   padding: 6px 10px;
+  box-sizing: border-box;
   background: var(--dd-panel);
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.06);
@@ -196,13 +206,16 @@
 .dd-stage {
   flex: 1 1 auto;
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   grid-template-rows: auto var(--dd-arena-h);
   align-content: start;
   align-items: center;
   gap: 6px 10px;
   padding: 0 12px 8px;
   min-height: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .dd-status {
@@ -258,14 +271,18 @@
   grid-column: 1 / -1;
   grid-row: 2;
   width: 100%;
+  max-width: 100%;
   height: var(--dd-arena-h);
   min-height: var(--dd-arena-h);
+  max-height: var(--dd-arena-h);
   flex: none;
   border-radius: 14px;
   padding: 4px;
   background: rgba(0, 0, 0, 0.28);
   border: 1px solid rgba(255, 255, 255, 0.1);
   z-index: 2;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .dd-arena-canvas {
@@ -278,21 +295,26 @@
 .dd-foot {
   flex: 0 0 auto;
   width: 100%;
+  max-width: 100%;
   min-width: 0;
   margin-top: auto;
   overflow: hidden;
-  padding: 8px 10px calc(12px + env(safe-area-inset-bottom));
+  padding: 8px 12px calc(12px + env(safe-area-inset-bottom));
   display: grid;
   gap: 6px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   background: rgba(0, 0, 0, 0.25);
   z-index: 1;
+  box-sizing: border-box;
 }
 
 .dd-pick {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .dd-pick__btn {
@@ -300,6 +322,8 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  min-width: 0;
+  max-width: 100%;
   padding: 0;
   border-radius: 10px;
   border: 2px solid rgba(255, 255, 255, 0.12);
@@ -321,7 +345,7 @@
 
 .dd-pick__btn.has-bet {
   border-color: rgba(251, 191, 36, 0.65);
-  box-shadow: 0 0 10px rgba(251, 191, 36, 0.22);
+  box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.35);
 }
 
 .dd-pick__face {
@@ -350,8 +374,11 @@
 
 .dd-pools {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 4px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   font-size: 9px;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.45);
@@ -361,12 +388,14 @@
 .dd-foot-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
 }
 
 .dd-chips {
-  flex: 1;
+  flex: 1 1 0;
   display: flex;
   justify-content: center;
   align-items: center;
