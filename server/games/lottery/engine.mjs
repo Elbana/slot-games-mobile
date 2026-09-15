@@ -143,7 +143,8 @@ export function createLotteryEngine(config) {
     maybeAdvancePeriod();
   }
 
-  setInterval(tick, 250);
+  const timer = setInterval(tick, 250);
+  if (typeof timer.unref === 'function') timer.unref();
 
   function getPoolItems() {
     /** @type {Record<string, number>} */

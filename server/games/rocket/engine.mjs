@@ -104,7 +104,8 @@ export function createRocketEngine(config = ROCKET_GAME) {
     }
   }
 
-  setInterval(tick, 50);
+  const timer = setInterval(tick, 50);
+  if (typeof timer.unref === 'function') timer.unref();
 
   function startBettingRound(now = Date.now()) {
     roundSeq += 1;
