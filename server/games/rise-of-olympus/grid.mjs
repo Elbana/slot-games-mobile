@@ -10,6 +10,7 @@ import {
   randomWinSymbol,
   MAX_GRID_MULTIPLIER_SUM,
 } from './config.mjs';
+import { secureRandom, secureRandomInt } from '../../economy/secure-rng.mjs';
 
 /** Column-major cell index (matches client TOP_TO_BOTTOM grid: col * rows + row). */
 export function cellIndex(row, col) {
@@ -72,7 +73,7 @@ const CLUSTER_DIRS = [
 
 function shufflePairs(arr) {
   for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = secureRandomInt(0, i);
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   return arr;
@@ -85,14 +86,14 @@ function shufflePairs(arr) {
  */
 export function plantWinCluster(grid, multValues, sym, size = MIN_CLUSTER, exclude = null) {
   const target = Math.max(MIN_CLUSTER, Math.min(size, COLS * ROWS - 1));
-  const startRow = Math.floor(Math.random() * ROWS);
-  const startCol = Math.floor(Math.random() * COLS);
+  const startRow = secureRandomInt(0, ROWS - 1);
+  const startCol = secureRandomInt(0, COLS - 1);
   const clusterSet = new Set();
   const placed = [];
   const queue = [[startRow, startCol]];
 
   while (placed.length < target && queue.length > 0) {
-    const idx = Math.floor(Math.random() * queue.length);
+    const idx = secureRandomInt(0, queue.length - 1);
     const [row, col] = queue.splice(idx, 1)[0];
     const k = cellIndex(row, col);
     if (clusterSet.has(k) || exclude?.has(k)) continue;
@@ -136,9 +137,9 @@ export function plantWinCluster(grid, multValues, sym, size = MIN_CLUSTER, exclu
  * @returns {Set<number> | null}
  */
 export function tryPlantSecondaryCluster(grid, multValues, primaryCells, primarySymbol) {
-  if (Math.random() > 0.32) return null;
+  if (secureRandom() > 0.32) return null;
   const sym = randomWinSymbol(primarySymbol);
-  const size = MIN_CLUSTER + Math.floor(Math.random() * 4);
+  const size = MIN_CLUSTER + secureRandomInt(0, 3);
   const placed = plantWinCluster(grid, multValues, sym, size, primaryCells);
   return placed.length >= MIN_CLUSTER ? new Set(placed) : null;
 }
@@ -158,7 +159,7 @@ export function placeScatters(grid, multValues, count, { exclude = null } = {}) 
     }
   }
   for (let i = candidates.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = secureRandomInt(0, i);
     [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
   }
   const n = Math.min(count, candidates.length);
@@ -184,7 +185,7 @@ export function buildForceWinGrid({ withMultipliers = true, lastWinSymbol = null
     }
   }
   const sym = randomWinSymbol(lastWinSymbol);
-  plantWinCluster(grid, multValues, sym, MIN_CLUSTER + Math.floor(Math.random() * 6));
+  plantWinCluster(grid, multValues, sym, MIN_CLUSTER + secureRandomInt(0, 5));
 
   if (withMultipliers) {
     const gods = [SYMBOL.MULTIPLIER_HADES, SYMBOL.MULTIPLIER_ZEUS, SYMBOL.MULTIPLIER_POSEIDON];

@@ -84,3 +84,8 @@ Inspect via internal stats helper `getPoolStats(operator, gameSlug)` in `prize-p
 4. Lower `houseEdgePercent` → players keep more, you earn less per bet.
 
 Always simulate large samples after changes and confirm `poolBalance` never goes negative.
+
+```bash
+npm run simulate                  # 10,000 rounds × 1000 bet per game
+npm run simulate -- --rounds=5000 --bet=500
+```

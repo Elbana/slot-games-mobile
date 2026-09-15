@@ -37,6 +37,7 @@ import {
   applyCascadeMultiplierUpgrades,
   markFreshMultiplierLands,
 } from './multiplier.mjs';
+import { secureRandom, secureRandomInt } from '../../economy/secure-rng.mjs';
 
 const DIRS = [
   [0, 1],
@@ -90,8 +91,8 @@ export function findClusters(grid) {
 
 /** Tumble refills never drop scatters (matches commercial cascade slots). */
 function randomRefillSymbol(biasSymbols = null) {
-  if (biasSymbols?.length && Math.random() < 0.44) {
-    return biasSymbols[Math.floor(Math.random() * biasSymbols.length)];
+  if (biasSymbols?.length && secureRandom() < 0.44) {
+    return biasSymbols[secureRandomInt(0, biasSymbols.length - 1)];
   }
   return randomPaySymbolOrMultiplier();
 }
@@ -144,18 +145,18 @@ function applyRoundMultiplier(totalWin, sumMulti) {
 
 /** FS seed or tease scatters after win planting — refills stay scatter-free. */
 function applyInitialScatterLayout(grid, multValues, plantedCells) {
-  if (Math.random() < scatterFsSeedRateForDeal()) {
+  if (secureRandom() < scatterFsSeedRateForDeal()) {
     placeScatters(grid, multValues, FS_TRIGGER_MIN);
     return { scatterSeed: true, scatterTease: false };
   }
   const hasPlanted = plantedCells?.size > 0;
   const teaseRate = hasPlanted ? SCATTER_TEASE_RATE : SCATTER_LOSE_TEASE_RATE;
-  if (Math.random() >= teaseRate) return { scatterSeed: false, scatterTease: false };
+  if (secureRandom() >= teaseRate) return { scatterSeed: false, scatterTease: false };
   const existing = countScatters(grid);
   if (existing >= FS_TRIGGER_MIN - 1) return { scatterSeed: false, scatterTease: false };
   const maxAdd = Math.min(SCATTER_TEASE_MAX, FS_TRIGGER_MIN - 1 - existing);
   if (maxAdd <= 0) return { scatterSeed: false, scatterTease: false };
-  const n = 1 + Math.floor(Math.random() * maxAdd);
+  const n = 1 + secureRandomInt(0, maxAdd - 1);
   placeScatters(grid, multValues, n, { exclude: hasPlanted ? plantedCells : null });
   return { scatterSeed: false, scatterTease: true };
 }
@@ -179,21 +180,21 @@ export function runCascadeRound(
   let plantedWinSymbol = null;
   if (forceWin) {
     ({ grid, multValues } = buildForceWinGrid({ withMultipliers: true, lastWinSymbol }));
-  } else if (allowPlanted && isDemoWinBoostEnabled() && Math.random() < plantedWinRate()) {
+  } else if (allowPlanted && isDemoWinBoostEnabled() && secureRandom() < plantedWinRate()) {
     const sym = randomWinSymbol(lastWinSymbol);
     plantedWinSymbol = sym;
     plantedCells = new Set(
-      plantWinCluster(grid, multValues, sym, MIN_CLUSTER + Math.floor(Math.random() * 6))
+      plantWinCluster(grid, multValues, sym, MIN_CLUSTER + secureRandomInt(0, 5))
     );
     const secondary = tryPlantSecondaryCluster(grid, multValues, plantedCells, sym);
     if (secondary) {
       for (const k of secondary) plantedCells.add(k);
     }
-  } else if (allowPlanted && Math.random() < naturalWinRate()) {
+  } else if (allowPlanted && secureRandom() < naturalWinRate()) {
     const sym = randomWinSymbol(lastWinSymbol);
     plantedWinSymbol = sym;
     plantedCells = new Set(
-      plantWinCluster(grid, multValues, sym, MIN_CLUSTER + Math.floor(Math.random() * 4))
+      plantWinCluster(grid, multValues, sym, MIN_CLUSTER + secureRandomInt(0, 3))
     );
   }
 

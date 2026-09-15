@@ -2,12 +2,14 @@
  * Lottery player sessions linked to platform wallet context.
  */
 
+import { secureRandomInt } from '../../economy/secure-rng.mjs';
+
 const sessions = new Map();
 
 function randomId(len = 12) {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
   let out = '';
-  for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
+  for (let i = 0; i < len; i++) out += chars[secureRandomInt(0, chars.length - 1)];
   return out;
 }
 

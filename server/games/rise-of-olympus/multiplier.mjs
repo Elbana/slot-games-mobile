@@ -5,6 +5,7 @@ import {
   isMultiplierSymbol,
 } from './config.mjs';
 import { COLS, ROWS } from './config.mjs';
+import { secureRandom, secureRandomInt } from '../../economy/secure-rng.mjs';
 
 const MAX_STAGE = MULTIPLIER_STAGES.length - 1;
 
@@ -40,7 +41,7 @@ export function superUpgradeValue(current) {
   if (from > MAX_STAGE) return current;
   const goldStart = stageIndex(GOLD_MULTIPLIER_STAGES[0]);
   const to = Math.max(from, goldStart);
-  const target = to + Math.floor(Math.random() * (MAX_STAGE - to + 1));
+  const target = to + secureRandomInt(0, MAX_STAGE - to);
   return stageValue(target);
 }
 
@@ -62,10 +63,10 @@ export function applyCascadeMultiplierUpgrades(grid, multValues, upgradeFlags, {
       let next = cur;
       let isSuper = false;
 
-      if (nextFlags[row][col] && Math.random() < 0.11) {
+      if (nextFlags[row][col] && secureRandom() < 0.11) {
         next = superUpgradeValue(cur);
         isSuper = next !== cur;
-      } else if (goUltra || Math.random() < 0.44) {
+      } else if (goUltra || secureRandom() < 0.44) {
         next = nextStageValue(cur);
       }
 

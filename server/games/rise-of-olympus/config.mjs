@@ -1,4 +1,5 @@
 import { getMathProfile } from '../../math-profile.mjs';
+import { secureRandom, secureRandomInt, secureWeightedPick } from '../../economy/secure-rng.mjs';
 export const COLS = 6;
 export const ROWS = 5;
 /** Minimum connected cluster size for a BLITZWAY win (paytable: 8+ symbols). */
@@ -58,13 +59,7 @@ export const GRID_SYMBOL_WEIGHTS = [
 ];
 
 function pickWeightedPaySymbol(weights) {
-  const total = weights.reduce((a, b) => a + b, 0);
-  let r = Math.random() * total;
-  for (let i = 0; i < weights.length; i++) {
-    r -= weights[i];
-    if (r < 0) return PAY_SYMBOL_MIN + i;
-  }
-  return PAY_SYMBOL_MAX;
+  return PAY_SYMBOL_MIN + secureWeightedPick(weights);
 }
 
 /**
@@ -78,7 +73,7 @@ export function randomWinSymbol(lastSymbol = null) {
     lastSymbol >= PAY_SYMBOL_MIN &&
     lastSymbol <= PAY_SYMBOL_MAX &&
     sym === lastSymbol &&
-    Math.random() < 0.75
+    secureRandom() < 0.75
   ) {
     const weights = [...WIN_SYMBOL_WEIGHTS];
     weights[lastSymbol - PAY_SYMBOL_MIN] = 0;
@@ -124,16 +119,16 @@ export function isMultiplierSymbol(sym) {
 
 /** Random paying symbol or weighted god multiplier — no scatter (cascade refills, force-win filler). */
 export function randomPaySymbolOrMultiplier() {
-  if (Math.random() < MULTIPLIER_LAND_WEIGHT) {
+  if (secureRandom() < MULTIPLIER_LAND_WEIGHT) {
     const gods = [SYMBOL.MULTIPLIER_HADES, SYMBOL.MULTIPLIER_POSEIDON, SYMBOL.MULTIPLIER_ZEUS];
-    return gods[Math.floor(Math.random() * gods.length)];
+    return gods[secureRandomInt(0, gods.length - 1)];
   }
   return pickWeightedPaySymbol(GRID_SYMBOL_WEIGHTS);
 }
 
 /** Initial grid deal — rare scatter + paying/multiplier symbols. */
 export function randomInitialGridSymbol() {
-  if (Math.random() < SCATTER_LAND_WEIGHT) return SYMBOL.SCATTER;
+  if (secureRandom() < SCATTER_LAND_WEIGHT) return SYMBOL.SCATTER;
   return randomPaySymbolOrMultiplier();
 }
 
