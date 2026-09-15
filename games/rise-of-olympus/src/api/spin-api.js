@@ -85,7 +85,27 @@ export async function requestSpin(game, opts = {}) {
     throw new Error(msg);
   }
   try {
-    return JSON.parse(text);
+    const result = JSON.parse(text);
+    if (typeof window !== 'undefined' && result.balance != null) {
+      const bet = Math.floor(Number(opts.bet)) || 0;
+      const win = Math.floor(Number(result.win)) || 0;
+      if (win > 0) {
+        window.gmNotifyWallet?.('win', {
+          game,
+          amount: win,
+          balance: result.balance,
+          delta: win,
+        });
+      } else if (bet > 0) {
+        window.gmNotifyWallet?.('bet', {
+          game,
+          amount: bet,
+          balance: result.balance,
+          delta: -bet,
+        });
+      }
+    }
+    return result;
   } catch {
     throw new Error('API unavailable — use npm run dev');
   }

@@ -100,7 +100,7 @@ export async function oddList(config) {
   return unwrap(res);
 }
 
-export async function placeBet(config, sessionId, playCode, amount) {
+export async function placeBet(config, sessionId, playCode, amount, gameId) {
   const res = await postJson(
     '/bigo/v1/bet',
     {
@@ -112,7 +112,17 @@ export async function placeBet(config, sessionId, playCode, amount) {
     },
     sessionId
   );
-  return unwrap(res);
+  const data = unwrap(res);
+  if (typeof window !== 'undefined' && gameId && data?.Balance != null) {
+    const amt = Math.floor(Number(amount)) || 0;
+    window.gmNotifyWallet?.('bet', {
+      game: gameId,
+      amount: amt,
+      balance: data.Balance,
+      delta: -amt,
+    });
+  }
+  return data;
 }
 
 export function oddsMap(oddListData) {

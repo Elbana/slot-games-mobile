@@ -154,15 +154,21 @@ export function mountFootballClashRoutes(app) {
     if (balance < betCheck.amount) return res.json(fail('Insufficient balance'));
 
     touchActiveOperator(SLUG, ctx.operator);
-    const result = engine.placeBet(ctx.sessionKey, prediction, betCheck.amount, { operator: ctx.operator });
-    if (!result.ok) return res.json(fail(result.message));
+    const pub = engine.getPublicState();
+    if (pub.phase !== 'betting') return res.json(fail('Betting closed — wait for next round'));
+    if (!['home', 'away', 'draw'].includes(prediction)) {
+      return res.json(fail('Pick home, away, or draw'));
+    }
+    if (engine.serializePlayer(ctx.sessionKey)) {
+      return res.json(fail('Already bet this round'));
+    }
 
     const txId = `football-clash-${ctx.sessionKey}-${Date.now()}`;
     try {
       await ctx.wallet.debit(ctx, {
         amount: betCheck.amount,
         game: SLUG,
-        roundId: String(result.data.roundId),
+        roundId: String(pub.roundId),
         transactionId: txId,
         reason: 'football_clash_bet',
       });
@@ -176,6 +182,16 @@ export function mountFootballClashRoutes(app) {
       });
     } catch (err) {
       return res.json(fail(err.message || 'Debit failed'));
+    }
+
+    const result = engine.placeBet(ctx.sessionKey, prediction, betCheck.amount, { operator: ctx.operator });
+    if (!result.ok) {
+      try {
+        await ctx.wallet.rollback?.(ctx, { transactionId: txId });
+      } catch (rollbackErr) {
+        console.error('[football-clash] rollback failed after placeBet', rollbackErr);
+      }
+      return res.json(fail(result.message));
     }
 
     let newBalance;

@@ -28,6 +28,7 @@ export const RATE_LIMIT_SPIN_MS = parseInt(process.env.RATE_LIMIT_SPIN_MS || '40
 export const RATE_LIMIT_LOTTERY_MS = parseInt(process.env.RATE_LIMIT_LOTTERY_MS || '200', 10);
 export const REQUIRE_AUTH = process.env.REQUIRE_AUTH === '1';
 export const WALLET_MOCK = process.env.WALLET_MOCK === '1' || !IS_PRODUCTION;
+export const OPERATOR_WALLET_BASE_URL = process.env.OPERATOR_WALLET_BASE_URL || '';
 export const WALLET_TIMEOUT_MS = parseInt(process.env.WALLET_TIMEOUT_MS || '8000', 10);
 export const IDEMPOTENCY_CACHE_SIZE = 32;
 export const LAUNCH_SECRET =

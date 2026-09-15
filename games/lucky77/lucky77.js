@@ -699,7 +699,7 @@ async function doBet(code) {
 
   let data;
   try {
-    data = await placeBet(config, sessionId, code, chip);
+    data = await placeBet(config, sessionId, code, chip, GAME_ID);
   } catch (err) {
     pending[code] = Math.max(0, (pending[code] || 0) - chip);
     updatePendingUI();
@@ -827,6 +827,13 @@ function showWin(state) {
     $('win-amount').textContent = `+${Number(state.WinAmount).toLocaleString()}`;
     $('win-overlay').hidden = false;
     toast(`Won ${Number(state.WinAmount).toLocaleString()}!`);
+    const winAmount = Number(state.WinAmount);
+    window.gmNotifyWallet?.('win', {
+      game: GAME_ID,
+      amount: winAmount,
+      balance: state.Balance,
+      delta: winAmount,
+    });
   }
 }
 

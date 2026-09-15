@@ -210,14 +210,35 @@ export async function handleV2Spin(req, res) {
   }
 
   if (totalWin > 0) {
-    try {
-      const credited = await ctx.wallet.credit(ctx, {
-        amount: totalWin,
-        game: slug,
-        roundId: txId,
-        transactionId: `${txId}:credit`,
-        reason: poolWin > 0 ? 'win_with_pool' : 'win',
-      });
+    const creditTx = {
+      amount: totalWin,
+      game: slug,
+      roundId: txId,
+      transactionId: `${txId}:credit`,
+      reason: poolWin > 0 ? 'win_with_pool' : 'win',
+    };
+    let credited = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        credited = await ctx.wallet.credit(ctx, creditTx);
+        break;
+      } catch (err) {
+        if (attempt === 0) {
+          console.error('[slot] credit failed after win, retrying once', err);
+          continue;
+        }
+        console.error('[slot] credit failed after win', err);
+        auditWallet({
+          operatorId: ctx.operator.id,
+          playerId: ctx.playerId,
+          type: 'credit_failed',
+          amount: totalWin,
+          txId,
+          error: err.message,
+        });
+      }
+    }
+    if (credited) {
       session.balance = credited.balance;
       auditWallet({
         operatorId: ctx.operator.id,
@@ -227,16 +248,6 @@ export async function handleV2Spin(req, res) {
         baseWin,
         poolWin,
         txId,
-      });
-    } catch (err) {
-      console.error('[slot] credit failed after win', err);
-      auditWallet({
-        operatorId: ctx.operator.id,
-        playerId: ctx.playerId,
-        type: 'credit_failed',
-        amount: totalWin,
-        txId,
-        error: err.message,
       });
     }
   } else {

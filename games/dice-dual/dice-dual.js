@@ -602,11 +602,23 @@ function showResultPopup() {
     $('result-amount').className = 'dd-result__amount';
     $('result-amount').textContent = `+${fmtNum(myBet.winAmount)}`;
     burstConfetti('#4ade80');
+    window.gmNotifyWallet?.('win', {
+      game: 'dice-duel',
+      amount: myBet.winAmount,
+      balance: state?.balance,
+      delta: myBet.winAmount,
+    });
   } else if (isDraw && myBet.prediction === 'draw') {
     $('result-title').textContent = 'Draw — you win!';
     $('result-amount').className = 'dd-result__amount';
     $('result-amount').textContent = `+${fmtNum(myBet.winAmount)}`;
     burstConfetti('#fbbf24');
+    window.gmNotifyWallet?.('win', {
+      game: 'dice-duel',
+      amount: myBet.winAmount,
+      balance: state?.balance,
+      delta: myBet.winAmount,
+    });
   } else {
     $('result-title').textContent = isDraw ? 'Draw' : 'Better luck next time';
     $('result-amount').className = 'dd-result__amount dd-result__amount--lose';

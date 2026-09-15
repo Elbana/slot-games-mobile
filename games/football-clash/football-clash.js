@@ -934,6 +934,15 @@ function showResultPopup() {
 
   $('result-win-banner').hidden = !won;
 
+  if (won) {
+    window.gmNotifyWallet?.('win', {
+      game: 'goal-clash',
+      amount: winAmt,
+      balance: state?.balance,
+      delta: winAmt,
+    });
+  }
+
   popup.hidden = false;
   scheduleResultPopupClose();
 }

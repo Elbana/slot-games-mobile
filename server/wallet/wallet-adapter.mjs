@@ -4,7 +4,7 @@
 
 import { createMockWallet } from './wallet-mock.mjs';
 import { createOperatorHttpWallet } from './operator-http.mjs';
-import { WALLET_MOCK } from '../config.mjs';
+import { OPERATOR_WALLET_BASE_URL, WALLET_MOCK } from '../config.mjs';
 
 /** @typedef {object} WalletContext
  * @property {object} operator
@@ -22,8 +22,13 @@ import { WALLET_MOCK } from '../config.mjs';
 /** @param {object} operator */
 export function createWalletForOperator(operator) {
   const mode = operator?.wallet?.mode || (WALLET_MOCK ? 'mock' : 'http');
-  if (mode === 'mock' || WALLET_MOCK) return createMockWallet();
-  return createOperatorHttpWallet(operator.wallet);
+  if (mode === 'mock') return createMockWallet();
+  if (mode === 'http') {
+    const walletConfig = { ...operator.wallet };
+    if (OPERATOR_WALLET_BASE_URL) walletConfig.baseUrl = OPERATOR_WALLET_BASE_URL;
+    return createOperatorHttpWallet(walletConfig);
+  }
+  return WALLET_MOCK ? createMockWallet() : createOperatorHttpWallet(operator.wallet);
 }
 
 /** @param {WalletContext} ctx @param {object} operator */

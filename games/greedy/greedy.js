@@ -287,7 +287,7 @@ async function doBet(playCode) {
     toast('Betting closed — wait for next round');
     throw new Error('closed');
   }
-  const data = await placeBet(config, sessionId, playCode, selectedChip);
+  const data = await placeBet(config, sessionId, playCode, selectedChip, GAME_ID);
   if (data.SessionId) {
     sessionId = data.SessionId;
     localStorage.setItem(`lottery-session-${GAME_ID}`, sessionId);
@@ -359,7 +359,14 @@ function showResult(state) {
   renderWinners(state.LastTop);
 
   if (state.WinAmount > 0) {
-    toast(`🎉 Won ${Number(state.WinAmount).toLocaleString()}!`);
+    const winAmount = Number(state.WinAmount);
+    toast(`🎉 Won ${winAmount.toLocaleString()}!`);
+    window.gmNotifyWallet?.('win', {
+      game: GAME_ID,
+      amount: winAmount,
+      balance: state.Balance,
+      delta: winAmount,
+    });
   }
 
   $('result-overlay').hidden = false;

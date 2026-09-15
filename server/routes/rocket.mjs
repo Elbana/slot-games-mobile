@@ -165,15 +165,19 @@ export function mountRocketRoutes(app) {
     if (balance < betCheck.amount) return res.json(fail('Insufficient balance'));
 
     touchActiveOperator(SLUG, ctx.operator);
-    const result = engine.placeBet(ctx.sessionKey, betCheck.amount, autoCashout, { operator: ctx.operator });
-    if (!result.ok) return res.json(fail(result.message));
+    const pub = engine.getPublicState();
+    if (pub.phase !== 'betting') return res.json(fail('Betting closed — wait for next round'));
+    const existing = engine.serializePlayer(ctx.sessionKey);
+    if (existing?.status === 'pending') {
+      return res.json(fail('Already bet this round'));
+    }
 
     const txId = `rocket-${ctx.sessionKey}-${Date.now()}`;
     try {
       await ctx.wallet.debit(ctx, {
         amount: betCheck.amount,
         game: SLUG,
-        roundId: String(result.data.roundId),
+        roundId: String(pub.roundId),
         transactionId: txId,
         reason: 'rocket_bet',
       });
@@ -187,6 +191,16 @@ export function mountRocketRoutes(app) {
       });
     } catch (err) {
       return res.json(fail(err.message || 'Debit failed'));
+    }
+
+    const result = engine.placeBet(ctx.sessionKey, betCheck.amount, autoCashout, { operator: ctx.operator });
+    if (!result.ok) {
+      try {
+        await ctx.wallet.rollback?.(ctx, { transactionId: txId });
+      } catch (rollbackErr) {
+        console.error('[rocket] rollback failed after placeBet', rollbackErr);
+      }
+      return res.json(fail(result.message));
     }
 
     let newBalance;
