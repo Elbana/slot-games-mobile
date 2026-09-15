@@ -39,7 +39,10 @@ export function handleGetLaunch(req, res) {
     game,
   });
 
-  const launchUrl = `${baseUrl(req)}${def.playPath}?launch=${encodeURIComponent(token)}`;
+  let launchUrl = `${baseUrl(req)}${def.playPath}?launch=${encodeURIComponent(token)}`;
+  if (req.query.standalone === '1') {
+    launchUrl += '&standalone=1';
+  }
 
   res.json({
     game: def.slug,

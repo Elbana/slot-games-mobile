@@ -161,11 +161,12 @@ async function mountRiseOfOlympus() {
     app.get(`/play/${SLOT_SLUG}`, async (req, res, next) => {
       try {
         const html = fs.readFileSync(path.join(rooRoot, 'index.html'), 'utf8');
+        const transformed = await rooVite.transformIndexHtml(req.originalUrl, html);
         const qs = new URLSearchParams(req.query);
-        const inject = `<script>window.__PLATFORM__=${JSON.stringify(Object.fromEntries(qs))};</script>`;
-        const prepared = injectMobilePlayHead(html, inject);
-        const transformed = await rooVite.transformIndexHtml(req.originalUrl, prepared);
-        const out = fixMobileShellLinks(transformed);
+        const inject = qs.size
+          ? `<script>window.__PLATFORM__=${JSON.stringify(Object.fromEntries(qs))};</script>`
+          : '';
+        const out = fixMobileShellLinks(injectMobilePlayHead(transformed, inject));
         res.status(200).set({ 'Content-Type': 'text/html' }).end(out);
       } catch (err) {
         next(err);
@@ -194,8 +195,8 @@ async function mountRiseOfOlympus() {
 
 await mountRiseOfOlympus();
 
-server.listen(PORT, () => {
-  console.log(`games-mobile platform — http://localhost:${PORT}/`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`games-mobile platform — http://0.0.0.0:${PORT}/ (emulator: http://10.0.2.2:${PORT}/)`);
   console.log(describeMathProfile());
   console.log(`Games: ${listGames().map((g) => g.slug).join(', ')}`);
   if (isDev) console.log('Dev mode: Vite (RoO) + static lottery clients');
