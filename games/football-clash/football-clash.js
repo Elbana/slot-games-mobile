@@ -416,12 +416,12 @@ function rebuildPitchStatic(w, h) {
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, w, h * 0.28);
 
-  const m = Math.max(3, w * 0.012);
+  const lw = Math.max(1, w / 280);
+  const m = Math.max(3, w * 0.012) + lw / 2;
   const fx = m;
   const fy = m;
   const fw = w - m * 2;
   const fh = h - m * 2;
-  const lw = Math.max(1, w / 280);
 
   ctx.strokeStyle = 'rgba(255,255,255,0.6)';
   ctx.lineWidth = lw;
